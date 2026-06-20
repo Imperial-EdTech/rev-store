@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { supabaseAdmin } from "@/src/lib/supabase-admin";
 
 /**
  * Returns all waitlist registrations for the admin dashboard. Uses the

@@ -2,8 +2,8 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { RevricaLogo } from "@/components/brand";
-import { Button } from "@/components/ui";
+import { RevricaLogo } from "@/src/components/brand";
+import { Button } from "@/src/components/ui";
 
 const nav = [
   { href: "/#program", label: "Teacher Program" },
