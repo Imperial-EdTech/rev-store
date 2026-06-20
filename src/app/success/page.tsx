@@ -3,8 +3,8 @@
 import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
 import Link from "next/link";
-import { SiteHeader } from "@/src/components/shell";
-import { Button } from "@/src/components/ui";
+import { SiteHeader } from "@/components/shell";
+import { Button } from "@/components/ui";
 
 export default function SuccessPage() {
   return (

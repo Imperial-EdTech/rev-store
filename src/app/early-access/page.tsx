@@ -10,9 +10,9 @@ import type React from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { SiteHeader } from "@/src/components/shell";
-import { Button } from "@/src/components/ui";
-import { interests, roles } from "@/src/lib/data";
+import { SiteHeader } from "@/components/shell";
+import { Button } from "@/components/ui";
+import { interests, roles } from "@/lib/data";
 
 const schema = z.object({
   fullName: z.string().min(2, "Enter your full name"),

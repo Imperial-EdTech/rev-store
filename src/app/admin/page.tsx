@@ -3,9 +3,9 @@
 import { AlertCircle, Download, Inbox, Loader2, RefreshCw, Search } from "lucide-react";
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
-import { SiteHeader } from "@/src/components/shell";
-import { roles } from "@/src/lib/data";
-import type { WaitlistRegistration } from "@/src/lib/types";
+import { SiteHeader } from "@/components/shell";
+import { roles } from "@/lib/data";
+import type { WaitlistRegistration } from "@/lib/types";
 
 type FetchState = "idle" | "loading" | "error" | "ready";
 

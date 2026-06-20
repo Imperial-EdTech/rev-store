@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { supabaseAdmin } from "@/src/lib/supabase-admin";
-import { supabase } from "@/src/lib/supabase";
-import { roles } from "@/src/lib/data";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+import { supabase } from "@/lib/supabase";
+import { roles } from "@/lib/data";
 
 const payloadSchema = z.object({
   fullName: z.string().min(2),

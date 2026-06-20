@@ -12,12 +12,12 @@ import {
   Wrench
 } from "lucide-react";
 import Link from "next/link";
-import { Accordion } from "@/src/components/accordion";
-import { AnnouncementTicker } from "@/src/components/announcement-ticker";
-import { RevLaptop } from "@/src/components/device-art";
-import { Reveal } from "@/src/components/reveal";
-import { SiteFooter, SiteHeader } from "@/src/components/shell";
-import { Button, Card, GlassCard, SectionTitle, Tag } from "@/src/components/ui";
+import { Accordion } from "@/components/accordion";
+import { AnnouncementTicker } from "@/components/announcement-ticker";
+import { RevLaptop } from "@/components/device-art";
+import { Reveal } from "@/components/reveal";
+import { SiteFooter, SiteHeader } from "@/components/shell";
+import { Button, Card, GlassCard, SectionTitle, Tag } from "@/components/ui";
 
 const faqs: [string, string][] = [
   ["Who can join the waitlist?", "Any teacher, school owner, or administrator in Nigeria. You don't need to be applying for financing specifically — the waitlist covers all of Revrica's devices and programs."],
