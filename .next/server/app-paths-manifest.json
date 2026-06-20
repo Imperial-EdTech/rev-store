@@ -1,6 +1,0 @@
-{
-  "/admin/page": "app/admin/page.js",
-  "/success/page": "app/success/page.js",
-  "/page": "app/page.js",
-  "/early-access/page": "app/early-access/page.js"
-}
