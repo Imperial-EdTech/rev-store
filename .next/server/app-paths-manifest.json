@@ -1,9 +1,6 @@
 {
-  "/api/registrations/route": "app/api/registrations/route.js",
-  "/api/admin/registrations/route": "app/api/admin/registrations/route.js",
-  "/_not-found/page": "app/_not-found/page.js",
-  "/page": "app/page.js",
-  "/early-access/page": "app/early-access/page.js",
   "/admin/page": "app/admin/page.js",
-  "/success/page": "app/success/page.js"
+  "/success/page": "app/success/page.js",
+  "/page": "app/page.js",
+  "/early-access/page": "app/early-access/page.js"
 }
