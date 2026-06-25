@@ -5,6 +5,7 @@ import {
   ArrowRight,
   Banknote,
   CalendarClock,
+  ClipboardCheck,
   Cpu,
   GraduationCap,
   HandshakeIcon,
@@ -25,6 +26,7 @@ const faqs: [string, string][] = [
   ["How much do Teacher Empowerment Program plans cost?", "Plans start from ₦15,000 a month, spread over terms of up to 24 months depending on the device and plan you choose."],
   ["Can I just buy a laptop outright?", "Yes. Laptops and devices are available for direct purchase for schools, teachers, and individuals — financing through the program is optional, not required."],
   ["Can a school request devices for many staff at once?", "Yes. School owners and administrators can register interest for their whole staff in one submission."],
+  ["Does the free tech audit cost anything?", "No. The tech audit is completely free and doesn't commit your school to financing, a purchase, or any program. It's simply a way for our team to understand your setup."],
   ["What else does Revrica do besides devices?", "Revrica is an OEM hardware company. Beyond devices and the Teacher Empowerment Program, we run hardware training programs, technical support for institutions, and manufacturing partnerships across Africa."]
 ];
 
@@ -223,6 +225,42 @@ export default function Home() {
                 </GlassCard>
               </Reveal>
             </div>
+          </div>
+        </section>
+
+        {/* FREE TECH AUDIT — white section, distinct from financing, sits between financing and partners */}
+        <section className="border-y border-black/8 bg-white py-24" id="tech-audit">
+          <div className="container-x grid items-center gap-12 lg:grid-cols-2">
+            <Reveal>
+              <ClipboardCheck className="h-10 w-10 text-rev-orange" />
+              <h2 className="text-balance mt-6 font-display text-4xl font-extrabold leading-tight text-slate-ink md:text-5xl">
+                Not sure what your school needs? Get a free tech audit.
+              </h2>
+              <p className="mt-5 max-w-md text-lg leading-8 text-slate-body">
+                Before you finance anything, find out what&apos;s actually going on with your devices, network, and
+                systems. A quick checklist tells our team where to start — completely free.
+              </p>
+              <Link className="mt-8 inline-block" href="/tech-audit">
+                <Button>
+                  Start the Free Audit <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {[
+                  ["4 quick sections", "Devices, network, software, planning"],
+                  ["3 minutes, tops", "Just check what applies to you"],
+                  ["No cost, no catch", "The audit itself is completely free"],
+                  ["A real next step", "Our team follows up to schedule it"]
+                ].map(([title, body]) => (
+                  <div className="rounded-2xl border border-black/8 bg-[#FAF8F6] p-6" key={title}>
+                    <p className="font-display text-lg font-bold text-slate-ink">{title}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-body">{body}</p>
+                  </div>
+                ))}
+              </div>
+            </Reveal>
           </div>
         </section>
 

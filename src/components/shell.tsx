@@ -8,6 +8,7 @@ import { Button } from "@/components/ui";
 const nav = [
   { href: "/#program", label: "Teacher Program" },
   { href: "/#financing", label: "Financing" },
+  { href: "/#tech-audit", label: "Free Tech Audit" },
   { href: "/#devices", label: "Devices" },
   { href: "/#faq", label: "FAQ" }
 ];
@@ -52,11 +53,13 @@ export function SiteFooter() {
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/35">Program</p>
             <Link className="block hover:text-rev-orange" href="/#program">Teacher Empowerment</Link>
             <Link className="block hover:text-rev-orange" href="/#financing">Pay Monthly</Link>
+            <Link className="block hover:text-rev-orange" href="/tech-audit">Free Tech Audit</Link>
             <Link className="block hover:text-rev-orange" href="/#faq">FAQ</Link>
           </div>
           <div className="space-y-3">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/35">Get Started</p>
             <Link className="block hover:text-rev-orange" href="/early-access">Join Waitlist</Link>
+            <Link className="block hover:text-rev-orange" href="/tech-audit">Request Tech Audit</Link>
           </div>
           <div className="space-y-3">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/35">Team</p>
