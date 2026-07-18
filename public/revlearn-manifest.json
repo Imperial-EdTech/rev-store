@@ -1,0 +1,25 @@
+{
+  "name": "RevLearn — Teacher Learning Hub",
+  "short_name": "RevLearn",
+  "description": "Curated courses and resources for Nigerian teachers",
+  "start_url": "/revlearn",
+  "scope": "/revlearn",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#4a0e10",
+  "icons": [
+    {
+      "src": "/revlearn-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/revlearn-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

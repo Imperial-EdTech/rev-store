@@ -1,357 +1,430 @@
 "use client";
 
-import { AlertCircle, ClipboardCheck, Download, Inbox, Loader2, RefreshCw, Search, Users } from "lucide-react";
-import type React from "react";
-import { useEffect, useMemo, useState } from "react";
-import { SiteHeader } from "@/components/shell";
-import { TechAuditView } from "@/components/tech-audit-view";
-import { roles } from "@/lib/data";
-import type { WaitlistRegistration } from "@/lib/types";
+import { useState } from "react";
+import { Plus, Trash2, Edit2, ChevronDown, ChevronUp, Loader2, Check, X } from "lucide-react";
+import { RevLearnHeader } from "@/components/revlearn/shell";
+import { useRevLearnContent } from "@/lib/revlearn-hooks";
+import { slugify, deriveSourceName, normaliseEmbedUrl } from "@/lib/revlearn-utils";
+import type { Accent, CourseType, Category, Course, Lesson } from "@/lib/revlearn-types";
 
-type FetchState = "idle" | "loading" | "error" | "ready";
-type Tab = "waitlist" | "tech-audit";
+const PASSCODE = process.env.NEXT_PUBLIC_ADMIN_PASSCODE ?? "revlearn-admin";
+const ACCENTS: Accent[] = ["orange", "maroon", "teal", "amber"];
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="rl-admin-field">
+      <span className="rl-admin-label">{label}</span>
+      {children}
+    </label>
+  );
+}
 
 export default function AdminPage() {
-  const [tab, setTab] = useState<Tab>("waitlist");
-  const [passcode, setPasscode] = useState("");
   const [unlocked, setUnlocked] = useState(false);
-  const [authError, setAuthError] = useState("");
+  const [pass, setPass] = useState("");
+  const [passErr, setPassErr] = useState("");
 
-  function unlockDashboard(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const expected = process.env.NEXT_PUBLIC_ADMIN_PASSCODE || "revstore-admin";
-    if (passcode === expected) {
-      setUnlocked(true);
-      setAuthError("");
-      return;
-    }
-    setAuthError("Enter the correct admin passcode.");
+  function unlock(e: React.FormEvent) {
+    e.preventDefault();
+    if (pass === PASSCODE) { setUnlocked(true); setPassErr(""); }
+    else setPassErr("Incorrect passcode.");
   }
 
   if (!unlocked) {
     return (
       <>
-        <SiteHeader />
-        <main className="maroon-glow relative flex min-h-screen items-center py-16">
-          <div className="noise-overlay" />
-          <section className="container-x relative z-10">
-            <div className="mx-auto max-w-md rounded-3xl border border-black/8 bg-white p-8 shadow-xl">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-rev-orange">Revrica Admin</p>
-              <h1 className="mt-3 font-display text-3xl font-extrabold text-slate-ink">Dashboard access</h1>
-              <p className="mt-3 leading-7 text-slate-body">Enter the admin passcode to view registrations and analytics.</p>
-              <form className="mt-6 space-y-4" onSubmit={unlockDashboard}>
+        <RevLearnHeader />
+        <main className="rl-main">
+          <div className="rl-container">
+            <div className="rl-admin-gate">
+              <p className="rl-hero-kicker">RevLearn Admin</p>
+              <h1 className="rl-admin-gate-title">Dashboard access</h1>
+              <p style={{ fontSize: ".875rem", color: "var(--rl-body)", marginBottom: "1.25rem" }}>
+                Enter your admin passcode to manage courses and categories.
+              </p>
+              <form onSubmit={unlock} className="rl-admin-gate-form">
                 <input
-                  className="focus-ring h-12 w-full rounded-xl border border-black/12 bg-white px-4 text-sm text-slate-ink placeholder:text-slate-body/50"
-                  onChange={(event) => setPasscode(event.target.value)}
-                  placeholder="Admin passcode"
                   type="password"
-                  value={passcode}
+                  className="rl-admin-input"
+                  placeholder="Admin passcode"
+                  value={pass}
+                  onChange={e => setPass(e.target.value)}
                 />
-                {authError ? <p className="text-sm font-bold text-rev-orange">{authError}</p> : null}
-                <button
-                  className="focus-ring h-12 w-full rounded-full bg-rev-orange text-sm font-bold text-white shadow-glow transition hover:bg-rev-orangeDeep"
-                  type="submit"
-                >
-                  Open Dashboard
-                </button>
+                {passErr && <p className="rl-admin-err">{passErr}</p>}
+                <button type="submit" className="rl-admin-submit">Open Dashboard</button>
               </form>
             </div>
-          </section>
+          </div>
         </main>
       </>
     );
   }
 
+  return <AdminDashboard />;
+}
+
+function AdminDashboard() {
+  const { categories, loading, error, reload } = useRevLearnContent();
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  type CatForm = { id: string; title: string; description: string; icon: string; accent: Accent; position: number };
+  type CourseForm = { categoryId: string; id: string; title: string; description: string; thumbnail: string; tags: string; type: CourseType; url: string; sourceName: string; duration: string; position: number };
+  type LessonForm = { courseId: string; id: string; title: string; url: string; position: number };
+
+  const [catForm, setCatForm] = useState<CatForm | null>(null);
+  const [courseForm, setCourseForm] = useState<CourseForm | null>(null);
+  const [lessonForm, setLessonForm] = useState<LessonForm | null>(null);
+
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  }
+
+  async function api(path: string, method: string, body: unknown) {
+    const res = await fetch(path, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      throw new Error(j.error ?? "Request failed");
+    }
+    return res.json();
+  }
+
+  async function saveCategory() {
+    if (!catForm) return;
+    setSaving(true);
+    try {
+      await api("/api/revlearn/categories", "POST", catForm);
+      setCatForm(null); reload(); showToast("Category saved ✓");
+    } catch (e) { showToast((e as Error).message); }
+    finally { setSaving(false); }
+  }
+
+  async function deleteCategory(id: string) {
+    if (!confirm("Delete this category and all its courses?")) return;
+    setSaving(true);
+    try {
+      await api("/api/revlearn/categories", "DELETE", { id });
+      reload(); showToast("Category deleted");
+    } catch (e) { showToast((e as Error).message); }
+    finally { setSaving(false); }
+  }
+
+  async function saveCourse() {
+    if (!courseForm) return;
+    setSaving(true);
+    try {
+      await api("/api/revlearn/courses", "POST", {
+        id: courseForm.id || slugify(courseForm.title) + "-" + Date.now(),
+        category_id: courseForm.categoryId,
+        title: courseForm.title,
+        description: courseForm.description,
+        thumbnail: courseForm.thumbnail,
+        tags: courseForm.tags.split(",").map((t: string) => t.trim()).filter(Boolean),
+        type: courseForm.type,
+        url: normaliseEmbedUrl(courseForm.url),
+        source_name: courseForm.sourceName || deriveSourceName(courseForm.url),
+        duration: courseForm.duration,
+        position: courseForm.position,
+      });
+      setCourseForm(null); reload(); showToast("Course saved ✓");
+    } catch (e) { showToast((e as Error).message); }
+    finally { setSaving(false); }
+  }
+
+  async function deleteCourse(id: string) {
+    if (!confirm("Delete this course?")) return;
+    setSaving(true);
+    try {
+      await api("/api/revlearn/courses", "DELETE", { id });
+      reload(); showToast("Course deleted");
+    } catch (e) { showToast((e as Error).message); }
+    finally { setSaving(false); }
+  }
+
+  async function saveLesson() {
+    if (!lessonForm) return;
+    setSaving(true);
+    try {
+      await api("/api/revlearn/lessons", "POST", {
+        id: lessonForm.id || slugify(lessonForm.title) + "-" + Date.now(),
+        course_id: lessonForm.courseId,
+        title: lessonForm.title,
+        url: normaliseEmbedUrl(lessonForm.url),
+        position: lessonForm.position,
+      });
+      setLessonForm(null); reload(); showToast("Lesson saved ✓");
+    } catch (e) { showToast((e as Error).message); }
+    finally { setSaving(false); }
+  }
+
+  async function deleteLesson(id: string) {
+    if (!confirm("Delete this lesson?")) return;
+    setSaving(true);
+    try {
+      await api("/api/revlearn/lessons", "DELETE", { id });
+      reload(); showToast("Lesson deleted");
+    } catch (e) { showToast((e as Error).message); }
+    finally { setSaving(false); }
+  }
+
   return (
     <>
-      <SiteHeader />
-      <main className="maroon-glow relative min-h-screen py-10">
-        <div className="noise-overlay" />
-        <div className="container-x relative z-10">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <RevLearnHeader />
+      <main className="rl-main">
+        <div className="rl-container rl-admin-page">
+          <div className="rl-admin-header">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-rev-orange">Revrica Admin</p>
-              <h1 className="mt-3 font-display text-4xl font-extrabold text-white md:text-5xl">Lead dashboard</h1>
-              <p className="mt-3 text-white/60">Live data from Supabase.</p>
+              <p className="rl-hero-kicker">RevLearn Admin</p>
+              <h1 className="rl-admin-title">Course Manager</h1>
             </div>
-            <div className="inline-flex gap-1 rounded-full border border-white/15 bg-white/5 p-1">
-              <button
-                className={`inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-bold transition ${
-                  tab === "waitlist" ? "bg-rev-orange text-white" : "text-white/60 hover:text-white"
-                }`}
-                onClick={() => setTab("waitlist")}
-                type="button"
-              >
-                <Users className="h-4 w-4" /> Waitlist
-              </button>
-              <button
-                className={`inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-bold transition ${
-                  tab === "tech-audit" ? "bg-rev-orange text-white" : "text-white/60 hover:text-white"
-                }`}
-                onClick={() => setTab("tech-audit")}
-                type="button"
-              >
-                <ClipboardCheck className="h-4 w-4" /> Tech Audit
-              </button>
-            </div>
+            <button
+              className="rl-admin-add-btn"
+              onClick={() => setCatForm({
+                id: "", title: "", description: "", icon: "📚",
+                accent: "orange", position: categories.length
+              })}
+            >
+              <Plus size={15} /> Add Category
+            </button>
           </div>
 
-          {tab === "waitlist" ? <WaitlistView /> : <TechAuditView />}
+          {loading && <div className="rl-state-center"><Loader2 size={22} className="rl-spin" /></div>}
+          {error && <div className="rl-error-box"><p className="rl-error-title">{error}</p><button className="rl-retry-btn" onClick={reload}>Retry</button></div>}
+
+          {/* Category form */}
+          {catForm && (
+            <div className="rl-admin-form-card">
+              <h3 className="rl-admin-form-title">{catForm.id ? "Edit" : "New"} Category</h3>
+              <div className="rl-admin-form-grid">
+                <Field label="Title">
+                  <input className="rl-admin-input" value={catForm.title} placeholder="Category title"
+                    onChange={e => setCatForm(f => f && ({ ...f, title: e.target.value, id: f.id || slugify(e.target.value) }))} />
+                </Field>
+                <Field label="ID (auto-filled)">
+                  <input className="rl-admin-input" value={catForm.id} placeholder="e.g. digital-skills"
+                    onChange={e => setCatForm(f => f && ({ ...f, id: e.target.value }))} />
+                </Field>
+                <Field label="Icon (emoji)">
+                  <input className="rl-admin-input" value={catForm.icon}
+                    onChange={e => setCatForm(f => f && ({ ...f, icon: e.target.value }))} />
+                </Field>
+                <Field label="Accent colour">
+                  <select className="rl-admin-input" value={catForm.accent}
+                    onChange={e => setCatForm(f => f && ({ ...f, accent: e.target.value as Accent }))}>
+                    {ACCENTS.map(a => <option key={a} value={a}>{a}</option>)}
+                  </select>
+                </Field>
+                <Field label="Description">
+                  <textarea className="rl-admin-input rl-admin-textarea" value={catForm.description}
+                    onChange={e => setCatForm(f => f && ({ ...f, description: e.target.value }))} />
+                </Field>
+              </div>
+              <div className="rl-admin-form-actions">
+                <button className="rl-admin-cancel" onClick={() => setCatForm(null)}>Cancel</button>
+                <button className="rl-admin-save" onClick={saveCategory} disabled={saving}>
+                  {saving ? <Loader2 size={13} className="rl-spin" /> : <Check size={13} />} Save
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Categories */}
+          {!loading && categories.map((cat: Category) => (
+            <div key={cat.id} className="rl-admin-cat-block">
+              <div className="rl-admin-cat-header">
+                <button className="rl-admin-cat-toggle"
+                  onClick={() => setExpanded(expanded === cat.id ? null : cat.id)}>
+                  <span>{cat.icon} {cat.title}</span>
+                  <span className="rl-admin-cat-meta">{cat.courses.length} courses</span>
+                  {expanded === cat.id ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                </button>
+                <div className="rl-admin-cat-actions">
+                  <button className="rl-admin-icon-btn" title="Edit"
+                    onClick={() => setCatForm({ id: cat.id, title: cat.title, description: cat.description, icon: cat.icon, accent: cat.accent, position: cat.position })}>
+                    <Edit2 size={13} />
+                  </button>
+                  <button className="rl-admin-icon-btn rl-admin-icon-btn--danger" title="Delete"
+                    onClick={() => deleteCategory(cat.id)}>
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              </div>
+
+              {expanded === cat.id && (
+                <div className="rl-admin-courses">
+                  {cat.courses.map((course: Course) => (
+                    <CourseRow
+                      key={course.id}
+                      course={course}
+                      onEdit={() => setCourseForm({
+                        categoryId: cat.id, id: course.id, title: course.title,
+                        description: course.description, thumbnail: course.thumbnail,
+                        tags: course.tags.join(", "), type: course.type,
+                        url: course.url ?? "", sourceName: course.sourceName,
+                        duration: course.duration, position: course.position,
+                      })}
+                      onDelete={() => deleteCourse(course.id)}
+                      onAddLesson={() => setLessonForm({
+                        courseId: course.id, id: "", title: "", url: "",
+                        position: course.lessons?.length ?? 0
+                      })}
+                      onDeleteLesson={deleteLesson}
+                    />
+                  ))}
+                  <button className="rl-admin-add-course-btn"
+                    onClick={() => setCourseForm({
+                      categoryId: cat.id, id: "", title: "", description: "",
+                      thumbnail: "", tags: "", type: "single", url: "",
+                      sourceName: "", duration: "", position: cat.courses.length,
+                    })}>
+                    <Plus size={13} /> Add Course
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Course modal */}
+          {courseForm && (
+            <div className="rl-admin-overlay">
+              <div className="rl-admin-modal">
+                <div className="rl-admin-modal-header">
+                  <h3 className="rl-admin-form-title">{courseForm.id ? "Edit" : "New"} Course</h3>
+                  <button className="rl-admin-icon-btn" onClick={() => setCourseForm(null)}><X size={15} /></button>
+                </div>
+                <div className="rl-admin-form-grid">
+                  <Field label="Title">
+                    <input className="rl-admin-input" value={courseForm.title} placeholder="Course title"
+                      onChange={e => setCourseForm(f => f && ({ ...f, title: e.target.value }))} />
+                  </Field>
+                  <Field label="Type">
+                    <select className="rl-admin-input" value={courseForm.type}
+                      onChange={e => setCourseForm(f => f && ({ ...f, type: e.target.value as CourseType }))}>
+                      <option value="single">Single resource</option>
+                      <option value="multi">Multi-lesson course</option>
+                    </select>
+                  </Field>
+                  {courseForm.type === "single" && (
+                    <Field label="Resource URL">
+                      <input className="rl-admin-input" value={courseForm.url}
+                        placeholder="Paste YouTube, Drive, or any URL"
+                        onChange={e => setCourseForm(f => f && ({
+                          ...f, url: e.target.value,
+                          sourceName: f.sourceName || deriveSourceName(e.target.value)
+                        }))} />
+                    </Field>
+                  )}
+                  <Field label="Source / Provider">
+                    <input className="rl-admin-input" value={courseForm.sourceName}
+                      placeholder="e.g. YouTube, Coursera, Schoolinka"
+                      onChange={e => setCourseForm(f => f && ({ ...f, sourceName: e.target.value }))} />
+                  </Field>
+                  <Field label="Duration">
+                    <input className="rl-admin-input" value={courseForm.duration} placeholder="e.g. 20 min"
+                      onChange={e => setCourseForm(f => f && ({ ...f, duration: e.target.value }))} />
+                  </Field>
+                  <Field label="Thumbnail URL">
+                    <input className="rl-admin-input" value={courseForm.thumbnail} placeholder="https://…"
+                      onChange={e => setCourseForm(f => f && ({ ...f, thumbnail: e.target.value }))} />
+                  </Field>
+                  <Field label="Tags (comma-separated)">
+                    <input className="rl-admin-input" value={courseForm.tags}
+                      placeholder="e.g. excel, beginner"
+                      onChange={e => setCourseForm(f => f && ({ ...f, tags: e.target.value }))} />
+                  </Field>
+                  <Field label="Description">
+                    <textarea className="rl-admin-input rl-admin-textarea" value={courseForm.description}
+                      onChange={e => setCourseForm(f => f && ({ ...f, description: e.target.value }))} />
+                  </Field>
+                </div>
+                <div className="rl-admin-form-actions">
+                  <button className="rl-admin-cancel" onClick={() => setCourseForm(null)}>Cancel</button>
+                  <button className="rl-admin-save" onClick={saveCourse} disabled={saving}>
+                    {saving ? <Loader2 size={13} className="rl-spin" /> : <Check size={13} />} Save Course
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Lesson modal */}
+          {lessonForm && (
+            <div className="rl-admin-overlay">
+              <div className="rl-admin-modal">
+                <div className="rl-admin-modal-header">
+                  <h3 className="rl-admin-form-title">Add Lesson</h3>
+                  <button className="rl-admin-icon-btn" onClick={() => setLessonForm(null)}><X size={15} /></button>
+                </div>
+                <div className="rl-admin-form-grid">
+                  <Field label="Lesson title">
+                    <input className="rl-admin-input" value={lessonForm.title} placeholder="e.g. Introduction"
+                      onChange={e => setLessonForm(f => f && ({ ...f, title: e.target.value }))} />
+                  </Field>
+                  <Field label="Resource URL">
+                    <input className="rl-admin-input" value={lessonForm.url}
+                      placeholder="Paste YouTube, Drive, or any URL"
+                      onChange={e => setLessonForm(f => f && ({ ...f, url: e.target.value }))} />
+                  </Field>
+                </div>
+                <div className="rl-admin-form-actions">
+                  <button className="rl-admin-cancel" onClick={() => setLessonForm(null)}>Cancel</button>
+                  <button className="rl-admin-save" onClick={saveLesson} disabled={saving}>
+                    {saving ? <Loader2 size={13} className="rl-spin" /> : <Check size={13} />} Save Lesson
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
+
+      {toast && <div className="rl-toast">{toast}</div>}
     </>
   );
 }
 
-/**
- * Unchanged waitlist view, just extracted into its own component so it
- * can sit alongside TechAuditView under the shared tab switcher above.
- */
-function WaitlistView() {
-  const [registrations, setRegistrations] = useState<WaitlistRegistration[]>([]);
-  const [fetchState, setFetchState] = useState<FetchState>("idle");
-  const [fetchError, setFetchError] = useState<string | null>(null);
-  const [query, setQuery] = useState("");
-  const [role, setRole] = useState("All");
-
-  async function loadRegistrations() {
-    setFetchState("loading");
-    setFetchError(null);
-    try {
-      const response = await fetch("/api/admin/registrations");
-      const body = await response.json();
-      if (!response.ok) {
-        setFetchError(body?.error ?? "Could not load registrations.");
-        setFetchState("error");
-        return;
-      }
-      setRegistrations(body.registrations);
-      setFetchState("ready");
-    } catch {
-      setFetchError("Could not reach the server. Check your connection and try again.");
-      setFetchState("error");
-    }
-  }
-
-  useEffect(() => {
-    loadRegistrations();
-  }, []);
-
-  const filtered = useMemo(() => {
-    return registrations.filter((item) => {
-      const q = query.toLowerCase();
-      const matchesQuery = [item.fullName, item.email, item.phone, item.organization, item.role, item.interests.join(" ")]
-        .join(" ")
-        .toLowerCase()
-        .includes(q);
-      const matchesRole = role === "All" || item.role === role;
-      return matchesQuery && matchesRole;
-    });
-  }, [query, registrations, role]);
-
-  const stats = useMemo(() => {
-    const countInterest = (name: string) => registrations.filter((item) => item.interests.includes(name)).length;
-    return [
-      ["Total Registrations", registrations.length],
-      ["Teachers", registrations.filter((item) => item.role === "Teacher").length],
-      ["School Owners", registrations.filter((item) => item.role === "School Owner").length],
-      ["Administrators", registrations.filter((item) => item.role === "School Administrator").length],
-      ["Laptop Financing", countInterest("Laptop Financing")],
-      ["Teacher Empowerment", countInterest("Teacher Empowerment Program")]
-    ];
-  }, [registrations]);
-
-  async function exportExcel() {
-    const XLSX = await import("xlsx");
-    const rows = filtered.map((item) => ({
-      Name: item.fullName,
-      Email: item.email,
-      Phone: item.phone,
-      Organization: item.organization,
-      Role: item.role,
-      Interests: item.interests.join(", "),
-      "Device Count": item.deviceCount ?? "",
-      Notes: item.notes ?? "",
-      Date: new Date(item.createdAt).toLocaleString()
-    }));
-    const worksheet = XLSX.utils.json_to_sheet(rows);
-    worksheet["!cols"] = [
-      { wch: 22 },
-      { wch: 26 },
-      { wch: 16 },
-      { wch: 24 },
-      { wch: 18 },
-      { wch: 36 },
-      { wch: 12 },
-      { wch: 30 },
-      { wch: 18 }
-    ];
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Registrations");
-    const dateStamp = new Date().toISOString().slice(0, 10);
-    XLSX.writeFile(workbook, `revrica-registrations-${dateStamp}.xlsx`);
-  }
-
-  if (fetchState === "error") {
-    return (
-      <div className="mt-8 flex items-start gap-4 rounded-2xl border border-white/15 bg-white/5 p-6">
-        <AlertCircle className="h-6 w-6 shrink-0 text-rev-orange" />
-        <div>
-          <p className="font-display text-lg font-bold text-white">Couldn&apos;t load registrations</p>
-          <p className="mt-1 text-sm leading-6 text-white/60">{fetchError}</p>
-          <button
-            className="focus-ring mt-4 inline-flex h-10 items-center rounded-full border border-white/20 bg-white/5 px-4 text-sm font-bold text-white transition hover:border-white/40"
-            onClick={loadRegistrations}
-            type="button"
-          >
-            Try again
+function CourseRow({ course, onEdit, onDelete, onAddLesson, onDeleteLesson }: {
+  course: Course;
+  onEdit: () => void;
+  onDelete: () => void;
+  onAddLesson: () => void;
+  onDeleteLesson: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rl-admin-course-row">
+      <div className="rl-admin-course-header">
+        <button className="rl-admin-course-toggle" onClick={() => course.type === "multi" && setOpen(o => !o)}>
+          <span className="rl-admin-course-name">{course.title}</span>
+          <span className="rl-admin-course-meta">{course.sourceName} · {course.type}</span>
+          {course.type === "multi" && (open ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
+        </button>
+        <div className="rl-admin-course-actions">
+          <button className="rl-admin-icon-btn" onClick={onEdit}><Edit2 size={12} /></button>
+          <button className="rl-admin-icon-btn rl-admin-icon-btn--danger" onClick={onDelete}><Trash2 size={12} /></button>
+        </div>
+      </div>
+      {course.type === "multi" && open && (
+        <div className="rl-admin-lessons">
+          {(course.lessons ?? []).map((lesson: Lesson, i: number) => (
+            <div key={lesson.id} className="rl-admin-lesson-row">
+              <span className="rl-admin-lesson-num">{i + 1}</span>
+              <span className="rl-admin-lesson-title">{lesson.title}</span>
+              <button className="rl-admin-icon-btn rl-admin-icon-btn--danger"
+                onClick={() => onDeleteLesson(lesson.id)}><Trash2 size={11} /></button>
+            </div>
+          ))}
+          <button className="rl-admin-add-lesson-btn" onClick={onAddLesson}>
+            <Plus size={11} /> Add lesson
           </button>
         </div>
-      </div>
-    );
-  }
-
-  if (fetchState === "loading" || fetchState === "idle") {
-    return (
-      <div className="mt-16 flex flex-col items-center gap-3 text-white/60">
-        <Loader2 className="h-7 w-7 animate-spin" />
-        <p>Loading registrations…</p>
-      </div>
-    );
-  }
-
-  if (registrations.length === 0) {
-    return (
-      <div className="mt-8 flex flex-col items-center gap-3 rounded-2xl border border-black/8 bg-white p-12 text-center shadow-sm">
-        <Inbox className="h-9 w-9 text-slate-body/40" />
-        <p className="font-display text-lg font-bold text-slate-ink">No registrations yet</p>
-        <p className="max-w-sm text-sm leading-6 text-slate-body">
-          Once people join the waitlist on the homepage, their details will appear here.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <div className="mt-8 flex items-center justify-end gap-3">
-        <button
-          className="focus-ring inline-flex h-11 items-center gap-2 rounded-full border border-white/20 bg-white/5 px-5 text-sm font-bold text-white transition hover:border-white/40 hover:bg-white/10"
-          onClick={loadRegistrations}
-          type="button"
-        >
-          <RefreshCw className="h-4 w-4" /> Refresh
-        </button>
-        <button
-          className="focus-ring inline-flex h-11 items-center gap-2 rounded-full bg-rev-orange px-5 text-sm font-bold text-white shadow-glow transition hover:bg-rev-orangeDeep disabled:cursor-not-allowed disabled:opacity-40"
-          disabled={filtered.length === 0}
-          onClick={exportExcel}
-          type="button"
-        >
-          <Download className="h-4 w-4" /> Export Excel
-        </button>
-      </div>
-
-      <div className="mt-6 grid gap-5 md:grid-cols-3 lg:grid-cols-6">
-        {stats.map(([label, value]) => (
-          <div className="rounded-[1.5rem] border border-black/8 bg-white p-6 shadow-sm" key={String(label)}>
-            <p className="font-display text-3xl font-extrabold text-slate-ink">{value}</p>
-            <p className="mt-2 text-xs font-bold uppercase tracking-[0.1em] text-slate-body/70">{label}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-6 grid gap-5 lg:grid-cols-[1fr_0.8fr]">
-        <div className="rounded-[1.5rem] border border-black/8 bg-white p-7 shadow-sm">
-          <h2 className="font-display text-xl font-bold text-slate-ink">Interest Breakdown</h2>
-          <div className="mt-5 grid gap-3">
-            {["Teacher Empowerment Program", "Laptop Financing", "Buy a Laptop Outright", "Smartboards", "Hardware Training"].map((name) => {
-              const count = registrations.filter((item) => item.interests.includes(name)).length;
-              const width = registrations.length ? (count / registrations.length) * 100 : 0;
-              return (
-                <div key={name}>
-                  <div className="mb-2 flex justify-between text-sm text-slate-body">
-                    <span>{name}</span>
-                    <span>{count}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-black/6">
-                    <div className="h-full rounded-full bg-rev-orange" style={{ width: `${width}%` }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-        <div className="rounded-[1.5rem] border border-black/8 bg-white p-7 shadow-sm">
-          <h2 className="font-display text-xl font-bold text-slate-ink">Role Breakdown</h2>
-          <div className="mt-5 grid gap-3">
-            {["Teacher", "School Owner", "School Administrator", "Parent", "Education Professional"].map((name) => {
-              const count = registrations.filter((item) => item.role === name).length;
-              const width = registrations.length ? (count / registrations.length) * 100 : 0;
-              return (
-                <div key={name}>
-                  <div className="mb-2 flex justify-between text-sm text-slate-body">
-                    <span>{name}</span>
-                    <span>{count}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-black/6">
-                    <div className="h-full rounded-full bg-maroon" style={{ width: `${width}%` }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-6 overflow-hidden rounded-[1.75rem] border border-black/8 bg-white shadow-sm">
-        <div className="border-b border-black/8 p-6">
-          <div className="grid gap-3 md:grid-cols-[1fr_220px]">
-            <label className="relative">
-              <Search className="absolute left-4 top-3.5 h-5 w-5 text-slate-body/50" />
-              <input
-                className="focus-ring h-12 w-full rounded-xl border border-black/12 bg-white pl-12 pr-4 text-sm text-slate-ink placeholder:text-slate-body/50"
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search name, email, organization, interest..."
-                value={query}
-              />
-            </label>
-            <select
-              className="focus-ring h-12 rounded-xl border border-black/12 bg-white px-4 text-sm text-slate-ink"
-              onChange={(event) => setRole(event.target.value)}
-              value={role}
-            >
-              {["All", ...roles].map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[960px] text-left text-sm">
-            <thead className="bg-black/3 text-xs uppercase tracking-[0.1em] text-slate-body/70">
-              <tr>
-                {["Name", "Email", "Phone", "Organization", "Role", "Interests", "Date"].map((heading) => (
-                  <th className="px-6 py-4" key={heading}>{heading}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((item) => (
-                <tr className="border-t border-black/6" key={item.id}>
-                  <td className="px-6 py-5 font-bold text-slate-ink">{item.fullName}</td>
-                  <td className="px-6 py-5 text-slate-body">{item.email}</td>
-                  <td className="px-6 py-5 text-slate-body">{item.phone}</td>
-                  <td className="px-6 py-5 text-slate-body">{item.organization}</td>
-                  <td className="px-6 py-5 text-slate-ink">{item.role}</td>
-                  <td className="px-6 py-5 text-slate-body">{item.interests.join(", ")}</td>
-                  <td className="px-6 py-5 text-slate-body">{new Date(item.createdAt).toLocaleDateString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </>
+      )}
+    </div>
   );
 }
