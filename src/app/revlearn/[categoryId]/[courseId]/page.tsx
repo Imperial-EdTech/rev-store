@@ -26,7 +26,7 @@ export default function CoursePage() {
   if (loading) {
     return (
       <>
-        <RevLearnHeader completedCount={completedCount} />
+        <RevLearnHeader />
         <div className="rl-state-center" style={{ minHeight: "80vh" }}>
           <Loader2 size={28} className="rl-spin" />
         </div>
@@ -37,7 +37,7 @@ export default function CoursePage() {
   if (error || !category || !course) {
     return (
       <>
-        <RevLearnHeader completedCount={completedCount} />
+        <RevLearnHeader />
         <div className="rl-container" style={{ padding: "3rem 20px" }}>
           <div className="rl-error-box">
             <AlertCircle size={20} />
@@ -58,7 +58,7 @@ export default function CoursePage() {
 
   return (
     <>
-      <RevLearnHeader completedCount={completedCount} />
+      <RevLearnHeader />
       <main className="rl-main">
         <div className="rl-udemy-layout">
 
