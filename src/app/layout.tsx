@@ -21,18 +21,27 @@ export const metadata: Metadata = {
     "school laptop payment plan",
     "affordable laptops for teachers"
   ],
-  openGraph: {
-    title: "Revrica | A Laptop for Every Teacher",
-    description: "Apply for the Teacher Empowerment Program. From ₦15,000/month, spread over up to 24 months.",
-    type: "website",
-    siteName: "Revrica",
-    url: siteUrl
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Revrica | A Laptop for Every Teacher",
-    description: "From ₦15,000/month, spread over up to 24 months. Apply for the Teacher Empowerment Program today."
-  },
+openGraph: {
+  title: "Revrica | A Laptop for Every Teacher",
+  description: "Apply for the Teacher Digital Empowerment Program. From ₦15,000/month. Monthly installments spread over 12, 24 or 36 months.",
+  type: "website",
+  siteName: "Revrica",
+  url: siteUrl,
+  images: [
+    {
+      url: `${siteUrl}/og-image.png`,
+      width: 1200,
+      height: 630,
+      alt: "Revrica - A Laptop for Every Teacher"
+    }
+  ]
+},
+twitter: {
+  card: "summary_large_image",
+  title: "Revrica | A Laptop for Every Teacher",
+  description: "From ₦15,000/month, spread over up to 24 months. Apply for the Teacher Digital Empowerment Program today.",
+  images: [`${siteUrl}/og-image.png`]
+},
   alternates: {
     canonical: siteUrl
   }

@@ -95,7 +95,7 @@ export async function downloadAndCachePDF(
     if (total && onProgress) onProgress(Math.round((received / total) * 100));
   }
 
-  const blob = new Blob(chunks, { type: "application/pdf" });
+const blob = new Blob(chunks as BlobPart[], { type: "application/pdf" });
   await savePDF({ id, url, title, blob, savedAt: new Date().toISOString(), size: blob.size });
 }
 
