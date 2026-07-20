@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { Category, Tool, Resource, Post, Comment, LocalProfile, SearchResult } from "@/lib/revlearn-types";
-import { loadProfile, saveProfile } from "@/lib/revlearn-utils";
+import type { Category, Tool, Resource, Post, Comment } from "@/lib/revlearn-types";
+import { getActiveProfile, type StoredProfile } from "@/lib/revlearn-profiles";
 
 export function useRevLearnContent() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -103,16 +103,15 @@ export function useComments(postId: string) {
 }
 
 export function useProfile() {
-  const [profile, setProfile] = useState<LocalProfile | null>(null);
+  const [profile, setProfile] = useState<StoredProfile | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setProfile(loadProfile());
+    setProfile(getActiveProfile());
     setMounted(true);
   }, []);
 
-  const update = useCallback((p: LocalProfile) => {
-    saveProfile(p);
+  const update = useCallback((p: StoredProfile) => {
     setProfile(p);
   }, []);
 
@@ -176,7 +175,10 @@ export function useLikedPosts() {
   return { liked, toggle };
 }
 
-export type { SearchResult }; 
+export type SearchResult =
+  | { kind: "course"; categoryId: string; categoryTitle: string; id: string; title: string; description: string; sourceName: string }
+  | { kind: "tool"; id: string; title: string; description: string; partnerName: string }
+  | { kind: "resource"; id: string; title: string; description: string; type: string; audience: string };
 
 export function globalSearch(
   categories: Category[],
@@ -190,16 +192,19 @@ export function globalSearch(
 
   for (const cat of categories) {
     for (const course of cat.courses) {
-      if ([course.title, course.description, course.sourceName, ...(course.tags ?? [])].join(" ").toLowerCase().includes(q))
+      if ([course.title, course.description, course.sourceName, ...(course.tags ?? [])]
+        .join(" ").toLowerCase().includes(q))
         results.push({ kind: "course", categoryId: cat.id, categoryTitle: cat.title, id: course.id, title: course.title, description: course.description, sourceName: course.sourceName });
     }
   }
   for (const tool of tools) {
-    if ([tool.name, tool.description, tool.partnerName, tool.category].join(" ").toLowerCase().includes(q))
+    if ([tool.name, tool.description, tool.partnerName, tool.category]
+      .join(" ").toLowerCase().includes(q))
       results.push({ kind: "tool", id: tool.id, title: tool.name, description: tool.description, partnerName: tool.partnerName });
   }
   for (const r of resources) {
-    if ([r.title, r.description, r.sourceName, ...(r.tags ?? [])].join(" ").toLowerCase().includes(q))
+    if ([r.title, r.description, r.sourceName, ...(r.tags ?? [])]
+      .join(" ").toLowerCase().includes(q))
       results.push({ kind: "resource", id: r.id, title: r.title, description: r.description, type: r.type, audience: r.audience });
   }
   return results;

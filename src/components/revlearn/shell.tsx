@@ -1,23 +1,54 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { BookOpen, Wrench, FileText, Users, Home, Moon, Sun, User } from "lucide-react";
-import { getInitials, getAvatarColor } from "@/lib/revlearn-utils";
-import { useProfile } from "@/lib/revlearn-hooks";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  createContext, useCallback, useContext,
+  useEffect, useRef, useState,
+} from "react";
+import {
+  BookOpen, Wrench, FileText, Users, Home,
+  Moon, Sun, ChevronDown, Plus, LogOut,
+  Bell, Check, UserCircle,
+} from "lucide-react";
+import {
+  getProfiles, getActiveProfile, setActiveProfileId,
+  upsertProfile, deleteProfile, generateId,
+  type StoredProfile,
+} from "@/lib/revlearn-profiles";
+import { getAvatarColor, getInitials } from "@/lib/revlearn-utils";
 
+// ── Theme ──────────────────────────────────────────────────────
 type Theme = "light" | "dark";
-const ThemeCtx = createContext<{ theme: Theme; toggle: () => void }>({ theme: "light", toggle: () => {} });
+const ThemeCtx = createContext<{ theme: Theme; toggle: () => void }>({
+  theme: "light", toggle: () => {},
+});
 export const useRLTheme = () => useContext(ThemeCtx);
 
+// ── Profile context ────────────────────────────────────────────
+type ProfileCtxType = {
+  active: StoredProfile | null;
+  profiles: StoredProfile[];
+  switchProfile: (id: string) => void;
+  refresh: () => void;
+};
+const ProfileCtx = createContext<ProfileCtxType>({
+  active: null, profiles: [], switchProfile: () => {}, refresh: () => {},
+});
+export const useActiveProfile = () => useContext(ProfileCtx);
+
+// ── Providers ──────────────────────────────────────────────────
 export function RevLearnProviders({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>("light");
   const [mounted, setMounted] = useState(false);
+  const [active, setActive] = useState<StoredProfile | null>(null);
+  const [profiles, setProfiles] = useState<StoredProfile[]>([]);
 
   useEffect(() => {
     const stored = localStorage.getItem("rl-theme") as Theme | null;
     setTheme(stored ?? "light");
+    setActive(getActiveProfile());
+    setProfiles(getProfiles());
     setMounted(true);
   }, []);
 
@@ -29,45 +60,68 @@ export function RevLearnProviders({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if ("serviceWorker" in navigator)
-      navigator.serviceWorker.register("/revlearn-sw.js", { scope: "/revlearn" }).catch(() => {});
+      navigator.serviceWorker
+        .register("/revlearn-sw.js", { scope: "/revlearn" })
+        .catch(() => {});
   }, []);
 
-  const toggle = useCallback(() => setTheme(t => t === "light" ? "dark" : "light"), []);
+  const toggle = useCallback(
+    () => setTheme(t => t === "light" ? "dark" : "light"),
+    []
+  );
+
+  const refresh = useCallback(() => {
+    setActive(getActiveProfile());
+    setProfiles(getProfiles());
+  }, []);
+
+  const switchProfile = useCallback((id: string) => {
+    setActiveProfileId(id);
+    refresh();
+  }, [refresh]);
+
+  if (!mounted) return <div style={{ visibility: "hidden" }}>{children}</div>;
 
   return (
     <ThemeCtx.Provider value={{ theme, toggle }}>
-      <div className="rl-app" data-rl={mounted ? theme : "light"}>{children}</div>
+      <ProfileCtx.Provider value={{ active, profiles, switchProfile, refresh }}>
+        <div className="rl-app" data-rl={theme}>{children}</div>
+      </ProfileCtx.Provider>
     </ThemeCtx.Provider>
   );
 }
 
-const NAV = [
-  { href: "/revlearn",           label: "Home",      Icon: Home,     exact: true },
-  { href: "/revlearn/courses",   label: "Courses",   Icon: BookOpen, exact: false },
-  { href: "/revlearn/tools",     label: "Tools",     Icon: Wrench,   exact: false },
-  { href: "/revlearn/resources", label: "Resources", Icon: FileText, exact: false },
-  { href: "/revlearn/community", label: "Community", Icon: Users,    exact: false },
-];
-
-function Avatar({ name, color, size = 28 }: { name: string; color: string; size?: number }) {
+// ── Avatar ─────────────────────────────────────────────────────
+export function Avatar({ name, color, size = 32 }: { name: string; color: string; size?: number }) {
   return (
-    <span style={{
-      width: size, height: size, background: color, fontSize: size * 0.36,
-      borderRadius: "50%", display: "inline-flex", alignItems: "center",
-      justifyContent: "center", color: "#fff", fontWeight: 700,
-      flexShrink: 0, letterSpacing: "-.02em",
+    <div style={{
+      width: size, height: size, background: color,
+      fontSize: Math.round(size * 0.38), borderRadius: "50%",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      color: "#fff", fontWeight: 700, flexShrink: 0,
+      letterSpacing: "-.02em", userSelect: "none",
     }}>
       {getInitials(name)}
-    </span>
+    </div>
   );
 }
 
-function SidebarLink({ href, label, Icon, exact }: { href: string; label: string; Icon: React.ElementType; exact: boolean }) {
+// ── Nav ────────────────────────────────────────────────────────
+const NAV = [
+  { href: "/revlearn",           label: "Dashboard",  Icon: Home,     exact: true },
+  { href: "/revlearn/courses",   label: "Courses",    Icon: BookOpen, exact: false },
+  { href: "/revlearn/tools",     label: "Tools",      Icon: Wrench,   exact: false },
+  { href: "/revlearn/resources", label: "Resources",  Icon: FileText, exact: false },
+  { href: "/revlearn/community", label: "Community",  Icon: Users,    exact: false },
+];
+
+function NavLink({ href, label, Icon, exact }: { href: string; label: string; Icon: React.ElementType; exact: boolean }) {
   const pathname = usePathname();
   const active = exact ? pathname === href : pathname.startsWith(href);
   return (
-    <Link href={href} className={`rl-sidebar-link${active ? " rl-sidebar-link--active" : ""}`}>
-      <Icon size={18} /><span>{label}</span>
+    <Link href={href} className={`rl-nav-link${active ? " rl-nav-link--active" : ""}`}>
+      <span className="rl-nav-icon"><Icon size={18} /></span>
+      <span className="rl-nav-label">{label}</span>
     </Link>
   );
 }
@@ -82,54 +136,112 @@ function BottomLink({ href, label, Icon, exact }: { href: string; label: string;
   );
 }
 
-export function RevLearnHeader() {
-  const { theme, toggle } = useRLTheme();
-  const { profile } = useProfile();
+// ── Profile switcher ───────────────────────────────────────────
+function ProfileSwitcher() {
+  const { active, profiles, switchProfile, refresh } = useActiveProfile();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  function handleDelete(id: string, e: React.MouseEvent) {
+    e.stopPropagation();
+    deleteProfile(id);
+    refresh();
+  }
+
+  if (!active) {
+    return (
+      <Link href="/revlearn/profile" className="rl-header-profile-btn">
+        <UserCircle size={20} /><span style={{ fontSize: ".82rem", fontWeight: 600 }}>Set up profile</span>
+      </Link>
+    );
+  }
 
   return (
-    <header className="rl-header">
-      <div className="rl-header-inner">
-        <Link href="/revlearn" className="rl-logo" style={{ textDecoration: "none" }}>
-          <span className="rl-logo-rev">rev</span><span className="rl-logo-learn">Learn</span>
-        </Link>
-        <span className="rl-header-tagline">The teachers training hub</span>
-        <div className="rl-header-right">
-          <button className="rl-hbtn" onClick={toggle} aria-label="Toggle theme">
-            {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
-          </button>
-          <Link href="/revlearn/profile" className="rl-hbtn" aria-label="Profile">
-            {profile ? <Avatar name={profile.name} color={getAvatarColor(profile.name)} size={26} /> : <User size={16} />}
-          </Link>
-          <Link href="/" className="rl-site-btn">revrica.com</Link>
+    <div className="rl-profile-switcher" ref={ref}>
+      <button className="rl-header-profile-btn" onClick={() => setOpen(o => !o)}>
+        <Avatar name={active.name} color={getAvatarColor(active.name)} size={32} />
+        <div className="rl-header-profile-text">
+          <span className="rl-header-profile-name">{active.name}</span>
+          <span className="rl-header-profile-sub">{active.subject}</span>
         </div>
-      </div>
-    </header>
+        <ChevronDown size={15} style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .2s", color: "var(--rl-body)" }} />
+      </button>
+
+      {open && (
+        <div className="rl-profile-dropdown">
+          <p className="rl-profile-dropdown-label">Switch profile</p>
+          {profiles.map(p => (
+            <div key={p.id} className="rl-profile-dropdown-item">
+              <button
+                className={`rl-profile-dropdown-btn${p.id === active.id ? " rl-profile-dropdown-btn--active" : ""}`}
+                onClick={() => { switchProfile(p.id); setOpen(false); }}
+              >
+                <Avatar name={p.name} color={getAvatarColor(p.name)} size={30} />
+                <div className="rl-profile-dropdown-info">
+                  <span className="rl-profile-dropdown-name">{p.name}</span>
+                  <span className="rl-profile-dropdown-sub">{p.school}</span>
+                </div>
+                {p.id === active.id && <Check size={14} className="rl-profile-active-check" />}
+              </button>
+              {profiles.length > 1 && (
+                <button className="rl-profile-delete-btn" onClick={e => handleDelete(p.id, e)} title="Remove">
+                  <LogOut size={13} />
+                </button>
+              )}
+            </div>
+          ))}
+          <button className="rl-profile-add-btn" onClick={() => { setOpen(false); router.push("/revlearn/profile?new=1"); }}>
+            <Plus size={14} /> Add another profile
+          </button>
+          <div className="rl-profile-dropdown-divider" />
+          <Link href="/revlearn/profile" className="rl-profile-edit-link" onClick={() => setOpen(false)}>
+            Edit current profile
+          </Link>
+        </div>
+      )}
+    </div>
   );
 }
 
+// ── Sidebar ────────────────────────────────────────────────────
 export function RevLearnSidebar() {
-  const { profile } = useProfile();
+  const { active } = useActiveProfile();
   return (
     <aside className="rl-sidebar">
-      <Link href="/revlearn" className="rl-sidebar-logo" style={{ textDecoration: "none" }}>
-        <span className="rl-logo-rev">rev</span><span className="rl-logo-learn">Learn</span>
+      <Link href="/revlearn" className="rl-sidebar-brand" style={{ textDecoration: "none" }}>
+        <div className="rl-sidebar-logo-box"><BookOpen size={22} color="#fff" /></div>
+        <div>
+          <span className="rl-sidebar-wordmark">
+            <span className="rl-sidebar-rev">rev</span>
+            <span className="rl-sidebar-learn">Learn</span>
+          </span>
+          <span className="rl-sidebar-tagline">Teachers training hub</span>
+        </div>
       </Link>
-      <p className="rl-sidebar-tagline">The teachers training hub</p>
       <nav className="rl-sidebar-nav">
-        {NAV.map(n => <SidebarLink key={n.href} {...n} />)}
+        {NAV.map(n => <NavLink key={n.href} {...n} />)}
       </nav>
-      <div className="rl-sidebar-profile">
-        {profile ? (
-          <Link href="/revlearn/profile" className="rl-sidebar-profile-link">
-            <Avatar name={profile.name} color={getAvatarColor(profile.name)} size={32} />
+      <div className="rl-sidebar-footer">
+        {active ? (
+          <Link href="/revlearn/profile" className="rl-sidebar-profile" style={{ textDecoration: "none" }}>
+            <Avatar name={active.name} color={getAvatarColor(active.name)} size={34} />
             <div className="rl-sidebar-profile-text">
-              <span className="rl-sidebar-profile-name">{profile.name}</span>
-              <span className="rl-sidebar-profile-school">{profile.school}</span>
+              <span className="rl-sidebar-profile-name">{active.name}</span>
+              <span className="rl-sidebar-profile-school">{active.school}</span>
             </div>
           </Link>
         ) : (
-          <Link href="/revlearn/profile" className="rl-sidebar-setup-link">
-            <User size={15} /> Set up your profile
+          <Link href="/revlearn/profile" className="rl-sidebar-setup" style={{ textDecoration: "none" }}>
+            <UserCircle size={16} /> Set up profile
           </Link>
         )}
       </div>
@@ -137,6 +249,42 @@ export function RevLearnSidebar() {
   );
 }
 
+// ── Header ─────────────────────────────────────────────────────
+export function RevLearnHeader() {
+  const { theme, toggle } = useRLTheme();
+  const { active } = useActiveProfile();
+  const dateStr = new Date().toLocaleDateString("en-NG", {
+    weekday: "long", month: "long", day: "numeric", year: "numeric",
+  });
+
+  return (
+    <header className="rl-header">
+      <div className="rl-header-inner">
+        <div className="rl-header-greeting">
+          <p className="rl-header-date">{dateStr}</p>
+          {active && (
+            <p className="rl-header-welcome">
+              Welcome back, <strong>{active.name.split(" ")[0]}</strong>!
+            </p>
+          )}
+        </div>
+        <div className="rl-header-right">
+          <button className="rl-hbtn" onClick={toggle} aria-label="Toggle theme">
+            {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
+          </button>
+          <button className="rl-hbtn rl-hbtn-notif" aria-label="Notifications">
+            <Bell size={16} />
+            <span className="rl-notif-dot" />
+          </button>
+          <ProfileSwitcher />
+          <Link href="/" className="rl-site-btn">revrica.com</Link>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+// ── Bottom nav ─────────────────────────────────────────────────
 export function RevLearnBottomNav() {
   return (
     <nav className="rl-bottom-nav">
@@ -145,6 +293,7 @@ export function RevLearnBottomNav() {
   );
 }
 
+// ── Shell ──────────────────────────────────────────────────────
 export function RevLearnShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="rl-shell">
