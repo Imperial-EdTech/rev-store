@@ -230,6 +230,12 @@ export function RevLearnSidebar() {
       <nav className="rl-sidebar-nav">
         {NAV.map(n => <NavLink key={n.href} {...n} />)}
       </nav>
+      <a href="https://revstore.revrica.com" target="_blank" rel="noopener noreferrer" style={{display:"block",margin:"0 .75rem .75rem",padding:"1rem",background:"linear-gradient(135deg,rgba(255,107,26,.12) 0%,rgba(74,14,16,.28) 100%)",border:"1px solid rgba(255,107,26,.2)",borderRadius:12,textDecoration:"none"}}>
+        <p style={{margin:"0 0 .2rem",fontSize:".56rem",fontWeight:700,letterSpacing:".14em",textTransform:"uppercase",color:"rgba(255,255,255,.38)"}}>RevStore</p>
+        <p style={{margin:"0 0 .3rem",fontSize:".8rem",fontWeight:800,color:"#fff",lineHeight:1.2}}>Own a Rev Laptop</p>
+        <p style={{margin:"0 0 .5rem",fontSize:".72rem",color:"rgba(255,255,255,.5)",lineHeight:1.4}}>From ₦15,000/month. Zero upfront.</p>
+        <span style={{fontSize:".72rem",fontWeight:700,color:"var(--rl-orange)"}}>Apply now →</span>
+      </a>
       <div className="rl-sidebar-footer">
         {active ? (
           <Link href="/revlearn/profile" className="rl-sidebar-profile" style={{ textDecoration: "none" }}>
@@ -260,14 +266,7 @@ export function RevLearnHeader() {
   return (
     <header className="rl-header">
       <div className="rl-header-inner">
-        <div className="rl-header-greeting">
-          <p className="rl-header-date">{dateStr}</p>
-          {active && (
-            <p className="rl-header-welcome">
-              Welcome back, <strong>{active.name.split(" ")[0]}</strong>!
-            </p>
-          )}
-        </div>
+        <p className="rl-header-date">{new Date().toLocaleDateString("en-NG",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</p>
         <div className="rl-header-right">
           <button className="rl-hbtn" onClick={toggle} aria-label="Toggle theme">
             {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
@@ -277,7 +276,6 @@ export function RevLearnHeader() {
             <span className="rl-notif-dot" />
           </button>
           <ProfileSwitcher />
-          <Link href="/" className="rl-site-btn">revrica.com</Link>
         </div>
       </div>
     </header>
