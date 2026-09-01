@@ -1,5 +1,18 @@
 "use client";
 
+// ═══════════════════════════════════════════════════════════════
+// 📸 IMAGE REPLACEMENT GUIDE
+//
+// Both laptop images currently use /public/devices/rev-laptop.png
+// To use separate images per model, update the `img` field in
+// the DEVICES array:
+//
+//   DEVICES[0].img = "/devices/rev-laptop-12.png"  ← Rev Orion 12"
+//   DEVICES[1].img = "/devices/rev-laptop-14.png"  ← Rev Aelia 14"
+//
+// The component falls back to rev-laptop.png if the file is missing.
+// ═══════════════════════════════════════════════════════════════
+
 import { motion } from "framer-motion";
 import {
   ArrowRight, BookOpen, CheckCircle2, ChevronDown,
@@ -8,6 +21,7 @@ import {
 import Link from "next/link";
 import { useState } from "react";
 import { SiteFooter, SiteHeader } from "@/components/shell";
+import { PreOrderPopup } from "@/components/preorder-popup";
 import { Button } from "@/components/ui";
 import { Reveal } from "@/components/reveal";
 
@@ -177,6 +191,7 @@ export default function TeacherEmpowermentPage() {
   return (
     <>
       <SiteHeader />
+      <PreOrderPopup />
       <main className="overflow-hidden bg-white">
 
         {/* ── HERO ── */}
@@ -217,7 +232,7 @@ export default function TeacherEmpowermentPage() {
               initial={{ opacity: 0, y: 14 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <Link href="/apply"><Button>Apply now <ArrowRight className="h-4 w-4" /></Button></Link>
+              <Link href="/pre-order"><Button>Pre-order now <ArrowRight className="h-4 w-4" /></Button></Link>
               <a href="#specs"><Button variant="ghost">See specifications</Button></a>
             </motion.div>
             <motion.div
@@ -248,7 +263,7 @@ export default function TeacherEmpowermentPage() {
                 Technical Specifications
               </p>
               <h2 className="text-balance mx-auto mt-3 max-w-xl text-center font-display text-4xl font-extrabold tracking-tight text-[#1d1d1f] md:text-5xl">
-                Built to last.
+                Built to last. Spec'd to teach.
               </h2>
               <p className="mx-auto mt-4 max-w-lg text-center text-base leading-7 text-[#6e6e73]">
                 Every Rev laptop is reinforced for classroom conditions — splash-resistant keyboard, all-day battery, and local support when you need it.
@@ -402,7 +417,9 @@ export default function TeacherEmpowermentPage() {
                     {fmt(plan.monthly)}
                   </motion.p>
                   <p className="mt-2 text-base font-semibold text-white/55">per month</p>
-   
+                  <p className="mt-3 text-xs text-white/30">
+                    Profit rate: {plan.profitRate} · Figures confirmed by our licensed financing partner.
+                  </p>
                   <Link className="mt-7 inline-block" href="/apply">
                     <Button>Apply for this plan <ArrowRight className="h-4 w-4" /></Button>
                   </Link>
@@ -509,7 +526,7 @@ export default function TeacherEmpowermentPage() {
                 Join the waitlist — no payment required. Our team will follow up with your exact plan and next steps.
               </p>
               <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
-                <Link href="/apply"><Button>Apply now <ArrowRight className="h-4 w-4" /></Button></Link>
+                <Link href="/pre-order"><Button>Pre-order now <ArrowRight className="h-4 w-4" /></Button></Link>
                 <Link href="/"><Button variant="ghost">Back to RevStore</Button></Link>
               </div>
               <p className="mt-5 text-xs text-white/25">

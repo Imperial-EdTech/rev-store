@@ -3,17 +3,19 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { supabase } from "@/lib/supabase";
 import { roles } from "@/lib/data";
-import { allPrompts } from "@/lib/audit-data";
-import { getOverallScore, getSectionScores } from "@/lib/audit-scoring";
+import { allQuestions } from "@/lib/audit-data";
+import { scoreAudit } from "@/lib/audit-scoring";
 
 const letterSchema = z.enum(["A", "B", "C", "D", "E"]);
-const validPromptIds = new Set(allPrompts.map((prompt) => prompt.id));
+
+const validQuestionKeys = new Set(allQuestions.map((q) => String(q.number)));
 
 const answersSchema = z
   .record(z.string(), z.array(letterSchema))
-  .refine((value) => Object.keys(value).every((key) => validPromptIds.has(key)), {
-    message: "Answers contain an unrecognized prompt id"
-  });
+  .refine(
+    (val) => Object.keys(val).every((k) => validQuestionKeys.has(k)),
+    { message: "Answers contain an unrecognised question number" }
+  );
 
 const payloadSchema = z.object({
   schoolName: z.string().min(2),
@@ -27,10 +29,16 @@ const payloadSchema = z.object({
 });
 
 /**
- * Submits a new free Tech Audit request. Computes the maturity score
- * server-side (never trust a client-submitted score) before insert, so
- * the admin dashboard can sort/filter on overall_score and
- * section_scores without recomputing from raw answers every load.
+ * POST /api/tech-audit
+ *
+ * Saves a new audit submission. Scores are computed server-side so the
+ * admin dashboard never needs to re-derive them from raw answers.
+ *
+ * Stored columns:
+ *   answers          JSONB  { "1": ["A","C"], "2": ["B"], … }
+ *   triggered_products JSONB  { product: triggerCount, … }   (ranked)
+ *   top_products     text[] top-5 product names for quick admin filtering
+ *   section_gaps     JSONB  { sectionId: { gapScore, triggeringSelections, … } }
  */
 export async function POST(request: Request) {
   let body: unknown;
@@ -42,27 +50,50 @@ export async function POST(request: Request) {
 
   const parsed = payloadSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid request data", details: parsed.error.flatten() }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid request data", details: parsed.error.flatten() },
+      { status: 400 }
+    );
   }
 
   const client = supabaseAdmin ?? supabase;
   if (!client) {
     return NextResponse.json(
-      { error: "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY (and ideally SUPABASE_SERVICE_ROLE_KEY) to .env.local." },
+      {
+        error:
+          "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local."
+      },
       { status: 503 }
     );
   }
 
-  const { schoolName, contactName, email, phone, role, deviceEstimate, answers, notes } = parsed.data;
+  const { schoolName, contactName, email, phone, role, deviceEstimate, answers, notes } =
+    parsed.data;
 
-  const overallScore = getOverallScore(answers);
-  const sectionScores = getSectionScores(answers).reduce<Record<string, { score: number | null; band: string | null }>>(
-    (acc, section) => {
-      acc[section.sectionId] = { score: section.score, band: section.band?.label ?? null };
-      return acc;
-    },
-    {}
-  );
+  // Score server-side — never trust client-submitted scores
+  const auditScore = scoreAudit(answers);
+
+  // Serialise triggered products as { productName: triggerCount }
+  const triggeredProducts: Record<string, number> = {};
+  for (const rec of auditScore.recommendations) {
+    triggeredProducts[rec.product] = rec.triggerCount;
+  }
+
+  // Top 5 product names for quick column filtering in Supabase
+  const topProducts = auditScore.recommendations.slice(0, 5).map((r) => r.product);
+
+  // Serialise section gaps
+  const sectionGaps: Record<
+    string,
+    { gapScore: number; triggeringSelections: number; maxTriggeringSelections: number }
+  > = {};
+  for (const gap of auditScore.sectionGaps) {
+    sectionGaps[gap.sectionId] = {
+      gapScore: gap.gapScore,
+      triggeringSelections: gap.triggeringSelections,
+      maxTriggeringSelections: gap.maxTriggeringSelections
+    };
+  }
 
   const { data, error } = await client
     .from("tech_audit_requests")
@@ -74,8 +105,9 @@ export async function POST(request: Request) {
       role,
       device_estimate: deviceEstimate ?? null,
       answers,
-      overall_score: overallScore,
-      section_scores: sectionScores,
+      triggered_products: triggeredProducts,
+      top_products: topProducts,
+      section_gaps: sectionGaps,
       notes: notes ?? null
     })
     .select("id, created_at")
@@ -83,7 +115,10 @@ export async function POST(request: Request) {
 
   if (error) {
     console.error("Failed to insert tech audit request:", error);
-    return NextResponse.json({ error: "Could not save your request. Please try again." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Could not save your request. Please try again." },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json({ id: data.id, createdAt: data.created_at }, { status: 201 });

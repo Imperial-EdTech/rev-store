@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Google Fonts ── */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@700;800&display=swap');
+
 @font-face {
   font-family: "Archivo Variable";
   src: url("/fonts/Archivo.ttf") format("truetype-variations");
@@ -19,35 +22,30 @@
 
 :root {
   color-scheme: dark;
-  --font-display: "Archivo Variable", ui-sans-serif, system-ui;
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui;
+  /* Plus Jakarta Sans is now the primary sans; Sora for display headings */
+  --font-display: "Sora", "Archivo Variable", ui-sans-serif, system-ui;
+  --font-sans:    "Plus Jakarta Sans", "Inter Variable", ui-sans-serif, system-ui;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
 body {
   margin: 0;
-  background: #4a0e10;
+  background: #f8f5f2;
   color: #f5edea;
-  font-family: var(--font-sans);
+  font-family: "Plus Jakarta Sans", "Inter Variable", ui-sans-serif, system-ui;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+a { color: inherit; text-decoration: none; }
 
 .container-x {
   margin-inline: auto;
-  max-width: 1240px;
-  padding-inline: 20px;
+  max-width: 1280px;
+  padding-inline: 24px;
 }
 
 .focus-ring:focus-visible {
@@ -55,50 +53,46 @@ a {
   outline-offset: 3px;
 }
 
-/* Glass surface used for floating spec cards over the hero photo */
-.glass-card {
-  background: linear-gradient(155deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+/* Section kicker label */
+.sect-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #FF6B1A;
+  margin-bottom: 6px;
+  display: block;
 }
 
-.glass-card-light {
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(10px);
-}
-
-/* Subtle radial vignette + grain used behind the hero */
+/* ── Background helpers ── */
 .maroon-glow {
   position: relative;
   background: radial-gradient(120% 90% at 78% 20%, #7a1a1e 0%, #4a0e10 55%, #2e0608 100%);
 }
 
-/* Secondary maroon section: less dramatic gradient, used for repeated maroon bands lower on the page */
 .maroon-soft {
   position: relative;
   background: linear-gradient(165deg, #5a1114 0%, #4a0e10 50%, #390a0c 100%);
 }
 
-/* Black band, matching the footer/strip treatment on the live site */
 .ink-band {
   position: relative;
   background: linear-gradient(180deg, #1a1818 0%, #121212 60%, #0c0b0b 100%);
 }
 
-/* Light section: body copy areas, matching the live site's grey body sections */
 .paper-band {
   position: relative;
-  background: #f3f1ef;
+  background: #f8f5f2;
   color: #1e1b1a;
 }
 
+/* ── Noise overlays ── */
 .noise-overlay {
   position: absolute;
   inset: 0;
   pointer-events: none;
   opacity: 0.05;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.7) 0.5px, transparent 0.5px);
+  background-image: radial-gradient(rgba(255,255,255,0.7) 0.5px, transparent 0.5px);
   background-size: 3px 3px;
 }
 
@@ -107,18 +101,32 @@ a {
   inset: 0;
   pointer-events: none;
   opacity: 0.04;
-  background-image: radial-gradient(rgba(0, 0, 0, 0.8) 0.5px, transparent 0.5px);
+  background-image: radial-gradient(rgba(0,0,0,0.8) 0.5px, transparent 0.5px);
   background-size: 3px 3px;
 }
 
-.text-balance {
-  text-wrap: balance;
+/* ── Glass ── */
+.glass-card {
+  background: linear-gradient(155deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,0.14);
+}
+
+.text-balance { text-wrap: balance; }
+
+/* Staircase step rise animation */
+@keyframes step-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.step-rise {
+  opacity: 0;
+  animation: step-rise 0.45s ease forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;

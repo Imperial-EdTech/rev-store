@@ -1,639 +1,778 @@
+/**
+ * audit-data.ts
+ *
+ * Source: "School Technology Audit Questionnaire" supplied by the client
+ * (Imperial EdTech format). 20 questions across 4 sections (A–D).
+ * Each option is a checkbox; schools may tick all that apply.
+ * Every option maps to one or more Revrica product triggers — the
+ * scoring layer (audit-scoring.ts) tallies these to produce ranked
+ * product recommendations.
+ *
+ * Option letters A–E match the source document's visual order only;
+ * they carry no maturity-scale meaning here (unlike the old system).
+ */
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+export type ProductTrigger =
+  | "E-Boards"
+  | "Tablets / Laptops"
+  | "Rev Micro-Cloud Server"
+  | "Doc Cam / E-Boards"
+  | "LMS"
+  | "Digital Learning Content"
+  | "STEM / Robotics Labs"
+  | "Capacity Development"
+  | "Digital Pedagogy Training"
+  | "Student & Parent Portals"
+  | "School Management Systems"
+  | "Digital Library"
+  | "Teacher Laptop Ownership Programme"
+  | "R.E.S.T. Squad / Teach with Tech"
+  | "Continuous Professional Development"
+  | "Teach with Tech Certification"
+  | "Campus Networking"
+  | "Tech Audit / Infrastructure"
+  | "R.E.S.T. Squad Support"
+  | "Hardware Financing / DaaS"
+  | "Mobile Device Management (MDM)"
+  | "Smart ICT Laboratory"
+  | "Student Tablets / Laptops"
+  | "Device-as-a-Service"
+  | "Compliance & Governance"
+  | "MDM / Anti-theft Security"
+  | "Enterprise-Grade Security"
+  | "Hardware Lifecycle Financing"
+  | "Flexible Hardware Financing"
+  | "Technology Audit"
+  | "BNPL / DaaS"
+  | "Subscription-based Leasing"
+  | "Integrated Solutions Bundles"
+  | "Custom Software Development"
+  | "Learning Analytics / Custom Portals"
+  | "Software Development Services"
+  | "Digital School Transformation Programme"
+  | "Free Technology Audit"
+  | "R.E.S.T. Squad";
+
 export type AuditOption = {
-  /** A–E, used for the maturity scoring framework (A=1 ... E=5) */
+  /** A–E: visual order in the source document */
   letter: "A" | "B" | "C" | "D" | "E";
   text: string;
+  triggers: ProductTrigger[];
 };
 
-export type AuditPrompt = {
-  /** Stable id used as the storage key, e.g. "s1-q1-challenge" */
-  id: string;
-  /** The question text shown above the options */
-  label: string;
-  options: AuditOption[];
-};
-
-export type AuditItem = {
-  /** Numbered item 1–20, as in the source document */
+export type AuditQuestion = {
+  /** 1-based question number matching the source document */
   number: number;
+  /** Focus tag e.g. "Current Position" | "Core Challenge" | "School Need / Outcome" */
+  focus: string;
   title: string;
-  /** Each numbered item has a "challenge" prompt and a "current resources/tools" prompt */
-  prompts: AuditPrompt[];
+  /** Instruction shown above the options */
+  instruction: string;
+  options: AuditOption[];
 };
 
 export type AuditSection = {
   id: string;
   letter: "A" | "B" | "C" | "D";
   title: string;
-  description: string;
-  items: AuditItem[];
+  questions: AuditQuestion[];
 };
 
-const letterPoints: Record<AuditOption["letter"], number> = { A: 1, B: 2, C: 3, D: 4, E: 5 };
+// ─── Data ────────────────────────────────────────────────────────────────────
 
-export function pointsForLetter(letter: AuditOption["letter"]): number {
-  return letterPoints[letter];
-}
-
-/**
- * Source: Imperial EdTech "School Technology Audit Questionnaire" (docx
- * supplied by the client). Originally a single-select A–E maturity scale
- * per prompt; per product decision this renders as checkboxes (schools
- * may select more than one option per prompt), and the maturity score
- * is computed as the average point value (A=1 ... E=5) across every
- * option a school checks. See lib/audit-scoring.ts for that logic.
- *
- * Structure preserved from the source: 4 sections, 5 numbered items per
- * section, 2 prompts per item (a "challenge" prompt and a "current
- * resources/tools" prompt) = 40 prompts total, 5 options each.
- */
 export const auditSections: AuditSection[] = [
+  // ── SECTION A: How Students Learn ────────────────────────────────────────
   {
-    id: "engagement",
+    id: "students",
     letter: "A",
-    title: "Student Engagement & Learning Outcomes",
-    description: "How students engage with lessons, pace, practical learning, and assessment.",
-    items: [
+    title: "How Students Learn",
+    questions: [
       {
         number: 1,
-        title: "Current Student Engagement Challenges",
-        prompts: [
+        focus: "Current Position",
+        title: "Classroom Tools",
+        instruction: "What tools do your students currently interact with during daily lessons? (tick all that apply)",
+        options: [
           {
-            id: "s1-q1-challenge",
-            label: "What best describes your biggest challenge with student engagement?",
-            options: [
-              { letter: "A", text: "Students lose interest quickly in traditional lectures" },
-              { letter: "B", text: "Difficulty making abstract concepts relatable" },
-              { letter: "C", text: "Limited hands-on learning opportunities" },
-              { letter: "D", text: "Students are easily distracted during lessons" },
-              { letter: "E", text: "Mixed engagement levels across different subjects" }
-            ]
+            letter: "A",
+            text: "Textbooks and traditional chalkboards / whiteboards.",
+            triggers: ["E-Boards"]
           },
           {
-            id: "s1-q1-current",
-            label: "What tools do you currently use to engage students?",
-            options: [
-              { letter: "A", text: "Textbooks and whiteboard only" },
-              { letter: "B", text: "Projector/basic display system" },
-              { letter: "C", text: "Interactive whiteboard/smartboard" },
-              { letter: "D", text: "Student tablets/laptops (limited)" },
-              { letter: "E", text: "Comprehensive digital learning tools" }
-            ]
+            letter: "B",
+            text: "Standard non-interactive projectors or TVs.",
+            triggers: ["E-Boards"]
+          },
+          {
+            letter: "C",
+            text: "Shared computers only available during scheduled lab time.",
+            triggers: ["Tablets / Laptops"]
+          },
+          {
+            letter: "D",
+            text: "Occasional use of online apps, heavily dependent on live internet.",
+            triggers: ["Rev Micro-Cloud Server"]
+          },
+          {
+            letter: "E",
+            text: "None of the above — we have more advanced tools in use.",
+            triggers: []
           }
         ]
       },
       {
         number: 2,
-        title: "Learning Pace & Differentiation",
-        prompts: [
+        focus: "Core Challenge",
+        title: "Helping Every Student Keep Up",
+        instruction: "What is the biggest hurdle your teachers face in keeping every student engaged? (tick all that apply)",
+        options: [
           {
-            id: "s1-q2-challenge",
-            label: "What describes your biggest challenge with different learning speeds?",
-            options: [
-              { letter: "A", text: "Advanced students finish early and get bored" },
-              { letter: "B", text: "Struggling students fall behind and lose confidence" },
-              { letter: "C", text: "Cannot provide personalized attention to all students" },
-              { letter: "D", text: "Limited resources to support different learning styles" },
-              { letter: "E", text: "Difficult to track individual progress effectively" }
-            ]
+            letter: "A",
+            text: "It is difficult to present multimedia or 3D objects clearly to the whole class.",
+            triggers: ["Doc Cam / E-Boards"]
           },
           {
-            id: "s1-q2-current",
-            label: "How do you currently track student progress?",
-            options: [
-              { letter: "A", text: "Traditional paper tests and manual grading" },
-              { letter: "B", text: "Basic digital gradebook" },
-              { letter: "C", text: "Learning management system with basic analytics" },
-              { letter: "D", text: "Interactive assessment tools with immediate feedback" },
-              { letter: "E", text: "Comprehensive learning analytics platform" }
-            ]
+            letter: "B",
+            text: "We cannot easily track which students are falling behind in real-time.",
+            triggers: ["LMS"]
+          },
+          {
+            letter: "C",
+            text: "Students lose focus due to a lack of interactive, gamified learning.",
+            triggers: ["Digital Learning Content"]
+          },
+          {
+            letter: "D",
+            text: "We lack the physical spaces for hands-on, practical innovation.",
+            triggers: ["STEM / Robotics Labs"]
+          },
+          {
+            letter: "E",
+            text: "Engagement is generally good — we are looking to take it further.",
+            triggers: []
           }
         ]
       },
       {
         number: 3,
-        title: "Real-World Application & Practical Learning",
-        prompts: [
+        focus: "Current Position",
+        title: "Future-Ready Skills",
+        instruction: "What digital skills are actively taught in your classrooms today? (tick all that apply)",
+        options: [
           {
-            id: "s1-q3-challenge",
-            label: "Which subjects need more hands-on, practical demonstrations?",
-            options: [
-              { letter: "A", text: "Mathematics (calculations and problem-solving)" },
-              { letter: "B", text: "Sciences (experiments and lab work)" },
-              { letter: "C", text: "Technology/Computer studies" },
-              { letter: "D", text: "Languages (interactive communication)" },
-              { letter: "E", text: "Multiple subjects need practical enhancement" }
-            ]
+            letter: "A",
+            text: "Only basic typing and general computer appreciation.",
+            triggers: ["Capacity Development"]
           },
           {
-            id: "s1-q3-current",
-            label: "What practical learning resources do you have?",
-            options: [
-              { letter: "A", text: "No dedicated lab or practical learning space" },
-              { letter: "B", text: "Basic science lab with limited equipment" },
-              { letter: "C", text: "Computer lab with older systems" },
-              { letter: "D", text: "Well-equipped labs but limited technology integration" },
-              { letter: "E", text: "Modern labs with digital learning integration" }
-            ]
+            letter: "B",
+            text: "No formal digital skills are currently part of the standard curriculum.",
+            triggers: ["STEM / Robotics Labs"]
+          },
+          {
+            letter: "C",
+            text: "Fundamental online safety is taught, though advanced digital literacy is omitted.",
+            triggers: ["Digital Pedagogy Training"]
+          },
+          {
+            letter: "D",
+            text: "Coding, robotics, or other advanced digital subjects are taught.",
+            triggers: []
+          },
+          {
+            letter: "E",
+            text: "A structured, curriculum-aligned digital skills programme is in place.",
+            triggers: []
           }
         ]
       },
       {
         number: 4,
-        title: "21st Century Skills Development",
-        prompts: [
+        focus: "Core Challenge",
+        title: "Tracking Student Progress",
+        instruction: "What limits your ability to test students and share academic results efficiently? (tick all that apply)",
+        options: [
           {
-            id: "s1-q4-challenge",
-            label: "What future-readiness skills are you most concerned about developing?",
-            options: [
-              { letter: "A", text: "Digital literacy and technology skills" },
-              { letter: "B", text: "Critical thinking and problem-solving" },
-              { letter: "C", text: "Collaboration and communication" },
-              { letter: "D", text: "Creativity and innovation" },
-              { letter: "E", text: "All of the above — comprehensive skill development" }
-            ]
+            letter: "A",
+            text: "Grading is manual, time-consuming, and prone to human error.",
+            triggers: ["LMS"]
           },
           {
-            id: "s1-q4-current",
-            label: "What technology do students regularly use for learning?",
-            options: [
-              { letter: "A", text: "No regular access to learning technology" },
-              { letter: "B", text: "Shared computers (limited time per student)" },
-              { letter: "C", text: "One-to-one device access during specific classes" },
-              { letter: "D", text: "Personal devices (BYOD) with some educational apps" },
-              { letter: "E", text: "Comprehensive learning technology ecosystem" }
-            ]
+            letter: "B",
+            text: "Parents only receive updates at the end of the term, not instantly.",
+            triggers: ["Student & Parent Portals"]
+          },
+          {
+            letter: "C",
+            text: "Tracking historical performance across multiple terms requires sifting through spreadsheets.",
+            triggers: ["School Management Systems"]
+          },
+          {
+            letter: "D",
+            text: "We have a digital gradebook but it is not integrated with other school systems.",
+            triggers: ["School Management Systems"]
+          },
+          {
+            letter: "E",
+            text: "Assessment and reporting are already largely automated.",
+            triggers: []
           }
         ]
       },
       {
         number: 5,
-        title: "Assessment & Feedback Effectiveness",
-        prompts: [
+        focus: "School Need / Outcome",
+        title: "Learning Experiences",
+        instruction: "How would you prefer your students to interact with educational content? (tick all that apply)",
+        options: [
           {
-            id: "s1-q5-challenge",
-            label: "What's your biggest challenge with student assessment and feedback?",
-            options: [
-              { letter: "A", text: "Time-consuming manual grading delays feedback" },
-              { letter: "B", text: "Difficult to identify specific learning gaps quickly" },
-              { letter: "C", text: "Limited variety in assessment methods" },
-              { letter: "D", text: "Cannot provide personalized feedback efficiently" },
-              { letter: "E", text: "Students don't engage well with current assessment formats" }
-            ]
+            letter: "A",
+            text: "We want them to access millions of curated books and research materials easily.",
+            triggers: ["Digital Library"]
           },
           {
-            id: "s1-q5-current",
-            label: "What systems support your assessment process?",
-            options: [
-              { letter: "A", text: "Paper-based testing and manual record keeping" },
-              { letter: "B", text: "Basic digital gradebook or spreadsheet" },
-              { letter: "C", text: "School management system with grade tracking" },
-              { letter: "D", text: "Online testing platform with basic analytics" },
-              { letter: "E", text: "Integrated assessment system with detailed insights" }
-            ]
+            letter: "B",
+            text: "We want adaptive software that adjusts to individual learning speeds.",
+            triggers: ["LMS", "Digital Learning Content"]
+          },
+          {
+            letter: "C",
+            text: "We want them to learn coding, robotics, and future-ready skills practically.",
+            triggers: ["STEM / Robotics Labs"]
+          },
+          {
+            letter: "D",
+            text: "We want rich multimedia lessons delivered directly to personal devices.",
+            triggers: ["Tablets / Laptops", "Digital Learning Content"]
+          },
+          {
+            letter: "E",
+            text: "We want a comprehensive, offline-capable content platform for the whole school.",
+            triggers: ["Rev Micro-Cloud Server", "LMS"]
           }
         ]
       }
     ]
   },
+
+  // ── SECTION B: Supporting Teachers ───────────────────────────────────────
   {
-    id: "teaching",
+    id: "teachers",
     letter: "B",
-    title: "Teaching Effectiveness & Professional Development",
-    description: "Lesson prep, teacher confidence with tech, collaboration, and admin load.",
-    items: [
+    title: "Supporting Teachers",
+    questions: [
       {
         number: 6,
-        title: "Lesson Preparation & Resource Availability",
-        prompts: [
+        focus: "Current Position",
+        title: "Preparing Lessons",
+        instruction: "How do your teachers currently source and prepare their lesson materials? (tick all that apply)",
+        options: [
           {
-            id: "s2-q6-challenge",
-            label: "What consumes most of your lesson preparation time?",
-            options: [
-              { letter: "A", text: "Searching for relevant, quality teaching materials" },
-              { letter: "B", text: "Creating visual aids and interactive content" },
-              { letter: "C", text: "Adapting content for different learning levels" },
-              { letter: "D", text: "Planning activities that engage all students" },
-              { letter: "E", text: "Technical setup and troubleshooting" }
-            ]
+            letter: "A",
+            text: "Relying heavily on physical textbooks and printed materials.",
+            triggers: ["LMS", "Digital Learning Content"]
           },
           {
-            id: "s2-q6-current",
-            label: "What teaching resources do you primarily use?",
-            options: [
-              { letter: "A", text: "Textbooks and printed materials only" },
-              { letter: "B", text: "Internet search for supplementary materials" },
-              { letter: "C", text: "Limited digital content library" },
-              { letter: "D", text: "Good digital resources but time-consuming to access" },
-              { letter: "E", text: "Comprehensive, easily accessible digital content library" }
-            ]
+            letter: "B",
+            text: "Searching the open internet individually for resources.",
+            triggers: ["Digital Library"]
+          },
+          {
+            letter: "C",
+            text: "Using personal USBs or basic shared folders to store files.",
+            triggers: ["LMS", "Rev Micro-Cloud Server"]
+          },
+          {
+            letter: "D",
+            text: "Using a shared drive but without structured organisation or version control.",
+            triggers: ["LMS"]
+          },
+          {
+            letter: "E",
+            text: "Using a proper LMS or structured content management platform.",
+            triggers: []
           }
         ]
       },
       {
         number: 7,
-        title: "Professional Development & Technology Confidence",
-        prompts: [
+        focus: "Core Challenge",
+        title: "Comfort With Technology",
+        instruction: "What prevents your teaching staff from fully embracing digital education? (tick all that apply)",
+        options: [
           {
-            id: "s2-q7-challenge",
-            label: "What best describes your relationship with educational technology?",
-            options: [
-              { letter: "A", text: "Interested but lack confidence to implement new tools" },
-              { letter: "B", text: "Comfortable with basics but want to learn advanced features" },
-              { letter: "C", text: "Eager to innovate but need structured training support" },
-              { letter: "D", text: "Confident user seeking cutting-edge solutions" },
-              { letter: "E", text: "Technology integration feels overwhelming" }
-            ]
+            letter: "A",
+            text: "They lack personal devices to practice and prepare lessons at home.",
+            triggers: ["Teacher Laptop Ownership Programme"]
           },
           {
-            id: "s2-q7-current",
-            label: "What professional development support do you receive?",
-            options: [
-              { letter: "A", text: "Minimal or no technology training provided" },
-              { letter: "B", text: "Occasional workshops or seminars" },
-              { letter: "C", text: "Online tutorials and self-directed learning" },
-              { letter: "D", text: "Regular training sessions but limited follow-up support" },
-              { letter: "E", text: "Comprehensive, ongoing professional development program" }
-            ]
+            letter: "B",
+            text: "They feel anxious because past tech rollouts lacked ongoing support.",
+            triggers: ["R.E.S.T. Squad / Teach with Tech"]
+          },
+          {
+            letter: "C",
+            text: "They spend too much time on manual admin tasks (attendance, grading).",
+            triggers: ["School Management Systems"]
+          },
+          {
+            letter: "D",
+            text: "They are willing but there has been no structured training programme.",
+            triggers: ["Capacity Development", "Digital Pedagogy Training"]
+          },
+          {
+            letter: "E",
+            text: "Our staff are digitally confident and actively use EdTech in lessons.",
+            triggers: []
           }
         ]
       },
       {
         number: 8,
-        title: "Collaboration & Knowledge Sharing",
-        prompts: [
+        focus: "Current Position",
+        title: "Training Received",
+        instruction: "What level of professional technology training has your staff received? (tick all that apply)",
+        options: [
           {
-            id: "s2-q8-challenge",
-            label: "What limits effective collaboration among teachers?",
-            options: [
-              { letter: "A", text: "No platform for sharing resources and strategies" },
-              { letter: "B", text: "Time constraints prevent collaborative planning" },
-              { letter: "C", text: "Limited communication tools between colleagues" },
-              { letter: "D", text: "Inconsistent teaching approaches across classes" },
-              { letter: "E", text: "Lack of structured collaboration processes" }
-            ]
+            letter: "A",
+            text: "Only one-off, irregular workshops with no follow-up.",
+            triggers: ["Continuous Professional Development"]
           },
           {
-            id: "s2-q8-current",
-            label: "How do teachers currently collaborate and communicate?",
-            options: [
-              { letter: "A", text: "In-person meetings and paper-based sharing" },
-              { letter: "B", text: "Email and basic messaging" },
-              { letter: "C", text: "Shared drives with some digital collaboration" },
-              { letter: "D", text: "Collaboration platform with file sharing" },
-              { letter: "E", text: "Integrated communication and collaboration ecosystem" }
-            ]
+            letter: "B",
+            text: "Mostly self-taught through online videos.",
+            triggers: ["Teach with Tech Certification"]
+          },
+          {
+            letter: "C",
+            text: "No formal digital pedagogy training has been provided.",
+            triggers: ["Digital Pedagogy Training"]
+          },
+          {
+            letter: "D",
+            text: "Structured training happened once but is now outdated.",
+            triggers: ["Continuous Professional Development"]
+          },
+          {
+            letter: "E",
+            text: "Ongoing, certified professional development is already in place.",
+            triggers: []
           }
         ]
       },
       {
         number: 9,
-        title: "Differentiated Instruction Capabilities",
-        prompts: [
+        focus: "Core Challenge",
+        title: "Working Together",
+        instruction: "What are the main bottlenecks in staff collaboration and administration? (tick all that apply)",
+        options: [
           {
-            id: "s2-q9-challenge",
-            label: "What's your biggest challenge in reaching different types of learners?",
-            options: [
-              { letter: "A", text: "Cannot provide visual, auditory, and kinesthetic options simultaneously" },
-              { letter: "B", text: "Limited resources to adapt content for different abilities" },
-              { letter: "C", text: "Difficult to manage multiple learning activities in one classroom" },
-              { letter: "D", text: "No tools to identify individual learning preferences" },
-              { letter: "E", text: "Time constraints prevent personalized instruction" }
-            ]
+            letter: "A",
+            text: "Communication relies on disorganised WhatsApp groups and physical meetings.",
+            triggers: ["School Management Systems"]
           },
           {
-            id: "s2-q9-current",
-            label: "What helps you cater to different learning styles?",
-            options: [
-              { letter: "A", text: "Traditional teaching methods only" },
-              { letter: "B", text: "Basic multimedia (videos, audio) occasionally" },
-              { letter: "C", text: "Some interactive tools and varied activities" },
-              { letter: "D", text: "Good variety but lacks systematic approach" },
-              { letter: "E", text: "Comprehensive adaptive learning platform" }
-            ]
+            letter: "B",
+            text: "Lesson plans and resources cannot be easily co-created or shared digitally.",
+            triggers: ["LMS"]
+          },
+          {
+            letter: "C",
+            text: "Administrative workflows (reports, fees) are disconnected from academic records.",
+            triggers: ["School Management Systems"]
+          },
+          {
+            letter: "D",
+            text: "There is no single system that gives leadership a real-time school overview.",
+            triggers: ["School Management Systems", "Learning Analytics / Custom Portals"]
+          },
+          {
+            letter: "E",
+            text: "Collaboration and admin are well-managed through existing digital tools.",
+            triggers: []
           }
         ]
       },
       {
         number: 10,
-        title: "Administrative Efficiency",
-        prompts: [
+        focus: "School Need / Outcome",
+        title: "Everyday Admin Work",
+        instruction: "What support systems would most drastically improve teacher morale and efficiency? (tick all that apply)",
+        options: [
           {
-            id: "s2-q10-challenge",
-            label: "Which administrative tasks consume too much of your teaching time?",
-            options: [
-              { letter: "A", text: "Manual attendance tracking and reporting" },
-              { letter: "B", text: "Grading and progress report generation" },
-              { letter: "C", text: "Parent communication and update management" },
-              { letter: "D", text: "Lesson planning and resource organization" },
-              { letter: "E", text: "All administrative tasks need streamlining" }
-            ]
+            letter: "A",
+            text: "Allowing every teacher to affordably own a personal device.",
+            triggers: ["Teacher Laptop Ownership Programme"]
           },
           {
-            id: "s2-q10-current",
-            label: "What systems handle your administrative tasks?",
-            options: [
-              { letter: "A", text: "Manual, paper-based processes" },
-              { letter: "B", text: "Basic spreadsheets and documents" },
-              { letter: "C", text: "School management system (limited features)" },
-              { letter: "D", text: "Digital tools but not integrated" },
-              { letter: "E", text: "Comprehensive, integrated administrative platform" }
-            ]
+            letter: "B",
+            text: "Providing structured, certified training on modern teaching methods.",
+            triggers: ["Capacity Development"]
+          },
+          {
+            letter: "C",
+            text: "Automating daily admin tasks into one unified digital system.",
+            triggers: ["School Management Systems"]
+          },
+          {
+            letter: "D",
+            text: "Giving teachers a reliable local network to access resources without internet.",
+            triggers: ["Rev Micro-Cloud Server", "Campus Networking"]
+          },
+          {
+            letter: "E",
+            text: "Providing dedicated technical support so teachers never have device downtime.",
+            triggers: ["R.E.S.T. Squad Support"]
           }
         ]
       }
     ]
   },
+
+  // ── SECTION C: School Infrastructure ─────────────────────────────────────
   {
     id: "infrastructure",
     letter: "C",
-    title: "Infrastructure & Learning Environment",
-    description: "Connectivity, classroom tech, device access, content access, and security.",
-    items: [
+    title: "School Infrastructure",
+    questions: [
       {
         number: 11,
-        title: "Internet Connectivity & Network Infrastructure",
-        prompts: [
+        focus: "Current Position",
+        title: "Internet Access",
+        instruction: "How is internet connectivity currently managed across your campus? (tick all that apply)",
+        options: [
           {
-            id: "s3-q11-challenge",
-            label: "How does internet connectivity affect your teaching?",
-            options: [
-              { letter: "A", text: "No reliable internet access for educational use" },
-              { letter: "B", text: "Limited connectivity that often disrupts lessons" },
-              { letter: "C", text: "Adequate for basic use but slow for multimedia content" },
-              { letter: "D", text: "Good connectivity but limited device capacity" },
-              { letter: "E", text: "Excellent connectivity supporting all educational needs" }
-            ]
+            letter: "A",
+            text: "Internet is unreliable or frequently drops during school hours.",
+            triggers: ["Tech Audit / Infrastructure"]
           },
           {
-            id: "s3-q11-current",
-            label: "What describes your school's internet infrastructure?",
-            options: [
-              { letter: "A", text: "No dedicated educational internet connection" },
-              { letter: "B", text: "Basic internet with limited bandwidth" },
-              { letter: "C", text: "Adequate connection for essential functions" },
-              { letter: "D", text: "Good connectivity but needs network management" },
-              { letter: "E", text: "Robust, managed network infrastructure" }
-            ]
+            letter: "B",
+            text: "Bandwidth is insufficient for multiple classrooms to connect at once.",
+            triggers: ["Campus Networking"]
+          },
+          {
+            letter: "C",
+            text: "There is no localised network to access files if the main internet fails.",
+            triggers: ["Rev Micro-Cloud Server"]
+          },
+          {
+            letter: "D",
+            text: "We have Wi-Fi but it is unmanaged and accessible to students without controls.",
+            triggers: ["Mobile Device Management (MDM)", "Campus Networking"]
+          },
+          {
+            letter: "E",
+            text: "We have a fully managed, high-speed campus network.",
+            triggers: []
           }
         ]
       },
       {
         number: 12,
-        title: "Learning Space & Physical Environment",
-        prompts: [
+        focus: "Core Challenge",
+        title: "Classroom Setup",
+        instruction: "What are the biggest issues with your current classroom and lab hardware? (tick all that apply)",
+        options: [
           {
-            id: "s3-q12-challenge",
-            label: "What physical limitations affect your teaching effectiveness?",
-            options: [
-              { letter: "A", text: "Classroom layout doesn't support interactive learning" },
-              { letter: "B", text: "Limited display options for multimedia content" },
-              { letter: "C", text: "No flexibility to rearrange for different activities" },
-              { letter: "D", text: "Insufficient power outlets for device charging" },
-              { letter: "E", text: "Outdated furniture and learning environment setup" }
-            ]
+            letter: "A",
+            text: "Devices frequently break down and repairs take too long.",
+            triggers: ["R.E.S.T. Squad Support"]
           },
           {
-            id: "s3-q12-current",
-            label: "What technology is installed in your classrooms?",
-            options: [
-              { letter: "A", text: "Traditional blackboard/whiteboard only" },
-              { letter: "B", text: "Basic projector or TV display" },
-              { letter: "C", text: "Interactive whiteboard or smart display" },
-              { letter: "D", text: "Good display technology but limited integration" },
-              { letter: "E", text: "Comprehensive smart classroom setup" }
-            ]
+            letter: "B",
+            text: "Our computer lab is outdated and hardware is rapidly depreciating.",
+            triggers: ["Hardware Financing / DaaS"]
+          },
+          {
+            letter: "C",
+            text: "We cannot remotely track, secure, or update the devices we currently own.",
+            triggers: ["Mobile Device Management (MDM)"]
+          },
+          {
+            letter: "D",
+            text: "Classrooms lack proper display technology (smartboards, projectors).",
+            triggers: ["E-Boards"]
+          },
+          {
+            letter: "E",
+            text: "Our hardware is modern and well-maintained.",
+            triggers: []
           }
         ]
       },
       {
         number: 13,
-        title: "Device Access & Management",
-        prompts: [
+        focus: "Current Position",
+        title: "Devices for Students",
+        instruction: "How do your students currently access digital learning devices? (tick all that apply)",
+        options: [
           {
-            id: "s3-q13-challenge",
-            label: "What describes student access to learning devices?",
-            options: [
-              { letter: "A", text: "Students have no regular access to digital devices" },
-              { letter: "B", text: "Shared devices with very limited time per student" },
-              { letter: "C", text: "Computer lab access for scheduled sessions only" },
-              { letter: "D", text: "Some one-to-one access but inconsistent" },
-              { letter: "E", text: "Comprehensive one-to-one device program" }
-            ]
+            letter: "A",
+            text: "They share a limited pool of aging desktop computers.",
+            triggers: ["Smart ICT Laboratory"]
           },
           {
-            id: "s3-q13-current",
-            label: "How are educational devices currently managed?",
-            options: [
-              { letter: "A", text: "No systematic device management" },
-              { letter: "B", text: "Basic inventory tracking" },
-              { letter: "C", text: "Manual device setup and maintenance" },
-              { letter: "D", text: "Some automated management but needs improvement" },
-              { letter: "E", text: "Comprehensive device management and security system" }
-            ]
+            letter: "B",
+            text: "They have no dedicated access to personal tablets or laptops.",
+            triggers: ["Student Tablets / Laptops"]
+          },
+          {
+            letter: "C",
+            text: "Access is strictly limited to scheduled lab sessions.",
+            triggers: ["Device-as-a-Service"]
+          },
+          {
+            letter: "D",
+            text: "Some students have personal devices (BYOD) but coverage is inconsistent.",
+            triggers: ["Mobile Device Management (MDM)", "Device-as-a-Service"]
+          },
+          {
+            letter: "E",
+            text: "Every student has consistent, managed access to a personal device.",
+            triggers: []
           }
         ]
       },
       {
         number: 14,
-        title: "Content Access & Digital Library",
-        prompts: [
+        focus: "Core Challenge",
+        title: "Keeping Students Safe Online",
+        instruction: "What concerns do you have regarding data privacy and digital safety? (tick all that apply)",
+        options: [
           {
-            id: "s3-q14-challenge",
-            label: "How do students access research materials and educational content?",
-            options: [
-              { letter: "A", text: "Limited to physical library and textbooks" },
-              { letter: "B", text: "Basic internet access for general research" },
-              { letter: "C", text: "Some digital educational resources available" },
-              { letter: "D", text: "Good content access but needs better organization" },
-              { letter: "E", text: "Comprehensive digital library and learning resources" }
-            ]
+            letter: "A",
+            text: "We lack central controls to block students from visiting unsafe websites.",
+            triggers: ["Mobile Device Management (MDM)"]
           },
           {
-            id: "s3-q14-current",
-            label: "What systems organize and deliver educational content?",
-            options: [
-              { letter: "A", text: "Physical materials and basic file storage" },
-              { letter: "B", text: "Simple shared folders or drives" },
-              { letter: "C", text: "Learning management system with basic features" },
-              { letter: "D", text: "Good content platform but limited integration" },
-              { letter: "E", text: "Comprehensive content management and delivery system" }
-            ]
+            letter: "B",
+            text: "We are unsure if our school's data practices comply with NDPR regulations.",
+            triggers: ["Compliance & Governance"]
+          },
+          {
+            letter: "C",
+            text: "We have no anti-theft system if a school device goes missing.",
+            triggers: ["MDM / Anti-theft Security"]
+          },
+          {
+            letter: "D",
+            text: "Student data is stored in multiple unconnected systems with no unified governance.",
+            triggers: ["School Management Systems", "Compliance & Governance"]
+          },
+          {
+            letter: "E",
+            text: "Digital safety and data governance are already well-managed.",
+            triggers: []
           }
         ]
       },
       {
         number: 15,
-        title: "Security & Safety Infrastructure",
-        prompts: [
+        focus: "School Need / Outcome",
+        title: "Learning Materials Online",
+        instruction: "How do you want your campus infrastructure to operate in the future? (tick all that apply)",
+        options: [
           {
-            id: "s3-q15-challenge",
-            label: "What concerns do you have about student safety and digital security?",
-            options: [
-              { letter: "A", text: "No content filtering or online safety measures" },
-              { letter: "B", text: "Basic security but concerns about inappropriate content" },
-              { letter: "C", text: "Adequate safety measures but limited monitoring" },
-              { letter: "D", text: "Good security but needs better management tools" },
-              { letter: "E", text: "Comprehensive safety and security infrastructure" }
-            ]
+            letter: "A",
+            text: "We want a local network that delivers digital content even without live internet.",
+            triggers: ["Rev Micro-Cloud Server"]
           },
           {
-            id: "s3-q15-current",
-            label: "What security and safety systems are in place?",
-            options: [
-              { letter: "A", text: "No systematic digital safety measures" },
-              { letter: "B", text: "Basic antivirus and minimal filtering" },
-              { letter: "C", text: "Standard security software and some filtering" },
-              { letter: "D", text: "Good security tools but need better integration" },
-              { letter: "E", text: "Comprehensive security and monitoring system" }
-            ]
+            letter: "B",
+            text: "We want rapid, local repair services to minimise hardware downtime.",
+            triggers: ["R.E.S.T. Squad Support"]
+          },
+          {
+            letter: "C",
+            text: "We want enterprise-grade security protecting our network and devices.",
+            triggers: ["Enterprise-Grade Security"]
+          },
+          {
+            letter: "D",
+            text: "We want every classroom fitted with modern interactive display technology.",
+            triggers: ["E-Boards", "Smart ICT Laboratory"]
+          },
+          {
+            letter: "E",
+            text: "We want a fully managed device fleet with MDM and lifecycle support.",
+            triggers: ["Mobile Device Management (MDM)", "Hardware Lifecycle Financing"]
           }
         ]
       }
     ]
   },
+
+  // ── SECTION D: Where You Want To Go ──────────────────────────────────────
   {
     id: "strategy",
     letter: "D",
-    title: "Strategic Vision & ROI Focus",
-    description: "STEM priorities, competitiveness, budget, change management, and long-term planning.",
-    items: [
+    title: "Where You Want To Go",
+    questions: [
       {
         number: 16,
-        title: "STEM & Innovation Readiness",
-        prompts: [
+        focus: "Current Position",
+        title: "Investment Plans",
+        instruction: "How does your school currently approach large-scale technology spending? (tick all that apply)",
+        options: [
           {
-            id: "s4-q16-challenge",
-            label: "What's your priority for improving STEM education outcomes?",
-            options: [
-              { letter: "A", text: "Making mathematics more engaging and practical" },
-              { letter: "B", text: "Providing hands-on science learning experiences" },
-              { letter: "C", text: "Introducing coding and technology skills" },
-              { letter: "D", text: "Developing engineering and design thinking" },
-              { letter: "E", text: "Comprehensive STEM integration across subjects" }
-            ]
+            letter: "A",
+            text: "We operate on a small, reactive budget for emergency repairs only.",
+            triggers: ["Hardware Lifecycle Financing"]
           },
           {
-            id: "s4-q16-current",
-            label: "What supports your STEM teaching currently?",
-            options: [
-              { letter: "A", text: "Traditional textbooks and basic materials" },
-              { letter: "B", text: "Some digital STEM content and tools" },
-              { letter: "C", text: "Basic lab equipment and software" },
-              { letter: "D", text: "Good STEM resources but limited integration" },
-              { letter: "E", text: "Comprehensive STEM learning ecosystem" }
-            ]
+            letter: "B",
+            text: "We rely entirely on large, upfront capital expenditures.",
+            triggers: ["Flexible Hardware Financing"]
+          },
+          {
+            letter: "C",
+            text: "We currently have no structured 3-to-5 year financial roadmap for tech.",
+            triggers: ["Technology Audit"]
+          },
+          {
+            letter: "D",
+            text: "We have a budget but lack confidence in which technologies to prioritise.",
+            triggers: ["Technology Audit", "Free Technology Audit"]
+          },
+          {
+            letter: "E",
+            text: "We have a structured technology investment plan and roadmap.",
+            triggers: []
           }
         ]
       },
       {
         number: 17,
-        title: "School Competitiveness & Achievement Goals",
-        prompts: [
+        focus: "Core Challenge",
+        title: "How Fast To Move",
+        instruction: "What is the biggest barrier preventing your school from fully modernising today? (tick all that apply)",
+        options: [
           {
-            id: "s4-q17-challenge",
-            label: "What improvement would most enhance your school's reputation and results?",
-            options: [
-              { letter: "A", text: "Higher standardized test scores and academic achievement" },
-              { letter: "B", text: "Better student engagement and reduced dropout rates" },
-              { letter: "C", text: "Enhanced technology integration and 21st-century readiness" },
-              { letter: "D", text: "Improved teacher effectiveness and innovation" },
-              { letter: "E", text: "Comprehensive school transformation and excellence" }
-            ]
+            letter: "A",
+            text: "The massive upfront cost of buying modern equipment all at once.",
+            triggers: ["BNPL / DaaS"]
           },
           {
-            id: "s4-q17-current",
-            label: "How do you monitor and improve school performance?",
-            options: [
-              { letter: "A", text: "Basic academic records and test scores" },
-              { letter: "B", text: "Standard reporting with limited analytics" },
-              { letter: "C", text: "Some data analysis but manual processes" },
-              { letter: "D", text: "Good data collection but needs better insights" },
-              { letter: "E", text: "Comprehensive performance analytics and improvement tracking" }
-            ]
+            letter: "B",
+            text: "Fear of investing in technology that will quickly become obsolete.",
+            triggers: ["Device-as-a-Service"]
+          },
+          {
+            letter: "C",
+            text: "Lack of a clear, expert-guided strategy for rollout and adoption.",
+            triggers: ["Technology Audit"]
+          },
+          {
+            letter: "D",
+            text: "Difficulty getting staff, parents, and leadership aligned on a shared vision.",
+            triggers: ["Digital School Transformation Programme"]
+          },
+          {
+            letter: "E",
+            text: "We are actively modernising — we need an implementation partner, not a plan.",
+            triggers: ["Integrated Solutions Bundles"]
           }
         ]
       },
       {
         number: 18,
-        title: "Budget & Resource Optimization",
-        prompts: [
+        focus: "School Need / Outcome",
+        title: "Funding Transformation",
+        instruction: "How would you prefer to fund your school's digital transformation? (tick all that apply)",
+        options: [
           {
-            id: "s4-q18-challenge",
-            label: "What's your biggest concern about technology investment and sustainability?",
-            options: [
-              { letter: "A", text: "Limited budget requires maximum impact solutions" },
-              { letter: "B", text: "Need proof of improved learning outcomes" },
-              { letter: "C", text: "Concern about ongoing maintenance and support costs" },
-              { letter: "D", text: "Want scalable solutions that grow with the school" },
-              { letter: "E", text: "Need comprehensive ROI analysis and planning" }
-            ]
+            letter: "A",
+            text: "We want to spread the cost of hardware into predictable monthly subscriptions.",
+            triggers: ["Subscription-based Leasing"]
           },
           {
-            id: "s4-q18-current",
-            label: "How do you currently manage technology investments?",
-            options: [
-              { letter: "A", text: "Minimal technology budget allocation" },
-              { letter: "B", text: "Basic technology expenses in annual budget" },
-              { letter: "C", text: "Dedicated technology budget but limited planning" },
-              { letter: "D", text: "Strategic technology planning but needs optimization" },
-              { letter: "E", text: "Comprehensive technology investment and ROI tracking" }
-            ]
+            letter: "B",
+            text: "We want flexible payment plans so individual teachers can afford their own tools.",
+            triggers: ["Teacher Laptop Ownership Programme"]
+          },
+          {
+            letter: "C",
+            text: "We want to finance complete, turnkey smart classrooms or laboratories.",
+            triggers: ["Integrated Solutions Bundles"]
+          },
+          {
+            letter: "D",
+            text: "We want a grant or partnership model rather than debt-based financing.",
+            triggers: ["Digital School Transformation Programme"]
+          },
+          {
+            letter: "E",
+            text: "We can fund upfront — we just need the right products and a clear proposal.",
+            triggers: ["Technology Audit"]
           }
         ]
       },
       {
         number: 19,
-        title: "Implementation Timeline & Change Management",
-        prompts: [
+        focus: "Core Challenge",
+        title: "Tracking School Performance",
+        instruction: "What makes tracking the overall health of your institution difficult for leadership? (tick all that apply)",
+        options: [
           {
-            id: "s4-q19-challenge",
-            label: "What's your preferred approach to implementing new educational technology?",
-            options: [
-              { letter: "A", text: "Gradual pilot programs with careful evaluation" },
-              { letter: "B", text: "Phase-by-phase implementation across grade levels" },
-              { letter: "C", text: "Comprehensive transformation with full support" },
-              { letter: "D", text: "Subject-specific implementation based on priority needs" },
-              { letter: "E", text: "Flexible approach based on school readiness and resources" }
-            ]
+            letter: "A",
+            text: "Academic, financial, and administrative data are kept in separate, unlinked systems.",
+            triggers: ["Custom Software Development"]
           },
           {
-            id: "s4-q19-current",
-            label: "How does your school typically handle new initiatives?",
-            options: [
-              { letter: "A", text: "Limited experience with major technology changes" },
-              { letter: "B", text: "Basic implementation with minimal support structure" },
-              { letter: "C", text: "Standard change processes but need improvement" },
-              { letter: "D", text: "Good change management but needs technology focus" },
-              { letter: "E", text: "Comprehensive change management and support systems" }
-            ]
+            letter: "B",
+            text: "We lack visual dashboards to give us a real-time overview of school performance.",
+            triggers: ["Learning Analytics / Custom Portals"]
+          },
+          {
+            letter: "C",
+            text: "Creating comprehensive reports for the board or parents takes weeks.",
+            triggers: ["School Management Systems"]
+          },
+          {
+            letter: "D",
+            text: "We cannot benchmark our performance against other schools or national standards.",
+            triggers: ["Learning Analytics / Custom Portals", "School Management Systems"]
+          },
+          {
+            letter: "E",
+            text: "Leadership has real-time visibility into all key school metrics.",
+            triggers: []
           }
         ]
       },
       {
         number: 20,
-        title: "Long-term Vision & Sustainability",
-        prompts: [
+        focus: "School Need / Outcome",
+        title: "Your 3–5 Year Vision",
+        instruction: "What is your ultimate 3-5 year vision for your institution? (tick all that apply)",
+        options: [
           {
-            id: "s4-q20-challenge",
-            label: "Where do you want your school to be in 3-5 years regarding educational technology?",
-            options: [
-              { letter: "A", text: "Basic technology integration meeting minimum standards" },
-              { letter: "B", text: "Solid technology foundation supporting improved learning" },
-              { letter: "C", text: "Advanced technology integration enhancing all subjects" },
-              { letter: "D", text: "Innovation leader and model for other schools" },
-              { letter: "E", text: "Comprehensive digital transformation with measurable excellence" }
-            ]
+            letter: "A",
+            text: "To have a fully integrated, bespoke digital platform unique to our school's brand.",
+            triggers: ["Software Development Services"]
           },
           {
-            id: "s4-q20-current",
-            label: "How do you plan for long-term educational technology development?",
-            options: [
-              { letter: "A", text: "No formal long-term technology planning" },
-              { letter: "B", text: "Basic planning with annual technology considerations" },
-              { letter: "C", text: "Strategic planning but limited technology integration" },
-              { letter: "D", text: "Good strategic planning but needs implementation support" },
-              { letter: "E", text: "Comprehensive strategic planning with technology roadmap" }
-            ]
+            letter: "B",
+            text: "To be recognised as a fully digitised, model tech-driven school.",
+            triggers: ["Digital School Transformation Programme"]
+          },
+          {
+            letter: "C",
+            text: "To receive a comprehensive, cost-free roadmap to begin this journey safely.",
+            triggers: ["Free Technology Audit"]
+          },
+          {
+            letter: "D",
+            text: "To equip every teacher and student with a personal, managed device.",
+            triggers: ["Teacher Laptop Ownership Programme", "Student Tablets / Laptops"]
+          },
+          {
+            letter: "E",
+            text: "To build a financially sustainable, phased technology programme over 5 years.",
+            triggers: ["Hardware Lifecycle Financing", "Technology Audit"]
           }
         ]
       }
@@ -641,9 +780,50 @@ export const auditSections: AuditSection[] = [
   }
 ];
 
-/** Flat list of every prompt across all sections, in document order. */
-export const allPrompts: AuditPrompt[] = auditSections.flatMap((section) =>
-  section.items.flatMap((item) => item.prompts)
+/** Flat list of all 20 questions in document order. */
+export const allQuestions: AuditQuestion[] = auditSections.flatMap(
+  (section) => section.questions
 );
 
-export const totalPromptCount = allPrompts.length; // 40
+/** Every distinct product trigger that exists across all options. */
+export const allProductTriggers: ProductTrigger[] = [
+  "E-Boards",
+  "Tablets / Laptops",
+  "Rev Micro-Cloud Server",
+  "Doc Cam / E-Boards",
+  "LMS",
+  "Digital Learning Content",
+  "STEM / Robotics Labs",
+  "Capacity Development",
+  "Digital Pedagogy Training",
+  "Student & Parent Portals",
+  "School Management Systems",
+  "Digital Library",
+  "Teacher Laptop Ownership Programme",
+  "R.E.S.T. Squad / Teach with Tech",
+  "Continuous Professional Development",
+  "Teach with Tech Certification",
+  "Campus Networking",
+  "Tech Audit / Infrastructure",
+  "R.E.S.T. Squad Support",
+  "Hardware Financing / DaaS",
+  "Mobile Device Management (MDM)",
+  "Smart ICT Laboratory",
+  "Student Tablets / Laptops",
+  "Device-as-a-Service",
+  "Compliance & Governance",
+  "MDM / Anti-theft Security",
+  "Enterprise-Grade Security",
+  "Hardware Lifecycle Financing",
+  "Flexible Hardware Financing",
+  "Technology Audit",
+  "BNPL / DaaS",
+  "Subscription-based Leasing",
+  "Integrated Solutions Bundles",
+  "Custom Software Development",
+  "Learning Analytics / Custom Portals",
+  "Software Development Services",
+  "Digital School Transformation Programme",
+  "Free Technology Audit",
+  "R.E.S.T. Squad"
+];

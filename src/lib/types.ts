@@ -1,4 +1,5 @@
 import type { AuditAnswers } from "@/lib/audit-scoring";
+import type { ProductTrigger } from "@/lib/audit-data";
 
 export type Role =
   | "Teacher"
@@ -22,7 +23,10 @@ export type WaitlistRegistration = {
   createdAt: string;
 };
 
-export type SectionScoreRecord = Record<string, { score: number | null; band: string | null }>;
+export type SectionGapRecord = Record<
+  string,
+  { gapScore: number; triggeringSelections: number; maxTriggeringSelections: number }
+>;
 
 export type TechAuditRequest = {
   id: string;
@@ -33,8 +37,12 @@ export type TechAuditRequest = {
   role: Role;
   deviceEstimate?: string | null;
   answers: AuditAnswers;
-  overallScore: number | null;
-  sectionScores: SectionScoreRecord;
+  /** { productName: triggerCount } — serialised from scoreAudit() at insert time */
+  triggeredProducts: Record<string, number>;
+  /** Top 5 product names, in order */
+  topProducts: ProductTrigger[];
+  /** Per-section gap data */
+  sectionGaps: SectionGapRecord;
   notes?: string | null;
   createdAt: string;
 };
