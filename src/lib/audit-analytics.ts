@@ -1,118 +1,152 @@
-import { allPrompts, auditSections } from "@/lib/audit-data";
-import { bandForScore, getOverallScore, getSectionScores, maturityBands, type MaturityBand } from "@/lib/audit-scoring";
+import { allQuestions, auditSections } from "@/lib/audit-data";
+import {
+  aggregateProductFrequencies,
+  aggregateSectionGaps,
+  scoreAudit,
+  sectionPriority,
+  type AuditScore,
+  type ProductFrequency,
+  type SectionGapScore,
+} from "@/lib/audit-scoring";
 import type { TechAuditRequest } from "@/lib/types";
 
 /**
  * Admin-dashboard analytics over a list of TechAuditRequest rows.
- * Scores are read from the stored overall_score/section_scores columns
- * where available (computed at insert time) and recomputed from raw
- * answers as a fallback for older rows or local testing.
+ *
+ * Built entirely on what audit-scoring.ts actually exports:
+ *   scoreAudit, sectionPriority, aggregateProductFrequencies,
+ *   aggregateSectionGaps, ProductFrequency, SectionGapScore, AuditScore
+ *
+ * TechAuditRequest has: answers, triggeredProducts, topProducts, sectionGaps
+ * — no overallScore or sectionScores columns.
  */
 
+// ─── Re-export useful types so consumers only need this file ──
+export type { ProductFrequency, SectionGapScore, AuditScore };
+
+// ─── Band label derived from gap score ───────────────────────
+export type BandLabel = "Critical" | "High" | "Medium" | "Low" | "Strong";
+
 export type BandDistributionEntry = {
-  band: MaturityBand["label"];
+  band: BandLabel;
   count: number;
   pct: number;
 };
 
 export type OptionFrequency = {
   sectionTitle: string;
-  itemNumber: number;
-  itemTitle: string;
-  promptLabel: string;
+  questionNumber: number;
+  questionText: string;
   letter: string;
   optionText: string;
   count: number;
   pct: number;
 };
 
-function resolveOverallScore(request: TechAuditRequest): number | null {
-  return request.overallScore ?? getOverallScore(request.answers);
-}
-
-export function getAverageOverallScore(requests: TechAuditRequest[]): number | null {
-  const scores = requests.map(resolveOverallScore).filter((value): value is number => value !== null);
-  if (scores.length === 0) return null;
-  return Math.round((scores.reduce((sum, value) => sum + value, 0) / scores.length) * 100) / 100;
-}
-
-export function getOverallBand(requests: TechAuditRequest[]): MaturityBand | null {
-  return bandForScore(getAverageOverallScore(requests));
-}
-
-export function getBandDistribution(requests: TechAuditRequest[]): BandDistributionEntry[] {
-  const total = requests.length || 1;
-  const counts = new Map<MaturityBand["label"], number>(maturityBands.map((band: { label: any; }) => [band.label, 0]));
-
-  for (const request of requests) {
-    const band = bandForScore(resolveOverallScore(request));
-    if (band) counts.set(band.label, (counts.get(band.label) ?? 0) + 1);
-  }
-
-  return maturityBands.map((band: { label: any; }) => {
-    const count = counts.get(band.label) ?? 0;
-    return { band: band.label, count, pct: Math.round((count / total) * 100) };
-  });
-}
-
 export type SectionAverage = {
   sectionId: string;
   title: string;
-  avgScore: number | null;
-  band: MaturityBand | null;
+  avgGapScore: number;
+  priority: ReturnType<typeof sectionPriority>;
 };
 
-export function getSectionAverages(requests: TechAuditRequest[]): SectionAverage[] {
-  return auditSections.map((section) => {
-    const scores = requests
-      .map((request) => {
-        const stored = request.sectionScores?.[section.id]?.score;
-        if (typeof stored === "number") return stored;
-        return getSectionScores(request.answers).find((s: { sectionId: string; }) => s.sectionId === section.id)?.score ?? null;
-      })
-      .filter((value): value is number => value !== null);
+// ─── Overall "score" — average gap score across all sections ──
+function overallGapScore(request: TechAuditRequest): number {
+  const gaps = Object.values(request.sectionGaps);
+  if (gaps.length === 0) {
+    // Fall back: re-score from raw answers
+    const scored = scoreAudit(request.answers);
+    const all = scored.sectionGaps;
+    if (all.length === 0) return 0;
+    return Math.round(all.reduce((s, g) => s + g.gapScore, 0) / all.length);
+  }
+  return Math.round(gaps.reduce((s, g) => s + g.gapScore, 0) / gaps.length);
+}
 
-    const avgScore = scores.length > 0 ? Math.round((scores.reduce((sum, v) => sum + v, 0) / scores.length) * 100) / 100 : null;
-    return { sectionId: section.id, title: section.title, avgScore, band: bandForScore(avgScore) };
+// ─── Public API ───────────────────────────────────────────────
+
+export function getAverageOverallScore(
+  requests: TechAuditRequest[]
+): number | null {
+  if (requests.length === 0) return null;
+  const sum = requests.reduce((s, r) => s + overallGapScore(r), 0);
+  return Math.round((sum / requests.length) * 100) / 100;
+}
+
+export function getOverallBand(
+  requests: TechAuditRequest[]
+): ReturnType<typeof sectionPriority> | null {
+  const avg = getAverageOverallScore(requests);
+  if (avg === null) return null;
+  return sectionPriority(avg);
+}
+
+export function getBandDistribution(
+  requests: TechAuditRequest[]
+): BandDistributionEntry[] {
+  const total = requests.length || 1;
+  const bands: BandLabel[] = ["Critical", "High", "Medium", "Low", "Strong"];
+  const counts = new Map<BandLabel, number>(bands.map((b) => [b, 0]));
+
+  for (const request of requests) {
+    const { label } = sectionPriority(overallGapScore(request));
+    counts.set(label, (counts.get(label) ?? 0) + 1);
+  }
+
+  return bands.map((band) => {
+    const count = counts.get(band) ?? 0;
+    return { band, count, pct: Math.round((count / total) * 100) };
   });
 }
 
+export function getSectionAverages(
+  requests: TechAuditRequest[]
+): SectionAverage[] {
+  const averaged = aggregateSectionGaps(requests.map((r) => r.answers));
+  return averaged.map((s) => ({
+    sectionId:    s.sectionId,
+    title:        s.sectionTitle,
+    avgGapScore:  s.avgGapScore,
+    priority:     sectionPriority(s.avgGapScore),
+  }));
+}
+
 /**
- * How often each individual A-E option was checked across all
- * submissions, flattened and ranked. Mirrors the source document's own
- * framing ("mostly A & B responses = high-impact opportunity") — this
- * is what lets the team see exactly which gaps are most common.
+ * How often each individual A–E option was selected across all submissions.
+ * Uses allQuestions (flat list of AuditQuestion) and iterates section.questions
+ * (not section.items — that field does not exist).
  */
-export function getOptionFrequencies(requests: TechAuditRequest[]): OptionFrequency[] {
+export function getOptionFrequencies(
+  requests: TechAuditRequest[]
+): OptionFrequency[] {
   const total = requests.length || 1;
   const counts = new Map<string, number>();
 
   for (const request of requests) {
-    for (const [promptId, letters] of Object.entries(request.answers ?? {})) {
+    for (const [qNum, letters] of Object.entries(request.answers ?? {})) {
       for (const letter of letters) {
-        const key = `${promptId}::${letter}`;
+        const key = `${qNum}::${letter}`;
         counts.set(key, (counts.get(key) ?? 0) + 1);
       }
     }
   }
 
   const results: OptionFrequency[] = [];
+
   for (const section of auditSections) {
-    for (const item of section.items) {
-      for (const prompt of item.prompts) {
-        for (const option of prompt.options) {
-          const count = counts.get(`${prompt.id}::${option.letter}`) ?? 0;
-          results.push({
-            sectionTitle: section.title,
-            itemNumber: item.number,
-            itemTitle: item.title,
-            promptLabel: prompt.label,
-            letter: option.letter,
-            optionText: option.text,
-            count,
-            pct: Math.round((count / total) * 100)
-          });
-        }
+    for (const question of section.questions) {
+      for (const option of question.options) {
+        const key   = `${question.number}::${option.letter}`;
+        const count = counts.get(key) ?? 0;
+        results.push({
+          sectionTitle:   section.title,
+          questionNumber: question.number,
+          questionText:   question.title,
+          letter:         option.letter,
+          optionText:     option.text,
+          count,
+          pct: Math.round((count / total) * 100),
+        });
       }
     }
   }
@@ -120,12 +154,31 @@ export function getOptionFrequencies(requests: TechAuditRequest[]): OptionFreque
   return results.sort((a, b) => b.count - a.count);
 }
 
+/**
+ * What percentage of questions (by count) did submitters actually answer?
+ * Uses allQuestions.length as the denominator per submission.
+ */
 export function getAnsweredRate(requests: TechAuditRequest[]): number {
   if (requests.length === 0) return 0;
-  const totalPossible = requests.length * allPrompts.length;
+  const totalPossible = requests.length * allQuestions.length;
   let totalAnswered = 0;
   for (const request of requests) {
-    totalAnswered += Object.values(request.answers ?? {}).filter((letters) => letters.length > 0).length;
+    totalAnswered += Object.values(request.answers ?? {}).filter(
+      (letters) => letters.length > 0
+    ).length;
   }
-  return totalPossible > 0 ? Math.round((totalAnswered / totalPossible) * 100) : 0;
+  return totalPossible > 0
+    ? Math.round((totalAnswered / totalPossible) * 100)
+    : 0;
+}
+
+/**
+ * Thin wrapper around audit-scoring's aggregateProductFrequencies —
+ * re-exported here so dashboard components only need to import from
+ * audit-analytics.
+ */
+export function getProductFrequencies(
+  requests: TechAuditRequest[]
+): ProductFrequency[] {
+  return aggregateProductFrequencies(requests.map((r) => r.answers));
 }
