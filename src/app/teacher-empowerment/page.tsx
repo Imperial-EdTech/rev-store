@@ -420,7 +420,7 @@ export default function TeacherEmpowermentPage() {
                   <p className="mt-3 text-xs text-white/30">
                     Profit rate: {plan.profitRate} · Figures confirmed by our licensed financing partner.
                   </p>
-                  <Link className="mt-7 inline-block" href="/apply">
+                  <Link className="mt-7 inline-block" href="/apply/devices">
                     <Button>Apply for this plan <ArrowRight className="h-4 w-4" /></Button>
                   </Link>
                 </div>
@@ -437,7 +437,7 @@ export default function TeacherEmpowermentPage() {
                     Pay the full device price in one go and receive a discount. Select "Buy Outright" when applying.
                   </p>
                 </div>
-                <Link className="shrink-0" href="/apply">
+                <Link className="shrink-0" href="/apply/devices">
                   <span className="inline-flex items-center gap-1.5 text-sm font-bold text-rev-orange">
                     Apply <ArrowRight className="h-3.5 w-3.5" />
                   </span>

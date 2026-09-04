@@ -36,7 +36,7 @@ const FOOTER_PROGRAMME = [
   { label: "Teacher Empowerment",    href: "/teacher-empowerment" },
   { label: "Let There Be Teachers",  href: "/teacher-empowerment#ltbt" },
   { label: "Pre-order",              href: "/pre-order" },
-  { label: "Apply now",              href: "/apply" },
+  { label: "Apply now",              href: "/apply/devices" },
   { label: "Payment plans",          href: "/teacher-empowerment#plans" },
   { label: "FAQ",                    href: "/#faq" },
 ];

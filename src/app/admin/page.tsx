@@ -1,56 +1,64 @@
 "use client";
 
 import {
-  AlertCircle, ClipboardCheck, Download,
-  Inbox, Loader2, RefreshCw, Search, Users,
+  AlertCircle, Building2, CheckCircle2, ClipboardCheck,
+  Download, GraduationCap, Inbox, Loader2,
+  RefreshCw, Search, Users,
 } from "lucide-react";
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { SiteHeader } from "@/components/shell";
 import { TechAuditView } from "@/components/tech-audit-view";
-import { roles } from "@/lib/data";
 import type { WaitlistRegistration } from "@/lib/types";
 
-// ── Partner list — keep in sync with apply/page.tsx ──────────
-const PARTNER_ORGS = [
-  { id: "let-there-be-teachers", name: "Let There Be Teachers Laptop Scheme" },
-] as const;
-
-// Pull partnerOrg out of the JSON notes field safely
-function getPartnerOrg(notes: string | null | undefined): string {
-  if (!notes) return "Independent";
-  try {
-    const parsed = JSON.parse(notes);
-    return parsed?.partnerOrg ?? "Independent";
-  } catch {
-    return "Independent";
-  }
+// ─── Note field helpers ───────────────────────────────────────
+function getNote(notes: string | null | undefined, key: string): string {
+  if (!notes) return "—";
+  try { return JSON.parse(notes)?.[key] ?? "—"; } catch { return "—"; }
 }
 
-function getNoteField(notes: string | null | undefined, key: string): string {
-  if (!notes) return "—";
+function isSchool(r: WaitlistRegistration): boolean {
+  if (!r.notes) return false;
+  try { return JSON.parse(r.notes)?.submissionType === "school"; } catch { return false; }
+}
+
+function getApplyAs(notes: string | null | undefined): string {
+  if (!notes) return "Individual";
   try {
-    const parsed = JSON.parse(notes);
-    return parsed?.[key] ?? "—";
-  } catch {
-    return "—";
+    const p = JSON.parse(notes);
+    if (p?.submissionType === "school") return "School";
+    if (p?.applyAs === "ltbt")       return "LTBT";
+    if (p?.applyAs === "government") return "Government";
+    return "Individual";
+  } catch { return "Individual"; }
+}
+
+function getPathwayColor(label: string): string {
+  switch (label) {
+    case "School":     return "#581319";
+    case "LTBT":       return "#f5a623";
+    case "Government": return "#16a34a";
+    default:           return "#6b7280";
   }
 }
 
 type FetchState = "idle" | "loading" | "error" | "ready";
-type Tab = "waitlist" | "tech-audit";
+type Tab = "individuals" | "schools" | "tech-audit";
 
+// ═══════════════════════════════════════════════════════════════
+// ROOT PAGE
+// ═══════════════════════════════════════════════════════════════
 export default function AdminPage() {
-  const [tab, setTab]             = useState<Tab>("waitlist");
-  const [passcode, setPasscode]   = useState("");
-  const [unlocked, setUnlocked]   = useState(false);
+  const [passcode,  setPasscode]  = useState("");
+  const [unlocked,  setUnlocked]  = useState(false);
   const [authError, setAuthError] = useState("");
+  const [tab,       setTab]       = useState<Tab>("individuals");
 
-  function unlockDashboard(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function unlock(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     const expected = process.env.NEXT_PUBLIC_ADMIN_PASSCODE || "revstore-admin";
     if (passcode === expected) { setUnlocked(true); setAuthError(""); return; }
-    setAuthError("Enter the correct admin passcode.");
+    setAuthError("Incorrect passcode. Try again.");
   }
 
   if (!unlocked) {
@@ -63,20 +71,17 @@ export default function AdminPage() {
             <div className="mx-auto max-w-md rounded-3xl border border-black/8 bg-white p-8 shadow-xl">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-rev-orange">Revrica Admin</p>
               <h1 className="mt-3 font-display text-3xl font-extrabold text-slate-ink">Dashboard access</h1>
-              <p className="mt-3 leading-7 text-slate-body">Enter the admin passcode to view registrations and analytics.</p>
-              <form className="mt-6 space-y-4" onSubmit={unlockDashboard}>
+              <p className="mt-3 leading-7 text-slate-body">Enter the admin passcode to view leads and analytics.</p>
+              <form className="mt-6 space-y-4" onSubmit={unlock}>
                 <input
                   className="focus-ring h-12 w-full rounded-xl border border-black/12 bg-white px-4 text-sm text-slate-ink placeholder:text-slate-body/50"
-                  onChange={(e) => setPasscode(e.target.value)}
+                  onChange={e => setPasscode(e.target.value)}
                   placeholder="Admin passcode"
                   type="password"
                   value={passcode}
                 />
                 {authError && <p className="text-sm font-bold text-rev-orange">{authError}</p>}
-                <button
-                  className="focus-ring h-12 w-full rounded-full bg-rev-orange text-sm font-bold text-white shadow-glow transition hover:bg-rev-orangeDeep"
-                  type="submit"
-                >
+                <button className="focus-ring h-12 w-full rounded-full bg-rev-orange text-sm font-bold text-white transition hover:bg-rev-orangeDeep" type="submit">
                   Open Dashboard
                 </button>
               </form>
@@ -93,338 +98,455 @@ export default function AdminPage() {
       <main className="maroon-glow relative min-h-screen py-10">
         <div className="noise-overlay" />
         <div className="container-x relative z-10">
+
+          {/* Header */}
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-rev-orange">Revrica Admin</p>
-              <h1 className="mt-3 font-display text-4xl font-extrabold text-white md:text-5xl">Lead dashboard</h1>
-              <p className="mt-3 text-white/60">Live data from Supabase.</p>
+              <h1 className="mt-3 font-display text-4xl font-extrabold text-white md:text-5xl">Lead Dashboard</h1>
+              <p className="mt-2 text-white/50 text-sm">Live data from Supabase — all submissions in one place.</p>
             </div>
-            <div className="inline-flex gap-1 rounded-full border border-white/15 bg-white/5 p-1">
-              <button
-                className={`inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-bold transition ${
-                  tab === "waitlist" ? "bg-rev-orange text-white" : "text-white/60 hover:text-white"
-                }`}
-                onClick={() => setTab("waitlist")}
-                type="button"
-              >
-                <Users className="h-4 w-4" /> Applications
-              </button>
-              <button
-                className={`inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-bold transition ${
-                  tab === "tech-audit" ? "bg-rev-orange text-white" : "text-white/60 hover:text-white"
-                }`}
-                onClick={() => setTab("tech-audit")}
-                type="button"
-              >
-                <ClipboardCheck className="h-4 w-4" /> Tech Audit
-              </button>
+            {/* Tab switcher */}
+            <div className="inline-flex gap-1 rounded-2xl border border-white/12 bg-white/5 p-1.5">
+              {([
+                { id: "individuals", label: "Individuals", Icon: GraduationCap },
+                { id: "schools",     label: "Schools",     Icon: Building2 },
+                { id: "tech-audit",  label: "Tech Audit",  Icon: ClipboardCheck },
+              ] as const).map(({ id, label, Icon }) => (
+                <button key={id} type="button" onClick={() => setTab(id)}
+                  className={`inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-bold transition ${tab === id ? "bg-rev-orange text-white shadow-sm" : "text-white/55 hover:text-white"}`}>
+                  <Icon className="h-4 w-4" /> {label}
+                </button>
+              ))}
             </div>
           </div>
-          {tab === "waitlist" ? <WaitlistView /> : <TechAuditView />}
+
+          <div className="mt-8">
+            {tab === "individuals" && <IndividualsView />}
+            {tab === "schools"     && <SchoolsView />}
+            {tab === "tech-audit"  && <TechAuditView />}
+          </div>
         </div>
       </main>
     </>
   );
 }
 
-// ── Waitlist view ─────────────────────────────────────────────
-function WaitlistView() {
-  const [registrations, setRegistrations] = useState<WaitlistRegistration[]>([]);
-  const [fetchState, setFetchState]       = useState<FetchState>("idle");
-  const [fetchError, setFetchError]       = useState<string | null>(null);
-  const [query, setQuery]                 = useState("");
-  const [roleFilter, setRoleFilter]       = useState("All");
-  const [partnerFilter, setPartnerFilter] = useState("All");
+// ─── Shared data hook ─────────────────────────────────────────
+function useRegistrations() {
+  const [data,  setData]  = useState<WaitlistRegistration[]>([]);
+  const [state, setState] = useState<FetchState>("idle");
+  const [error, setError] = useState<string | null>(null);
 
-  async function loadRegistrations() {
-    setFetchState("loading");
-    setFetchError(null);
+  async function load() {
+    setState("loading"); setError(null);
     try {
       const res  = await fetch("/api/admin/registrations");
       const body = await res.json();
-      if (!res.ok) { setFetchError(body?.error ?? "Could not load registrations."); setFetchState("error"); return; }
-      setRegistrations(body.registrations);
-      setFetchState("ready");
+      if (!res.ok) { setError(body?.error ?? "Failed to load."); setState("error"); return; }
+      setData(body.registrations);
+      setState("ready");
     } catch {
-      setFetchError("Could not reach the server. Check your connection and try again.");
-      setFetchState("error");
+      setError("Could not reach the server."); setState("error");
     }
   }
 
-  useEffect(() => { loadRegistrations(); }, []);
+  useEffect(() => { load(); }, []);
+  return { data, state, error, reload: load };
+}
 
-  // Enrich each record with the partner org extracted from notes
-  const enriched = useMemo(
-    () => registrations.map((r) => ({ ...r, partnerOrg: getPartnerOrg(r.notes) })),
-    [registrations]
+// ─── Stat card ────────────────────────────────────────────────
+function StatCard({ label, value, sub, color }: { label: string; value: number | string; sub?: string; color?: string }) {
+  return (
+    <div className="rounded-2xl border border-black/8 bg-white p-5 shadow-sm">
+      <p className="font-display text-3xl font-extrabold" style={{ color: color ?? "#1e1b1a" }}>{value}</p>
+      <p className="mt-1.5 text-xs font-bold uppercase tracking-[0.1em] text-slate-body/65">{label}</p>
+      {sub && <p className="mt-0.5 text-[11px] text-slate-body/45">{sub}</p>}
+    </div>
   );
+}
 
-  // All unique partner values present in data
-  const presentPartners = useMemo(() => {
-    const set = new Set(enriched.map((r) => r.partnerOrg));
-    return Array.from(set).sort();
-  }, [enriched]);
+// ─── Loading / error / empty states ──────────────────────────
+function LoadingState() {
+  return <div className="mt-16 flex flex-col items-center gap-3 text-white/55"><Loader2 className="h-7 w-7 animate-spin" /><p>Loading…</p></div>;
+}
+function ErrorState({ msg, onRetry }: { msg: string; onRetry: () => void }) {
+  return (
+    <div className="mt-8 flex items-start gap-4 rounded-2xl border border-white/15 bg-white/5 p-6">
+      <AlertCircle className="h-6 w-6 shrink-0 text-rev-orange" />
+      <div>
+        <p className="font-display text-lg font-bold text-white">Couldn&apos;t load data</p>
+        <p className="mt-1 text-sm text-white/55">{msg}</p>
+        <button className="mt-4 inline-flex h-10 items-center rounded-full border border-white/20 bg-white/5 px-4 text-sm font-bold text-white" onClick={onRetry} type="button">Try again</button>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INDIVIDUALS VIEW
+// ═══════════════════════════════════════════════════════════════
+function IndividualsView() {
+  const { data: all, state, error, reload } = useRegistrations();
+  const [query,      setQuery]      = useState("");
+  const [pathway,    setPathway]    = useState("All");
+  const [repayment,  setRepayment]  = useState("All");
+
+  // Only non-school registrations
+  const individuals = useMemo(() => all.filter(r => !isSchool(r)), [all]);
 
   const filtered = useMemo(() => {
-    return enriched.filter((item) => {
+    return individuals.filter(r => {
       const q = query.toLowerCase();
-      const matchesQuery = [item.fullName, item.email, item.phone, item.organization, item.role, item.interests.join(" "), item.partnerOrg]
+      const matchQ = [r.fullName, r.email, r.phone, r.organization, r.role, getApplyAs(r.notes), getNote(r.notes, "state")]
         .join(" ").toLowerCase().includes(q);
-      const matchesRole    = roleFilter    === "All" || item.role      === roleFilter;
-      const matchesPartner = partnerFilter === "All" || item.partnerOrg === partnerFilter;
-      return matchesQuery && matchesRole && matchesPartner;
+      const matchP = pathway   === "All" || getApplyAs(r.notes)              === pathway;
+      const matchR = repayment === "All" || getNote(r.notes, "repaymentTenor") === repayment;
+      return matchQ && matchP && matchR;
     });
-  }, [query, enriched, roleFilter, partnerFilter]);
+  }, [individuals, query, pathway, repayment]);
 
-  const stats = useMemo(() => {
-    const total     = registrations.length;
-    const indep     = enriched.filter((r) => r.partnerOrg === "Independent").length;
-    const byPartner = PARTNER_ORGS.map((p) => [p.name, enriched.filter((r) => r.partnerOrg === p.name).length] as [string, number]);
-    return [
-      ["Total Applications", total],
-      ["Independent", indep],
-      ...byPartner,
-      ["Outright Purchase", enriched.filter((r) => r.interests.includes("Buy a Laptop Outright")).length],
-      ["Financing", enriched.filter((r) => r.interests.includes("Laptop Financing")).length],
-    ] as [string, number][];
-  }, [registrations, enriched]);
+  const stats = useMemo(() => [
+    { label: "Total Individuals", value: individuals.length },
+    { label: "Independent",       value: individuals.filter(r => getApplyAs(r.notes) === "Individual").length },
+    { label: "Via LTBT",          value: individuals.filter(r => getApplyAs(r.notes) === "LTBT").length },
+    { label: "Government Staff",  value: individuals.filter(r => getApplyAs(r.notes) === "Government").length },
+    { label: "Buy Outright",      value: individuals.filter(r => getNote(r.notes, "repaymentTenor") === "Buy Outright (Discounted)").length },
+    { label: "Financing",         value: individuals.filter(r => getNote(r.notes, "repaymentTenor") !== "Buy Outright (Discounted)" && getNote(r.notes, "repaymentTenor") !== "—").length },
+  ], [individuals]);
 
   async function exportExcel() {
     const XLSX = await import("xlsx");
-    const rows = filtered.map((item) => ({
-      Name:            item.fullName,
-      Email:           item.email,
-      Phone:           item.phone,
-      School:          item.organization,
-      Role:            item.role,
-      "Partner Org":   item.partnerOrg,
-      "Payment Option": getNoteField(item.notes, "paymentOption"),
-      State:           getNoteField(item.notes, "state"),
-      LGA:             getNoteField(item.notes, "lga"),
-      Position:        getNoteField(item.notes, "position"),
-      "School Type":   getNoteField(item.notes, "schoolType"),
-      "Salary Band":   getNoteField(item.notes, "salaryBand"),
-      "Years Teaching": getNoteField(item.notes, "yearsTeaching"),
-      "Owns Laptop":   getNoteField(item.notes, "ownsLaptop"),
-      "KYC Consent":   getNoteField(item.notes, "kycConsent"),
-      Date:            new Date(item.createdAt).toLocaleString(),
+    const rows = filtered.map(r => ({
+      Name:           r.fullName,
+      Email:          r.email,
+      Phone:          r.phone,
+      School:         r.organization,
+      Role:           r.role,
+      Pathway:        getApplyAs(r.notes),
+      "Gov Body":     getNote(r.notes, "applyAs") === "government" ? getNote(r.notes, "governmentBodyId") : "—",
+      Device:         getNote(r.notes, "device"),
+      Repayment:      getNote(r.notes, "repaymentTenor"),
+      "Salary Band":  getNote(r.notes, "salaryBand"),
+      State:          getNote(r.notes, "state"),
+      LGA:            getNote(r.notes, "lga"),
+      Position:       getNote(r.notes, "position"),
+      "School Type":  getNote(r.notes, "schoolType"),
+      "Yrs Teaching": getNote(r.notes, "yearsTeaching"),
+      "Owns Laptop":  getNote(r.notes, "ownsLaptop"),
+      "KYC Consent":  getNote(r.notes, "kycConsent"),
+      Date:           new Date(r.createdAt).toLocaleString(),
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
-    ws["!cols"] = [
-      { wch: 22 },{ wch: 26 },{ wch: 16 },{ wch: 28 },{ wch: 14 },
-      { wch: 36 },{ wch: 20 },{ wch: 16 },{ wch: 16 },{ wch: 22 },
-      { wch: 14 },{ wch: 22 },{ wch: 16 },{ wch: 12 },{ wch: 12 },{ wch: 18 },
-    ];
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Applications");
-    XLSX.writeFile(wb, `revrica-applications-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, "Individuals");
+    XLSX.writeFile(wb, `revrica-individuals-${new Date().toISOString().slice(0, 10)}.xlsx`);
   }
 
-  if (fetchState === "error") {
-    return (
-      <div className="mt-8 flex items-start gap-4 rounded-2xl border border-white/15 bg-white/5 p-6">
-        <AlertCircle className="h-6 w-6 shrink-0 text-rev-orange" />
-        <div>
-          <p className="font-display text-lg font-bold text-white">Couldn&apos;t load applications</p>
-          <p className="mt-1 text-sm leading-6 text-white/60">{fetchError}</p>
-          <button className="focus-ring mt-4 inline-flex h-10 items-center rounded-full border border-white/20 bg-white/5 px-4 text-sm font-bold text-white transition hover:border-white/40" onClick={loadRegistrations} type="button">
-            Try again
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (fetchState === "loading" || fetchState === "idle") {
-    return (
-      <div className="mt-16 flex flex-col items-center gap-3 text-white/60">
-        <Loader2 className="h-7 w-7 animate-spin" />
-        <p>Loading applications…</p>
-      </div>
-    );
-  }
-
-  if (registrations.length === 0) {
-    return (
-      <div className="mt-8 flex flex-col items-center gap-3 rounded-2xl border border-black/8 bg-white p-12 text-center shadow-sm">
-        <Inbox className="h-9 w-9 text-slate-body/40" />
-        <p className="font-display text-lg font-bold text-slate-ink">No applications yet</p>
-        <p className="max-w-sm text-sm leading-6 text-slate-body">
-          Once teachers submit the application form, their details will appear here.
-        </p>
-      </div>
-    );
-  }
+  if (state === "loading" || state === "idle") return <LoadingState />;
+  if (state === "error") return <ErrorState msg={error!} onRetry={reload} />;
+  if (individuals.length === 0) return (
+    <div className="mt-8 flex flex-col items-center gap-3 rounded-2xl border border-black/8 bg-white p-12 text-center shadow-sm">
+      <Inbox className="h-9 w-9 text-slate-body/40" />
+      <p className="font-display text-lg font-bold text-slate-ink">No individual applications yet</p>
+    </div>
+  );
 
   return (
     <>
-      {/* ── Toolbar ── */}
-      <div className="mt-8 flex items-center justify-end gap-3">
-        <button
-          className="focus-ring inline-flex h-11 items-center gap-2 rounded-full border border-white/20 bg-white/5 px-5 text-sm font-bold text-white transition hover:border-white/40 hover:bg-white/10"
-          onClick={loadRegistrations}
-          type="button"
-        >
-          <RefreshCw className="h-4 w-4" /> Refresh
-        </button>
-        <button
-          className="focus-ring inline-flex h-11 items-center gap-2 rounded-full bg-rev-orange px-5 text-sm font-bold text-white shadow-glow transition hover:bg-rev-orangeDeep disabled:cursor-not-allowed disabled:opacity-40"
-          disabled={filtered.length === 0}
-          onClick={exportExcel}
-          type="button"
-        >
-          <Download className="h-4 w-4" /> Export Excel
-        </button>
+      {/* Stats */}
+      <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        {stats.map(s => <StatCard key={s.label} label={s.label} value={s.value} />)}
       </div>
 
-      {/* ── Stat cards ── */}
-      <div className="mt-6 grid gap-5 md:grid-cols-3 lg:grid-cols-6">
-        {stats.map(([label, value]) => (
-          <div className="rounded-[1.5rem] border border-black/8 bg-white p-6 shadow-sm" key={label}>
-            <p className="font-display text-3xl font-extrabold text-slate-ink">{value}</p>
-            <p className="mt-2 text-xs font-bold uppercase tracking-[0.1em] text-slate-body/70">{label}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* ── Charts row ── */}
-      <div className="mt-6 grid gap-5 lg:grid-cols-[1fr_0.8fr]">
-        {/* Partner breakdown */}
-        <div className="rounded-[1.5rem] border border-black/8 bg-white p-7 shadow-sm">
-          <h2 className="font-display text-xl font-bold text-slate-ink">Applications by Partner</h2>
-          <div className="mt-5 grid gap-3">
-            {["Independent", ...PARTNER_ORGS.map((p) => p.name)].map((name) => {
-              const count = enriched.filter((r) => r.partnerOrg === name).length;
-              const width = enriched.length ? (count / enriched.length) * 100 : 0;
-              return (
-                <div key={name}>
-                  <div className="mb-2 flex justify-between text-sm text-slate-body">
-                    <span className="max-w-[240px] truncate">{name}</span>
-                    <span>{count}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-black/6">
-                    <div className="h-full rounded-full bg-rev-orange" style={{ width: `${width}%` }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+      {/* Breakdown charts */}
+      <div className="mt-5 grid gap-5 lg:grid-cols-2">
+        <div className="rounded-2xl border border-black/8 bg-white p-6 shadow-sm">
+          <h3 className="font-display text-base font-bold text-slate-ink mb-4">By Pathway</h3>
+          {["Individual", "LTBT", "Government"].map(p => {
+            const count = individuals.filter(r => getApplyAs(r.notes) === p).length;
+            const pct   = individuals.length ? (count / individuals.length) * 100 : 0;
+            return (
+              <div key={p} className="mb-3">
+                <div className="mb-1.5 flex justify-between text-sm text-slate-body"><span>{p}</span><span className="font-bold">{count}</span></div>
+                <div className="h-2 rounded-full bg-black/6"><div className="h-full rounded-full" style={{ width: `${pct}%`, background: getPathwayColor(p) }} /></div>
+              </div>
+            );
+          })}
         </div>
-
-        {/* Payment option breakdown */}
-        <div className="rounded-[1.5rem] border border-black/8 bg-white p-7 shadow-sm">
-          <h2 className="font-display text-xl font-bold text-slate-ink">Payment Options</h2>
-          <div className="mt-5 grid gap-3">
-            {["Buy Outright (Discounted)", "12 Months", "24 Months", "36 Months"].map((opt) => {
-              const count = enriched.filter((r) => getNoteField(r.notes, "paymentOption") === opt).length;
-              const width = enriched.length ? (count / enriched.length) * 100 : 0;
-              return (
-                <div key={opt}>
-                  <div className="mb-2 flex justify-between text-sm text-slate-body">
-                    <span>{opt}</span>
-                    <span>{count}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-black/6">
-                    <div className="h-full rounded-full bg-maroon" style={{ width: `${width}%` }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        <div className="rounded-2xl border border-black/8 bg-white p-6 shadow-sm">
+          <h3 className="font-display text-base font-bold text-slate-ink mb-4">By Repayment</h3>
+          {["Buy Outright (Discounted)", "12 Months", "24 Months", "36 Months"].map(opt => {
+            const count = individuals.filter(r => getNote(r.notes, "repaymentTenor") === opt).length;
+            const pct   = individuals.length ? (count / individuals.length) * 100 : 0;
+            return (
+              <div key={opt} className="mb-3">
+                <div className="mb-1.5 flex justify-between text-sm text-slate-body"><span>{opt}</span><span className="font-bold">{count}</span></div>
+                <div className="h-2 rounded-full bg-black/6"><div className="h-full rounded-full bg-[#581319]" style={{ width: `${pct}%` }} /></div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* ── Filters + Table ── */}
-      <div className="mt-6 overflow-hidden rounded-[1.75rem] border border-black/8 bg-white shadow-sm">
-        <div className="border-b border-black/8 p-6">
-          <div className="grid gap-3 md:grid-cols-[1fr_200px_200px]">
-            {/* Search */}
+      {/* Table */}
+      <div className="mt-5 overflow-hidden rounded-2xl border border-black/8 bg-white shadow-sm">
+        <div className="border-b border-black/8 p-5">
+          <div className="grid gap-3 md:grid-cols-[1fr_180px_220px]">
             <label className="relative">
-              <Search className="absolute left-4 top-3.5 h-5 w-5 text-slate-body/50" />
-              <input
-                className="focus-ring h-12 w-full rounded-xl border border-black/12 bg-white pl-12 pr-4 text-sm text-slate-ink placeholder:text-slate-body/50"
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search name, email, school, state…"
-                value={query}
-              />
+              <Search className="absolute left-4 top-3.5 h-4 w-4 text-slate-body/40" />
+              <input className="focus-ring h-11 w-full rounded-xl border border-black/12 bg-white pl-11 pr-4 text-sm text-slate-ink placeholder:text-slate-body/45"
+                onChange={e => setQuery(e.target.value)} placeholder="Search name, email, school, state…" value={query} />
             </label>
-
-            {/* Partner filter */}
-            <select
-              className="focus-ring h-12 rounded-xl border border-black/12 bg-white px-4 text-sm text-slate-ink"
-              onChange={(e) => setPartnerFilter(e.target.value)}
-              value={partnerFilter}
-            >
-              <option value="All">All partners</option>
-              <option value="Independent">Independent</option>
-              {PARTNER_ORGS.map((p) => (
-                <option key={p.id} value={p.name}>{p.name}</option>
-              ))}
+            <select className="focus-ring h-11 rounded-xl border border-black/12 bg-white px-4 text-sm text-slate-ink"
+              onChange={e => setPathway(e.target.value)} value={pathway}>
+              {["All", "Individual", "LTBT", "Government"].map(p => <option key={p}>{p}</option>)}
             </select>
-
-            {/* Role filter */}
-            <select
-              className="focus-ring h-12 rounded-xl border border-black/12 bg-white px-4 text-sm text-slate-ink"
-              onChange={(e) => setRoleFilter(e.target.value)}
-              value={roleFilter}
-            >
-              {["All", ...roles].map((r) => <option key={r}>{r}</option>)}
+            <select className="focus-ring h-11 rounded-xl border border-black/12 bg-white px-4 text-sm text-slate-ink"
+              onChange={e => setRepayment(e.target.value)} value={repayment}>
+              {["All", "Buy Outright (Discounted)", "12 Months", "24 Months", "36 Months"].map(o => <option key={o}>{o}</option>)}
             </select>
           </div>
-
-          {/* Active filter badges */}
-          {(partnerFilter !== "All" || roleFilter !== "All") && (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="text-xs text-slate-body/60">Filtering:</span>
-              {partnerFilter !== "All" && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-rev-orange/10 px-3 py-1 text-xs font-bold text-rev-orange">
-                  {partnerFilter}
-                  <button className="text-rev-orange/60 hover:text-rev-orange" onClick={() => setPartnerFilter("All")} type="button">✕</button>
-                </span>
-              )}
-              {roleFilter !== "All" && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-maroon/10 px-3 py-1 text-xs font-bold text-maroon">
-                  {roleFilter}
-                  <button className="text-maroon/60 hover:text-maroon" onClick={() => setRoleFilter("All")} type="button">✕</button>
-                </span>
-              )}
-              <span className="text-xs text-slate-body/50">— {filtered.length} result{filtered.length !== 1 ? "s" : ""}</span>
+          <div className="mt-3 flex items-center justify-between flex-wrap gap-2">
+            <p className="text-xs text-slate-body/55">{filtered.length} record{filtered.length !== 1 ? "s" : ""}</p>
+            <div className="flex gap-2">
+              <button onClick={reload} className="inline-flex h-9 items-center gap-2 rounded-full border border-black/12 px-4 text-xs font-bold text-slate-body transition hover:border-black/25" type="button">
+                <RefreshCw className="h-3.5 w-3.5" /> Refresh
+              </button>
+              <button onClick={exportExcel} disabled={filtered.length === 0}
+                className="inline-flex h-9 items-center gap-2 rounded-full bg-[#581319] px-4 text-xs font-bold text-white disabled:opacity-40" type="button">
+                <Download className="h-3.5 w-3.5" /> Export
+              </button>
             </div>
-          )}
+          </div>
         </div>
-
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1100px] text-left text-sm">
-            <thead className="bg-black/3 text-xs uppercase tracking-[0.1em] text-slate-body/70">
+          <table className="w-full min-w-[1000px] text-left text-sm">
+            <thead className="bg-black/[0.025] text-[11px] uppercase tracking-[0.1em] text-slate-body/60">
               <tr>
-                {["Name","Email","Phone","School","Partner","Payment","State","Date"].map((h) => (
-                  <th className="px-5 py-4" key={h}>{h}</th>
+                {["Name","Email","Phone","School / Org","Pathway","Device","Repayment","State","Date"].map(h => (
+                  <th className="px-5 py-3.5" key={h}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {filtered.map((item) => (
-                <tr className="border-t border-black/6 hover:bg-black/[0.015]" key={item.id}>
-                  <td className="px-5 py-4 font-bold text-slate-ink">{item.fullName}</td>
-                  <td className="px-5 py-4 text-slate-body">{item.email}</td>
-                  <td className="px-5 py-4 text-slate-body">{item.phone}</td>
-                  <td className="px-5 py-4 text-slate-body">{item.organization}</td>
-                  <td className="px-5 py-4">
-                    <span
-                      className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
-                        item.partnerOrg === "Independent"
-                          ? "bg-black/6 text-slate-body"
-                          : "bg-rev-orange/12 text-rev-orange"
-                      }`}
-                    >
-                      {item.partnerOrg === "Independent" ? "Independent" : item.partnerOrg.replace("Let There Be Teachers Laptop Scheme", "LTBT")}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4 text-slate-body">{getNoteField(item.notes, "paymentOption")}</td>
-                  <td className="px-5 py-4 text-slate-body">{getNoteField(item.notes, "state")}</td>
-                  <td className="px-5 py-4 text-slate-body">{new Date(item.createdAt).toLocaleDateString()}</td>
-                </tr>
-              ))}
+              {filtered.map(r => {
+                const pw = getApplyAs(r.notes);
+                return (
+                  <tr className="border-t border-black/5 hover:bg-black/[0.012]" key={r.id}>
+                    <td className="px-5 py-4 font-bold text-slate-ink">{r.fullName}</td>
+                    <td className="px-5 py-4 text-slate-body">{r.email}</td>
+                    <td className="px-5 py-4 text-slate-body">{r.phone}</td>
+                    <td className="px-5 py-4 text-slate-body">{r.organization}</td>
+                    <td className="px-5 py-4">
+                      <span className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-bold text-white" style={{ background: getPathwayColor(pw) }}>{pw}</span>
+                    </td>
+                    <td className="px-5 py-4 text-slate-body">{getNote(r.notes, "device") || "—"}</td>
+                    <td className="px-5 py-4 text-slate-body">{getNote(r.notes, "repaymentTenor")}</td>
+                    <td className="px-5 py-4 text-slate-body">{getNote(r.notes, "state")}</td>
+                    <td className="px-5 py-4 text-slate-body">{new Date(r.createdAt).toLocaleDateString()}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SCHOOLS VIEW
+// ═══════════════════════════════════════════════════════════════
+function SchoolsView() {
+  const { data: all, state, error, reload } = useRegistrations();
+  const [query,   setQuery]   = useState("");
+  const [devType, setDevType] = useState("All");
+  const [purpose, setPurpose] = useState("All");
+
+  const schools = useMemo(() => all.filter(r => isSchool(r)), [all]);
+
+  const filtered = useMemo(() => {
+    return schools.filter(r => {
+      const q = query.toLowerCase();
+      const matchQ = [r.fullName, r.email, r.phone, r.organization, getNote(r.notes, "role")]
+        .join(" ").toLowerCase().includes(q);
+      const dt  = getNote(r.notes, "deviceTypes");
+      const pur = getNote(r.notes, "purposes");
+      const matchDT  = devType  === "All" || dt.includes(devType.toLowerCase());
+      const matchPur = purpose  === "All" || pur.includes(purpose.toLowerCase());
+      return matchQ && matchDT && matchPur;
+    });
+  }, [schools, query, devType, purpose]);
+
+  const stats = useMemo(() => {
+    const financing = (val: string) => {
+      try { return (JSON.parse(val)?.financingInterest === "yes"); } catch { return false; }
+    };
+    return [
+      { label: "Total Schools",       value: schools.length },
+      { label: "Interested in Finance",value: schools.filter(r => r.notes && financing(r.notes)).length },
+      { label: "Want Laptops",         value: schools.filter(r => getNote(r.notes, "deviceTypes").includes("laptops")).length },
+      { label: "Want Tablets",         value: schools.filter(r => getNote(r.notes, "deviceTypes").includes("tablets")).length },
+      { label: "Lab Setups",           value: schools.filter(r => getNote(r.notes, "purposes").includes("lab")).length },
+      { label: "For Teachers",         value: schools.filter(r => getNote(r.notes, "purposes").includes("teachers")).length },
+    ];
+  }, [schools]);
+
+  async function exportExcel() {
+    const XLSX = await import("xlsx");
+    const rows = filtered.map(r => ({
+      "Contact Name":       r.fullName,
+      Email:                r.email,
+      Phone:                r.phone,
+      "School Name":        r.organization,
+      Role:                 getNote(r.notes, "role"),
+      "Device Types":       getNote(r.notes, "deviceTypes"),
+      "Est. Device Count":  r.deviceCount ?? "—",
+      "Purposes":           getNote(r.notes, "purposes"),
+      "Financing Interest": getNote(r.notes, "financingInterest"),
+      Comments:             getNote(r.notes, "comments"),
+      Date:                 new Date(r.createdAt).toLocaleString(),
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Schools");
+    XLSX.writeFile(wb, `revrica-schools-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  }
+
+  if (state === "loading" || state === "idle") return <LoadingState />;
+  if (state === "error") return <ErrorState msg={error!} onRetry={reload} />;
+  if (schools.length === 0) return (
+    <div className="mt-8 flex flex-col items-center gap-3 rounded-2xl border border-black/8 bg-white p-12 text-center shadow-sm">
+      <Building2 className="h-9 w-9 text-slate-body/40" />
+      <p className="font-display text-lg font-bold text-slate-ink">No school enquiries yet</p>
+      <p className="max-w-sm text-sm leading-6 text-slate-body">School submissions via /apply/school will appear here.</p>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Stats */}
+      <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        {stats.map(s => <StatCard key={s.label} label={s.label} value={s.value} color={s.label === "Interested in Finance" ? "#581319" : undefined} />)}
+      </div>
+
+      {/* Device interest breakdown */}
+      <div className="mt-5 grid gap-5 lg:grid-cols-2">
+        <div className="rounded-2xl border border-black/8 bg-white p-6 shadow-sm">
+          <h3 className="font-display text-base font-bold text-slate-ink mb-4">Device Interest</h3>
+          {["laptops", "tablets", "all-in-ones", "cloud-server", "interactive-boards"].map(d => {
+            const label = { "laptops": "Laptops", "tablets": "Tablets", "all-in-ones": "All-in-One PCs", "cloud-server": "Cloud / Server", "interactive-boards": "Interactive Boards" }[d] ?? d;
+            const count = schools.filter(r => getNote(r.notes, "deviceTypes").includes(d)).length;
+            const pct   = schools.length ? (count / schools.length) * 100 : 0;
+            return (
+              <div key={d} className="mb-3">
+                <div className="mb-1.5 flex justify-between text-sm text-slate-body"><span>{label}</span><span className="font-bold">{count}</span></div>
+                <div className="h-2 rounded-full bg-black/6"><div className="h-full rounded-full bg-[#581319]" style={{ width: `${pct}%` }} /></div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="rounded-2xl border border-black/8 bg-white p-6 shadow-sm">
+          <h3 className="font-display text-base font-bold text-slate-ink mb-4">Purpose</h3>
+          {[["teachers","For Teachers"],["students","For Students"],["lab","Lab Setup"],["admin","Administrative"]].map(([id, label]) => {
+            const count = schools.filter(r => getNote(r.notes, "purposes").includes(id)).length;
+            const pct   = schools.length ? (count / schools.length) * 100 : 0;
+            return (
+              <div key={id} className="mb-3">
+                <div className="mb-1.5 flex justify-between text-sm text-slate-body"><span>{label}</span><span className="font-bold">{count}</span></div>
+                <div className="h-2 rounded-full bg-black/6"><div className="h-full rounded-full bg-[#FF6B1A]" style={{ width: `${pct}%` }} /></div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="mt-5 overflow-hidden rounded-2xl border border-black/8 bg-white shadow-sm">
+        <div className="border-b border-black/8 p-5">
+          <div className="grid gap-3 md:grid-cols-[1fr_180px_180px]">
+            <label className="relative">
+              <Search className="absolute left-4 top-3.5 h-4 w-4 text-slate-body/40" />
+              <input className="focus-ring h-11 w-full rounded-xl border border-black/12 bg-white pl-11 pr-4 text-sm text-slate-ink placeholder:text-slate-body/45"
+                onChange={e => setQuery(e.target.value)} placeholder="Search school, contact, email…" value={query} />
+            </label>
+            <select className="focus-ring h-11 rounded-xl border border-black/12 bg-white px-4 text-sm text-slate-ink"
+              onChange={e => setDevType(e.target.value)} value={devType}>
+              {["All", "Laptops", "Tablets", "All-in-Ones", "Cloud / Server", "Interactive Boards"].map(o => <option key={o}>{o}</option>)}
+            </select>
+            <select className="focus-ring h-11 rounded-xl border border-black/12 bg-white px-4 text-sm text-slate-ink"
+              onChange={e => setPurpose(e.target.value)} value={purpose}>
+              {["All", "Teachers", "Students", "Lab", "Admin"].map(o => <option key={o}>{o}</option>)}
+            </select>
+          </div>
+          <div className="mt-3 flex items-center justify-between flex-wrap gap-2">
+            <p className="text-xs text-slate-body/55">{filtered.length} school{filtered.length !== 1 ? "s" : ""}</p>
+            <div className="flex gap-2">
+              <button onClick={reload} className="inline-flex h-9 items-center gap-2 rounded-full border border-black/12 px-4 text-xs font-bold text-slate-body" type="button">
+                <RefreshCw className="h-3.5 w-3.5" /> Refresh
+              </button>
+              <button onClick={exportExcel} disabled={filtered.length === 0}
+                className="inline-flex h-9 items-center gap-2 rounded-full bg-[#581319] px-4 text-xs font-bold text-white disabled:opacity-40" type="button">
+                <Download className="h-3.5 w-3.5" /> Export
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[900px] text-left text-sm">
+            <thead className="bg-black/[0.025] text-[11px] uppercase tracking-[0.1em] text-slate-body/60">
+              <tr>
+                {["Contact","Email","Phone","School","Role","Devices Wanted","Est. Count","For","Finance?","Date"].map(h => (
+                  <th className="px-5 py-3.5" key={h}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(r => {
+                const fi = getNote(r.notes, "financingInterest");
+                const fiColor = fi === "yes" ? "#16a34a" : fi === "maybe" ? "#d97706" : fi === "no" ? "#9ca3af" : "#9ca3af";
+                const fiLabel = fi === "yes" ? "Yes" : fi === "maybe" ? "Maybe" : fi === "no" ? "No" : "—";
+                return (
+                  <tr className="border-t border-black/5 hover:bg-black/[0.012]" key={r.id}>
+                    <td className="px-5 py-4 font-bold text-slate-ink">{r.fullName}</td>
+                    <td className="px-5 py-4 text-slate-body">{r.email}</td>
+                    <td className="px-5 py-4 text-slate-body">{r.phone}</td>
+                    <td className="px-5 py-4 font-semibold text-slate-ink">{r.organization}</td>
+                    <td className="px-5 py-4 text-slate-body text-xs">{getNote(r.notes, "role")}</td>
+                    <td className="px-5 py-4">
+                      <div className="flex flex-wrap gap-1">
+                        {(() => {
+                          try {
+                            const dt = JSON.parse(r.notes ?? "{}").deviceTypes ?? [];
+                            return dt.map((d: string) => (
+                              <span key={d} className="inline-block rounded-full bg-[#581319]/8 px-2 py-0.5 text-[10px] font-bold text-[#581319]">{d}</span>
+                            ));
+                          } catch { return "—"; }
+                        })()}
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-slate-body text-center">{r.deviceCount ?? "—"}</td>
+                    <td className="px-5 py-4">
+                      <div className="flex flex-wrap gap-1">
+                        {(() => {
+                          try {
+                            const pur = JSON.parse(r.notes ?? "{}").purposes ?? [];
+                            return pur.map((p: string) => (
+                              <span key={p} className="inline-block rounded-full bg-[#FF6B1A]/10 px-2 py-0.5 text-[10px] font-bold text-[#FF6B1A]">{p}</span>
+                            ));
+                          } catch { return "—"; }
+                        })()}
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-bold text-white" style={{ background: fiColor }}>{fiLabel}</span>
+                    </td>
+                    <td className="px-5 py-4 text-slate-body">{new Date(r.createdAt).toLocaleDateString()}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

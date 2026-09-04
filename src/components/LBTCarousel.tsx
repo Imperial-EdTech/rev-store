@@ -443,7 +443,7 @@ function Slide1({ active }: { active: boolean }) {
                 </div>
 
                 <div className="mt-7">
-                  <Link href="/apply">
+                  <Link href="/apply/devices">
                     <button className="w-full rounded-full bg-amber-400 py-3 text-[12px] font-bold text-[#050d1a] transition hover:bg-amber-300">
                       Apply Today
                     </button>
@@ -505,7 +505,7 @@ function Slide2({ active }: { active: boolean }) {
                 <p className="mt-4 text-[14px] leading-[1.7] text-white/52">
                   From ₦14,858/month over 36 months. Zero upfront cost. Bank-backed and fully regulated.
                 </p>
-                <Link href="/apply" className="mt-7 inline-block">
+                <Link href="/apply/devices" className="mt-7 inline-block">
                   <button className="inline-flex items-center gap-2.5 rounded-full bg-amber-400 px-7 py-3 text-[13px] font-bold text-[#050d1a] transition hover:bg-amber-300 active:scale-95">
                     Apply Now <ArrowRight className="h-4 w-4" />
                   </button>
@@ -621,7 +621,7 @@ function Slide3({ active }: { active: boolean }) {
               </div>
 
               <div className="mt-10 flex items-center gap-4">
-                <Link href="/apply">
+                <Link href="/apply/devices">
                   <button className="inline-flex items-center gap-2.5 rounded-full bg-amber-400 px-7 py-3 text-[13px] font-bold text-[#050d1a] transition hover:bg-amber-300 active:scale-95">
                     Apply Today <ArrowRight className="h-4 w-4" />
                   </button>
