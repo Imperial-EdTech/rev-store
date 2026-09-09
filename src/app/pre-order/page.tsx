@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, CheckCircle2, Copy, Mail, MapPin, MessageCircle, Package, Truck } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { RevricaLogo } from "@/components/brand";
@@ -297,7 +298,7 @@ function StepPayment({ device, buyer, onBack }: { device:Device; buyer:BuyerInfo
 }
 
 // ── Main page ─────────────────────────────────────────────────
-export default function PreOrderPage() {
+function PreOrderInner() {
   const searchParams = useSearchParams();
   const preselect = searchParams?.get("device");
 
@@ -385,5 +386,13 @@ export default function PreOrderPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function PreOrderPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: "100vh", background: "#f5f5f5" }} />}>
+      <PreOrderInner />
+    </Suspense>
   );
 }
