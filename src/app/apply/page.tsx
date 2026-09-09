@@ -427,7 +427,7 @@ function ApplyForm() {
                           />
                           <PathwayCard
                             logo={<FederalEagle size={36}/>}
-                            title="Government Staff"
+                            title="Civil Servant"
                             description="Applying as a federal or state government education staff member."
                             selected={field.value === "government"}
                             onClick={() => field.onChange("government")}
