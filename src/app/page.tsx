@@ -2,12 +2,13 @@
 
 import { AnimatePresence, motion, useInView } from "framer-motion";
 import {
-  ArrowRight, Bell, Building2, CheckCircle2, Facebook, FlaskConical,
-  Instagram, Linkedin, Mail, MapPin, MessageCircle, Phone,
+  ArrowRight, Facebook, FlaskConical,
+  Instagram, Linkedin, Mail, MessageCircle,
   Search, ShoppingCart, Twitter, Youtube,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import type React from "react";
 import { BackToSchoolBanner } from "@/components/BackToSchoolBanner";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { PreOrderPopup } from "@/components/preorder-popup";
@@ -81,7 +82,7 @@ const DEALS = [
     name: 'Rev Orion 12"',
     spec: "Intel Celeron N4020 · 4GB RAM · 128GB eMMC · Win 11",
     price: 290000, was: 350000, save: 17,
-    img: "/devices/rev-laptop.png",
+    img: "/devices/rev-orion.png",
     badge: "Most Popular",
   },
   {
@@ -113,12 +114,14 @@ const DEALS = [
 // ─── Mobile menu ──────────────────────────────────────────────
 function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const navLinks = [
-    ["Laptops", "/products"],
-    ["Tablets", "/products"],
-    ["All-in-Ones", "#"],
-    ["Mini PCs", "#"],
+    ["Home",               "/"],
+    ["About",              "/about"],
+    ["Shop Now",           "/products"],
+    ["Laptops",            "/products"],
+    ["Tablets",            "/products"],
+    ["All-in-Ones",        "#"],
+    ["Mini PCs",           "#"],
     ["Interactive Boards", "#"],
-    ["Programs", "/teacher-empowerment"],
   ];
   return (
     <AnimatePresence>
@@ -169,6 +172,135 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   );
 }
 
+// ─── Section entrance animation wrapper ───────────────────────
+function AnimatedSection({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 32 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+// ─── WhatsApp Chat Button ──────────────────────────────────────
+const WA_NUMBER = "2348136117198";
+const WA_MESSAGE = encodeURIComponent(
+  "Hi! I just visited the RevStore website and I'm interested in learning more about your devices and payment options. " +
+  "Could you please help me with information on the available laptops/tablets, pricing, and your financing plans? " +
+  "I'd love to find the best option for my needs. Thank you!"
+);
+const WA_URL = `https://wa.me/${WA_NUMBER}?text=${WA_MESSAGE}`;
+
+function WhatsAppButton() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ position: "fixed", bottom: 28, right: 28, zIndex: 999, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10 }}>
+      {/* Popup */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.88, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.88, y: 10 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              background: "#fff",
+              borderRadius: 18,
+              boxShadow: "0 8px 40px rgba(0,0,0,0.16)",
+              padding: "20px 20px 16px",
+              width: 270,
+              border: "1px solid rgba(0,0,0,0.06)",
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <div style={{ width: 40, height: 40, borderRadius: "50%", background: "#25D366", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="22" height="22" viewBox="0 0 32 32" fill="#fff">
+                  <path d="M16 2C8.268 2 2 8.268 2 16c0 2.47.668 4.783 1.832 6.77L2 30l7.43-1.796A13.94 13.94 0 0016 30c7.732 0 14-6.268 14-14S23.732 2 16 2zm7.2 19.4c-.3.84-1.76 1.62-2.42 1.68-.62.06-1.2.28-4.04-.84-3.4-1.36-5.58-4.82-5.74-5.04-.16-.22-1.3-1.74-1.3-3.32s.82-2.36 1.12-2.68c.3-.32.66-.4.88-.4l.64.012c.2 0 .48-.076.74.56.3.72 1.02 2.48 1.1 2.66.08.18.14.4.028.64-.11.24-.166.39-.33.6-.16.21-.34.47-.48.63-.16.18-.33.38-.14.74.18.36.82 1.36 1.76 2.2 1.21 1.08 2.23 1.42 2.59 1.58.36.16.57.14.78-.08.22-.22.92-1.08 1.16-1.44.24-.36.48-.3.8-.18.32.12 2.04.96 2.4 1.14.36.18.6.26.68.4.08.22.08 1.06-.22 1.9z"/>
+                </svg>
+              </div>
+              <div>
+                <p style={{ fontWeight: 700, fontSize: 13.5, color: "#111", margin: 0 }}>RevStore Support</p>
+                <p style={{ fontSize: 11.5, color: "#25D366", margin: 0, fontWeight: 600 }}>● Online now</p>
+              </div>
+              <button
+                onClick={() => setOpen(false)}
+                style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "#9ca3af", padding: 2, lineHeight: 1 }}
+                type="button"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+            <p style={{ fontSize: 12.5, color: "#374151", lineHeight: 1.6, margin: "0 0 14px" }}>
+              Have questions? Chat with us on WhatsApp — we typically reply in minutes.
+            </p>
+            <a href={WA_URL} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                style={{ width: "100%", height: 44, borderRadius: 12, background: "#25D366", border: "none", color: "#fff", fontSize: 13.5, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                type="button"
+              >
+                <svg width="18" height="18" viewBox="0 0 32 32" fill="#fff">
+                  <path d="M16 2C8.268 2 2 8.268 2 16c0 2.47.668 4.783 1.832 6.77L2 30l7.43-1.796A13.94 13.94 0 0016 30c7.732 0 14-6.268 14-14S23.732 2 16 2zm7.2 19.4c-.3.84-1.76 1.62-2.42 1.68-.62.06-1.2.28-4.04-.84-3.4-1.36-5.58-4.82-5.74-5.04-.16-.22-1.3-1.74-1.3-3.32s.82-2.36 1.12-2.68c.3-.32.66-.4.88-.4l.64.012c.2 0 .48-.076.74.56.3.72 1.02 2.48 1.1 2.66.08.18.14.4.028.64-.11.24-.166.39-.33.6-.16.21-.34.47-.48.63-.16.18-.33.38-.14.74.18.36.82 1.36 1.76 2.2 1.21 1.08 2.23 1.42 2.59 1.58.36.16.57.14.78-.08.22-.22.92-1.08 1.16-1.44.24-.36.48-.3.8-.18.32.12 2.04.96 2.4 1.14.36.18.6.26.68.4.08.22.08 1.06-.22 1.9z"/>
+                </svg>
+                Chat on WhatsApp
+              </motion.button>
+            </a>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* The floating button itself */}
+      <motion.button
+        onClick={() => setOpen(o => !o)}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 1.2, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.94 }}
+        style={{
+          width: 58,
+          height: 58,
+          borderRadius: "50%",
+          background: "#25D366",
+          border: "none",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: "0 4px 20px rgba(37,211,102,0.45)",
+          position: "relative",
+        }}
+        type="button"
+        aria-label="Chat with us on WhatsApp"
+      >
+        {/* Pulse ring */}
+        <motion.span
+          animate={{ scale: [1, 1.55], opacity: [0.5, 0] }}
+          transition={{ duration: 1.6, repeat: Infinity, ease: "easeOut" }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            borderRadius: "50%",
+            background: "#25D366",
+            pointerEvents: "none",
+          }}
+        />
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="#fff">
+          <path d="M16 2C8.268 2 2 8.268 2 16c0 2.47.668 4.783 1.832 6.77L2 30l7.43-1.796A13.94 13.94 0 0016 30c7.732 0 14-6.268 14-14S23.732 2 16 2zm7.2 19.4c-.3.84-1.76 1.62-2.42 1.68-.62.06-1.2.28-4.04-.84-3.4-1.36-5.58-4.82-5.74-5.04-.16-.22-1.3-1.74-1.3-3.32s.82-2.36 1.12-2.68c.3-.32.66-.4.88-.4l.64.012c.2 0 .48-.076.74.56.3.72 1.02 2.48 1.1 2.66.08.18.14.4.028.64-.11.24-.166.39-.33.6-.16.21-.34.47-.48.63-.16.18-.33.38-.14.74.18.36.82 1.36 1.76 2.2 1.21 1.08 2.23 1.42 2.59 1.58.36.16.57.14.78-.08.22-.22.92-1.08 1.16-1.44.24-.36.48-.3.8-.18.32.12 2.04.96 2.4 1.14.36.18.6.26.68.4.08.22.08 1.06-.22 1.9z"/>
+        </svg>
+      </motion.button>
+    </div>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════
 // PAGE
 // ═══════════════════════════════════════════════════════════════
@@ -186,6 +318,7 @@ export default function Home() {
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@700;800&display=swap');
         .serve-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .deals-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+        .shop-cat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
         .why-grid { display: grid; grid-template-columns: repeat(4,1fr); }
         .programs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .trust-grid { display: grid; grid-template-columns: repeat(4,1fr); }
@@ -200,11 +333,13 @@ export default function Home() {
         .search-bar { display: block; }
         @media (max-width: 1024px) {
           .deals-grid { grid-template-columns: repeat(2,1fr) !important; }
+          .shop-cat-grid { grid-template-columns: repeat(2,1fr) !important; }
           .footer-grid { grid-template-columns: 1fr 1fr 1fr !important; }
         }
         @media (max-width: 768px) {
           .serve-grid { grid-template-columns: 1fr !important; }
           .deals-grid { grid-template-columns: 1fr 1fr !important; }
+          .shop-cat-grid { grid-template-columns: 1fr 1fr !important; }
           .why-grid { grid-template-columns: 1fr 1fr !important; }
           .programs-grid { grid-template-columns: 1fr !important; }
           .trust-grid { grid-template-columns: 1fr 1fr !important; }
@@ -227,81 +362,97 @@ export default function Home() {
       `}</style>
 
       {/* ── TOP INFO BAR ── */}
-      <div className="top-info-bar" style={{ background: "#111", padding: "8px 0" }}>
-        <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 20, fontSize: 11.5, color: "rgba(255,255,255,0.5)" }}>
-            <span>About</span><span>Support</span><span>FAQ</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5 }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#f2760f", display: "inline-block" }} />
-            <span style={{ color: "#f2760f", fontWeight: 700 }}>Pre-order open</span>
-            <span style={{ color: "rgba(255,255,255,0.45)" }}>— Rev Orion from ₦290,000</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 20, fontSize: 11.5, color: "rgba(255,255,255,0.5)" }}>
-            <span>+234 813 611 7198</span>
-            <span style={{ color: "#f2760f" }}>support@revrica.com</span>
-          </div>
-        </div>
+      <div style={{ background: "#4a0e10", padding: "9px 20px", textAlign: "center" }}>
+        <span style={{ fontSize: 12.5, fontWeight: 600, color: "rgba(255,255,255,0.92)", letterSpacing: "0.01em" }}>
+          Welcome to{" "}
+          <span style={{ fontWeight: 800, color: "#fff" }}>RevStore</span>
+          <span style={{ color: "rgba(255,255,255,0.55)", fontWeight: 400 }}> by Revrica</span>
+        </span>
       </div>
 
       {/* ── HEADER ── */}
-      <header style={{ background: "#fff", borderBottom: "1px solid #e8e8e8", position: "sticky", top: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 20px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 16, height: 64 }}>
+      <header style={{ background: "#fff", borderBottom: "1px solid #e8e8e8", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 1px 12px rgba(0,0,0,0.05)" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 28px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 20, height: 82 }}>
+
             {/* Hamburger — mobile only */}
             <button
               className="nav-mobile-btn"
               onClick={() => setMobileMenuOpen(true)}
-              style={{ height: 36, width: 36, alignItems: "center", justifyContent: "center", borderRadius: 8, border: "1.5px solid #e8e8e8", background: "transparent", cursor: "pointer", flexShrink: 0 }}
+              style={{ height: 40, width: 40, alignItems: "center", justifyContent: "center", borderRadius: 10, border: "1.5px solid #e8e8e8", background: "transparent", cursor: "pointer", flexShrink: 0 }}
               type="button" aria-label="Open menu"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2.2" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2.2" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
 
-            {/* Logo — light variant for white header */}
+            {/* Logo */}
             <div style={{ flexShrink: 0 }}>
               <RevricaLogo variant="light" />
             </div>
 
+            {/* Primary nav — desktop only, centred */}
+            <nav className="nav-desktop" style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 4 }}>
+              {([
+                ["Home",     "/"],
+                ["About",    "/about"],
+                ["Shop Now", "/products"],
+              ] as [string, string][]).map(([label, href], i) => (
+                <Link key={label} href={href}
+                  style={{
+                    padding: "10px 22px",
+                    display: "flex",
+                    alignItems: "center",
+                    fontSize: 14.5,
+                    fontWeight: 700,
+                    color: i === 0 ? "#4a0e10" : "#1a1a1a",
+                    whiteSpace: "nowrap",
+                    textDecoration: "none",
+                    borderRadius: 10,
+                    transition: "background 0.15s, color 0.15s",
+                    background: i === 0 ? "rgba(74,14,16,0.06)" : "transparent",
+                  }}
+                >
+                  {label}
+                </Link>
+              ))}
+            </nav>
+
             {/* Search — hidden on mobile */}
-            <div className="search-bar" style={{ flex: 1, maxWidth: 500, position: "relative" }}>
-              <Search size={14} style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", color: "#aaa" }} />
+            <div className="search-bar" style={{ flex: 1, maxWidth: 420, position: "relative" }}>
+              <Search size={15} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#bbb" }} />
               <input
                 placeholder="Search laptops, tablets, accessories..."
-                style={{ width: "100%", height: 38, borderRadius: 9, border: "1.5px solid #e8e8e8", background: "#fafafa", paddingLeft: 36, paddingRight: 14, fontSize: 12.5, color: "#111", outline: "none", boxSizing: "border-box" }}
+                style={{ width: "100%", height: 44, borderRadius: 11, border: "1.5px solid #e8e8e8", background: "#fafafa", paddingLeft: 40, paddingRight: 16, fontSize: 13, color: "#111", outline: "none", boxSizing: "border-box", transition: "border-color 0.15s" }}
+                onFocus={e => (e.target.style.borderColor = "#4a0e10")}
+                onBlur={e => (e.target.style.borderColor = "#e8e8e8")}
               />
             </div>
 
-            {/* Desktop actions */}
-            <div className="nav-desktop" style={{ alignItems: "center", gap: 8, marginLeft: "auto" }}>
+            {/* Pre-order CTA */}
+            <div className="nav-desktop" style={{ alignItems: "center", gap: 10, flexShrink: 0 }}>
               <Link href="/pre-order">
-                <button style={{ height: 37, padding: "0 18px", borderRadius: 8, border: "none", background: "#f2760f", fontSize: 12.5, fontWeight: 700, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 7, whiteSpace: "nowrap" }} type="button">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="#fff"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                <button
+                  style={{ height: 44, padding: "0 22px", borderRadius: 11, border: "none", background: "#4a0e10", fontSize: 13.5, fontWeight: 700, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, whiteSpace: "nowrap", boxShadow: "0 2px 10px rgba(74,14,16,0.25)", transition: "background 0.15s" }}
+                  onMouseEnter={e => ((e.currentTarget as HTMLButtonElement).style.background = "#3a0a0d")}
+                  onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.background = "#4a0e10")}
+                  type="button"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                   Pre-order
                 </button>
               </Link>
             </div>
 
-            {/* Mobile: pre-order pill only */}
+            {/* Mobile: pre-order pill */}
             <div className="nav-mobile-btn" style={{ marginLeft: "auto" }}>
               <Link href="/pre-order">
-                <button style={{ height: 36, padding: "0 14px", borderRadius: 8, border: "none", background: "#f2760f", fontSize: 12, fontWeight: 700, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }} type="button">
+                <button style={{ height: 40, padding: "0 16px", borderRadius: 10, border: "none", background: "#4a0e10", fontSize: 12.5, fontWeight: 700, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }} type="button">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                   Pre-order
                 </button>
               </Link>
             </div>
           </div>
-
-          {/* Category nav — desktop */}
-          <nav className="nav-desktop" style={{ alignItems: "center", gap: 4, height: 40, borderTop: "1px solid #f0f0f0", overflowX: "auto" }}>
-            {[["Laptops", "/products"], ["Tablets", "/products"], ["All-in-Ones", "#"], ["Mini PCs", "#"], ["Interactive Boards", "#"], ["Content Servers", "#"]].map(([label, href]) => (
-              <Link key={label} href={href}
-                style={{ padding: "0 12px", height: "100%", display: "flex", alignItems: "center", fontSize: 12.5, fontWeight: 600, color: "#374151", whiteSpace: "nowrap", textDecoration: "none" }}>
-                {label}
-              </Link>
-            ))}
-          </nav>
         </div>
       </header>
 
@@ -314,61 +465,16 @@ export default function Home() {
         {/* 2. BACK TO SCHOOL BANNER */}
         <BackToSchoolBanner />
 
-        {/* 3. WHO WE SERVE */}
-        <section style={{ background: "#fff", padding: "52px 20px" }}>
-          <div style={{ maxWidth: 1240, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: 32 }}>
-              <h2 style={{ fontFamily: "Sora,sans-serif", fontWeight: 800, fontSize: 28, color: "#111", letterSpacing: "-0.02em", margin: "0 0 8px" }}>
-                Who <span style={{ color: "#f2760f" }}>we serve</span>
-              </h2>
-              <div style={{ width: 36, height: 3, background: "#f2760f", margin: "0 auto", borderRadius: 2 }} />
-            </div>
-            <div className="serve-grid">
-              {/* Students */}
-              <div style={{ borderRadius: 18, background: "linear-gradient(135deg,#e8f5ee 0%,#d4eddc 100%)", padding: "36px 32px", position: "relative", overflow: "hidden", display: "flex", gap: 20, alignItems: "flex-end", minHeight: 240 }}>
-                <div style={{ flex: 1, zIndex: 2, position: "relative" }}>
-                  <div style={{ display: "inline-block", fontSize: 10, fontWeight: 800, letterSpacing: "0.14em", color: "#0a6b35", textTransform: "uppercase", marginBottom: 12, background: "rgba(10,107,53,0.1)", padding: "4px 10px", borderRadius: 4 }}>For Students</div>
-                  <h3 style={{ fontFamily: "Sora,sans-serif", fontWeight: 800, fontSize: 26, color: "#111", margin: "0 0 10px", lineHeight: 1.15 }}>Learn better.<br />Do more.</h3>
-                  <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.6, margin: "0 0 22px", maxWidth: 240 }}>Reliable devices for studying, assignments and research.</p>
-                  <Link href="/products">
-                    <button style={{ display: "inline-flex", alignItems: "center", gap: 7, height: 42, padding: "0 22px", borderRadius: 100, background: "#0a6b35", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }} type="button">
-                      Shop student deals <ArrowRight size={13} />
-                    </button>
-                  </Link>
-                </div>
-                <div style={{ width: 140, flexShrink: 0, alignSelf: "flex-end" }}>
-                  <DeviceImg alt="Student with Rev device" src="/images/student.png" className="w-full object-contain" />
-                </div>
-                <div style={{ position: "absolute", right: -20, bottom: -20, width: 160, height: 160, borderRadius: "50%", background: "rgba(10,107,53,0.06)", pointerEvents: "none" }} />
-              </div>
-              {/* Teachers */}
-              <div style={{ borderRadius: 18, background: "linear-gradient(135deg,#fff3ec 0%,#fde8d4 100%)", padding: "36px 32px", position: "relative", overflow: "hidden", display: "flex", gap: 20, alignItems: "flex-end", minHeight: 240 }}>
-                <div style={{ flex: 1, zIndex: 2, position: "relative" }}>
-                  <div style={{ display: "inline-block", fontSize: 10, fontWeight: 800, letterSpacing: "0.14em", color: "#b45309", textTransform: "uppercase", marginBottom: 12, background: "rgba(180,83,9,0.1)", padding: "4px 10px", borderRadius: 4 }}>For Teachers</div>
-                  <h3 style={{ fontFamily: "Sora,sans-serif", fontWeight: 800, fontSize: 26, color: "#111", margin: "0 0 10px", lineHeight: 1.15 }}>Teach better.<br />Inspire more.</h3>
-                  <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.6, margin: "0 0 22px", maxWidth: 240 }}>Built for planning, lessons and every part of your school day.</p>
-                  <Link href="/apply/devices">
-                    <button style={{ display: "inline-flex", alignItems: "center", gap: 7, height: 42, padding: "0 22px", borderRadius: 100, background: "#f2760f", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }} type="button">
-                      Shop teacher deals <ArrowRight size={13} />
-                    </button>
-                  </Link>
-                </div>
-                <div style={{ width: 140, flexShrink: 0, alignSelf: "flex-end" }}>
-                  <DeviceImg alt="Teacher with Rev laptop" src="/images/teacher.png" className="w-full object-contain" />
-                </div>
-                <div style={{ position: "absolute", right: -20, bottom: -20, width: 160, height: 160, borderRadius: "50%", background: "rgba(242,118,15,0.06)", pointerEvents: "none" }} />
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* WHO WE SERVE moved to /about page */}
 
-        {/* 4. TODAY'S DEALS */}
-        <section style={{ background: "#f5f5f5", padding: "52px 20px" }}>
+        {/* 3. LIMITED OFFERS */}
+        <AnimatedSection>
+        <section style={{ background: "#f5f5f5", padding: "56px 20px" }}>
           <div style={{ maxWidth: 1240, margin: "0 auto" }}>
-            <div className="deals-header" style={{ marginBottom: 24 }}>
+            <div className="deals-header" style={{ marginBottom: 28 }}>
               <div>
                 <h2 style={{ fontFamily: "Sora,sans-serif", fontWeight: 800, fontSize: 28, color: "#111", letterSpacing: "-0.02em", margin: "0 0 4px" }}>
-                  Today's <span style={{ color: "#f2760f" }}>deals</span>
+                  Limited <span style={{ color: "#f2760f" }}>offers</span>
                 </h2>
                 <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>Limited-time offers on our most popular devices.</p>
               </div>
@@ -378,10 +484,14 @@ export default function Home() {
               </div>
             </div>
             <div className="deals-grid">
-              {DEALS.map((p) => (
+              {DEALS.map((p, idx) => (
                 <Link key={p.id} href={`/products/${p.id}`} style={{ textDecoration: "none" }}>
                   <motion.div
-                    whileHover={{ y: -3, boxShadow: "0 12px 32px rgba(0,0,0,0.10)" }}
+                    initial={{ opacity: 0, y: 28 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-40px" }}
+                    transition={{ duration: 0.45, delay: idx * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                    whileHover={{ y: -5, boxShadow: "0 16px 40px rgba(0,0,0,0.12)" }}
                     style={{ background: "#fff", borderRadius: 16, border: "1px solid #ebebeb", overflow: "hidden", cursor: "pointer", height: "100%", display: "flex", flexDirection: "column" }}
                   >
                     <div style={{ padding: "14px 14px 0", position: "relative" }}>
@@ -424,8 +534,121 @@ export default function Home() {
             </div>
           </div>
         </section>
+        </AnimatedSection>
+
+        {/* 4b. SHOP BY CATEGORY */}
+        <AnimatedSection>
+        <section style={{ background: "#fff", padding: "56px 20px", borderTop: "1px solid #ebebeb" }}>
+          <div style={{ maxWidth: 1240, margin: "0 auto" }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 10 }}>
+              <h2 style={{ fontFamily: "Sora,sans-serif", fontWeight: 800, fontSize: 24, color: "#111", letterSpacing: "-0.02em", margin: 0 }}>
+                Shop by <span style={{ color: "#f2760f" }}>category</span>
+              </h2>
+              <Link href="/products" style={{ fontSize: 13, fontWeight: 700, color: "#f2760f", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
+                View all <ArrowRight size={13} />
+              </Link>
+            </div>
+            <div className="shop-cat-grid">
+              {[
+                {
+                  label: "Laptops",
+                  sub: "Work, learn & create",
+                  href: "/products",
+                  bg: "linear-gradient(135deg,#f0f4ff 0%,#e8eeff 100%)",
+                  accent: "#3b5bdb",
+                  icon: (
+                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="4" width="20" height="13" rx="2"/>
+                      <path d="M0 21h24"/>
+                    </svg>
+                  ),
+                },
+                {
+                  label: "Tablets",
+                  sub: "Portable & powerful",
+                  href: "/products",
+                  bg: "linear-gradient(135deg,#fff0f6 0%,#ffe3ec 100%)",
+                  accent: "#c2255c",
+                  icon: (
+                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#c2255c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="4" y="2" width="16" height="20" rx="2"/>
+                      <circle cx="12" cy="17.5" r="0.8" fill="#c2255c" stroke="none"/>
+                    </svg>
+                  ),
+                },
+                {
+                  label: "All-in-Ones",
+                  sub: "Desktop, reinvented",
+                  href: "#",
+                  bg: "linear-gradient(135deg,#f3fff3 0%,#e6ffe6 100%)",
+                  accent: "#2f9e44",
+                  icon: (
+                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#2f9e44" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="3" width="20" height="14" rx="2"/>
+                      <path d="M8 21h8M12 17v4"/>
+                    </svg>
+                  ),
+                },
+                {
+                  label: "Mini PCs",
+                  sub: "Big power, tiny form",
+                  href: "#",
+                  bg: "linear-gradient(135deg,#fff9f0 0%,#fff3e0 100%)",
+                  accent: "#e67700",
+                  icon: (
+                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#e67700" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="4" width="9" height="14" rx="2"/>
+                      <path d="M16 8h3a1 1 0 011 1v6a1 1 0 01-1 1h-3"/>
+                      <circle cx="7.5" cy="15" r="1" fill="#e67700" stroke="none"/>
+                    </svg>
+                  ),
+                },
+              ].map((cat, idx) => (
+                <Link key={cat.label} href={cat.href} style={{ textDecoration: "none" }}>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.92, y: 20 }}
+                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-30px" }}
+                    transition={{ duration: 0.4, delay: idx * 0.07, ease: [0.22, 1, 0.36, 1] }}
+                    whileHover={{ y: -6, boxShadow: `0 12px 32px ${cat.accent}28` }}
+                    style={{
+                      background: cat.bg,
+                      borderRadius: 20,
+                      padding: "32px 24px 28px",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-start",
+                      gap: 16,
+                      cursor: "pointer",
+                      border: "1.5px solid transparent",
+                      height: "100%",
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    <motion.div
+                      whileHover={{ rotate: [0, -8, 8, 0], scale: 1.08 }}
+                      transition={{ duration: 0.4 }}
+                      style={{ width: 68, height: 68, borderRadius: 16, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 10px rgba(0,0,0,0.06)" }}
+                    >
+                      {cat.icon}
+                    </motion.div>
+                    <div>
+                      <p style={{ fontFamily: "Sora,sans-serif", fontWeight: 800, fontSize: 17, color: "#111", margin: "0 0 4px", letterSpacing: "-0.01em" }}>{cat.label}</p>
+                      <p style={{ fontSize: 12.5, color: "#6b7280", margin: 0 }}>{cat.sub}</p>
+                    </div>
+                    <div style={{ marginTop: "auto", display: "flex", alignItems: "center", gap: 5, fontSize: 12.5, fontWeight: 700, color: cat.accent }}>
+                      Browse <ArrowRight size={12} />
+                    </div>
+                  </motion.div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+        </AnimatedSection>
 
         {/* 5. WHY REVSTORE */}
+        <AnimatedSection>
         <section style={{ background: "#fff", padding: "52px 20px", borderTop: "1px solid #ebebeb" }}>
           <div style={{ maxWidth: 1240, margin: "0 auto" }}>
             <h2 style={{ fontFamily: "Sora,sans-serif", fontWeight: 800, fontSize: 26, color: "#111", textAlign: "center", margin: "0 0 32px", letterSpacing: "-0.02em" }}>
@@ -451,6 +674,7 @@ export default function Home() {
             </div>
           </div>
         </section>
+        </AnimatedSection>
 
         {/* 6. PROGRAMS MAKING AN IMPACT */}
         <section style={{ background: "#f5f5f5", padding: "52px 20px" }}>
@@ -612,6 +836,9 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* WhatsApp floating chat button */}
+      <WhatsAppButton />
     </div>
   );
 }

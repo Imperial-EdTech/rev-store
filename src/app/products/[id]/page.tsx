@@ -27,7 +27,7 @@ const PRODUCTS: Record<string, {
     name: 'Rev Orion 12"',
     tagline: "The teacher's everyday laptop — lightweight, powerful, classroom-ready.",
     price: 290000, was: 350000, save: 17,
-    img: "/devices/rev-laptop.png",
+    img: "/devices/rev-orion.png",
     accentColor: "#581319", category: "Laptop", badge: "Most Popular",
     monthlyFrom: 14858,
     specs: [
