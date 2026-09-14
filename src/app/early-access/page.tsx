@@ -10,9 +10,10 @@ import type React from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { SiteHeader } from "@/components/shell";
 import { Button } from "@/components/ui";
 import { interests, roles } from "@/lib/data";
+import { StorefrontHeader } from "@/components/StorefrontHeader";
+import { StorefrontFooter } from "@/components/StorefrontFooter";
 
 const schema = z.object({
   fullName: z.string().min(2, "Enter your full name"),
@@ -103,7 +104,7 @@ export default function EarlyAccessPage() {
 
   return (
     <>
-      <SiteHeader />
+      <StorefrontHeader />
       <main className="maroon-glow relative min-h-screen py-12">
         <div className="noise-overlay" />
         <div className="container-x relative z-10 grid gap-8 lg:grid-cols-[0.8fr_1.1fr]">
@@ -274,6 +275,7 @@ export default function EarlyAccessPage() {
           </div>
         </div>
       </main>
+      <StorefrontFooter />
     </>
   );
 }

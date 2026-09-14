@@ -3,8 +3,9 @@
 import { Users, RefreshCw, Loader2, AlertCircle, Inbox } from "lucide-react";
 import type React from "react";
 import { useState, useEffect, useMemo } from "react";
-import { SiteHeader } from "@/components/shell";
 import type { WaitlistRegistration } from "@/lib/types";
+import { StorefrontHeader } from "@/components/StorefrontHeader";
+import { StorefrontFooter } from "@/components/StorefrontFooter";
 
 // ── Partner config ────────────────────────────────────────────
 // Each partner has: their display name, the value stored in notes.partnerOrg,
@@ -51,7 +52,7 @@ export default function PartnersPage() {
   if (!partner) {
     return (
       <>
-        <SiteHeader />
+        <StorefrontHeader />
         <main className="maroon-glow relative flex min-h-screen items-center py-16">
           <div className="noise-overlay" />
           <section className="container-x relative z-10">
@@ -134,7 +135,7 @@ function PartnerDashboard({ partner }: { partner: (typeof PARTNERS)[number] }) {
 
   return (
     <>
-      <SiteHeader />
+      <StorefrontHeader />
       <main className="maroon-glow relative min-h-screen py-10">
         <div className="noise-overlay" />
         <div className="container-x relative z-10 max-w-4xl">
@@ -262,6 +263,7 @@ function PartnerDashboard({ partner }: { partner: (typeof PARTNERS)[number] }) {
           )}
         </div>
       </main>
+      <StorefrontFooter />
     </>
   );
 }

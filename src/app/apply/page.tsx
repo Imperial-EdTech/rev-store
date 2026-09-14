@@ -25,8 +25,9 @@ import type React from "react";
 import { Suspense, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
-import { SiteHeader } from "@/components/shell";
 import { Button } from "@/components/ui";
+import { StorefrontHeader } from "@/components/StorefrontHeader";
+import { StorefrontFooter } from "@/components/StorefrontFooter";
 
 const JAKARTA = "'Plus Jakarta Sans', ui-sans-serif, system-ui";
 const SORA    = "'Sora', ui-sans-serif, system-ui";
@@ -312,7 +313,7 @@ function ApplyForm() {
 
   return (
     <>
-      <SiteHeader />
+      <StorefrontHeader />
       <main className="maroon-glow relative min-h-screen py-12" style={{ fontFamily: JAKARTA }}>
         <div className="noise-overlay"/>
         <div className="container-x relative z-10 grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
@@ -427,7 +428,7 @@ function ApplyForm() {
                           />
                           <PathwayCard
                             logo={<FederalEagle size={36}/>}
-                            title="Civil Servant"
+                            title="Government Staff"
                             description="Applying as a federal or state government education staff member."
                             selected={field.value === "government"}
                             onClick={() => field.onChange("government")}
@@ -611,8 +612,11 @@ function ApplyForm() {
 // ─── Suspense wrapper (useSearchParams needs it) ──────────────
 export default function ApplyPage() {
   return (
-    <Suspense fallback={<div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", color:"#fff" }}>Loading…</div>}>
-      <ApplyForm />
-    </Suspense>
+    <>
+      <Suspense fallback={<div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", color:"#fff" }}>Loading…</div>}>
+        <ApplyForm />
+      </Suspense>
+      <StorefrontFooter />
+    </>
   );
 }

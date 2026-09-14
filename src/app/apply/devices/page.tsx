@@ -16,7 +16,8 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { SiteHeader } from "@/components/shell";
+import { StorefrontHeader } from "@/components/StorefrontHeader";
+import { StorefrontFooter } from "@/components/StorefrontFooter";
 
 const JAKARTA = "'Plus Jakarta Sans', ui-sans-serif, system-ui";
 const SORA    = "'Sora', ui-sans-serif, system-ui";
@@ -185,7 +186,7 @@ export default function DevicePickerPage() {
   if (pathway === null) {
     return (
       <>
-        <SiteHeader />
+        <StorefrontHeader />
         <main className="maroon-glow relative min-h-screen" style={{ fontFamily: JAKARTA }}>
           <div className="noise-overlay" />
           <div style={{ maxWidth: 680, margin: "0 auto", padding: "64px 20px 80px", position: "relative", zIndex: 10 }}>
@@ -273,7 +274,7 @@ export default function DevicePickerPage() {
   // ── Device picker (individual pathway) ────────────────────
   return (
     <>
-      <SiteHeader />
+      <StorefrontHeader />
       <main style={{ background: "#f5f5f5", minHeight: "100vh", fontFamily: JAKARTA }}>
 
         {/* Header band */}
@@ -484,6 +485,7 @@ export default function DevicePickerPage() {
           )}
         </AnimatePresence>
       </main>
+      <StorefrontFooter />
     </>
   );
 }

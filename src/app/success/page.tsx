@@ -3,13 +3,14 @@
 import { motion } from "framer-motion";
 import { CheckCircle2, MessageCircle } from "lucide-react";
 import Link from "next/link";
-import { SiteHeader } from "@/components/shell";
 import { Button } from "@/components/ui";
+import { StorefrontHeader } from "@/components/StorefrontHeader";
+import { StorefrontFooter } from "@/components/StorefrontFooter";
 
 export default function SuccessPage() {
   return (
     <>
-      <SiteHeader />
+      <StorefrontHeader />
       <main className="maroon-glow relative flex min-h-screen items-center py-16">
         <div className="noise-overlay" />
         <section className="container-x relative z-10 text-center">
@@ -99,6 +100,7 @@ export default function SuccessPage() {
 
         </section>
       </main>
+      <StorefrontFooter />
     </>
   );
 }

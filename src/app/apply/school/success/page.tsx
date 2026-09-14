@@ -3,7 +3,8 @@
 import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle2, ClipboardCheck } from "lucide-react";
 import Link from "next/link";
-import { SiteHeader } from "@/components/shell";
+import { StorefrontHeader } from "@/components/StorefrontHeader";
+import { StorefrontFooter } from "@/components/StorefrontFooter";
 
 const SORA    = "'Sora', ui-sans-serif, system-ui";
 const JAKARTA = "'Plus Jakarta Sans', ui-sans-serif, system-ui";
@@ -13,7 +14,7 @@ const E: [number,number,number,number] = [0.16, 1, 0.3, 1];
 export default function SchoolSuccessPage() {
   return (
     <>
-      <SiteHeader />
+      <StorefrontHeader />
       <main className="maroon-glow relative flex min-h-screen items-center py-16" style={{ fontFamily: JAKARTA }}>
         <div className="noise-overlay" />
         <div style={{ maxWidth: 620, margin: "0 auto", padding: "0 20px", position: "relative", zIndex: 10, textAlign: "center" }}>
@@ -90,6 +91,7 @@ export default function SchoolSuccessPage() {
 
         </div>
       </main>
+      <StorefrontFooter />
     </>
   );
 }

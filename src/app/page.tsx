@@ -82,7 +82,7 @@ const DEALS = [
     name: 'Rev Orion 12"',
     spec: "Intel Celeron N4020 · 4GB RAM · 128GB eMMC · Win 11",
     price: 290000, was: 350000, save: 17,
-    img: "/devices/rev-orion.png",
+    img: "/devices/rev-laptop.png",
     badge: "Most Popular",
   },
   {
@@ -322,11 +322,9 @@ export default function Home() {
         .why-grid { display: grid; grid-template-columns: repeat(4,1fr); }
         .programs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .trust-grid { display: grid; grid-template-columns: repeat(4,1fr); }
-        .footer-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 32px; }
         .financing-bar { display: flex; align-items: center; }
         .top-info-bar { display: flex; }
         .deals-header { display: flex; align-items: flex-end; justify-content: space-between; }
-        .newsletter-row { display: flex; align-items: center; gap: 20px; }
         .bulk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .nav-desktop { display: flex; }
         .nav-mobile-btn { display: none; }
@@ -765,24 +763,25 @@ export default function Home() {
       </main>
 
       {/* ── FOOTER ── */}
-      <footer style={{ background: "#0a0a0a", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        {/* Newsletter */}
-        <div style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "28px 20px" }}>
-          <div className="newsletter-row" style={{ maxWidth: 1240, margin: "0 auto" }}>
-            <div style={{ flex: "0 0 auto" }}>
-              <p style={{ fontWeight: 700, fontSize: 14, color: "#fff", margin: "0 0 3px" }}>Stay in the loop</p>
-              <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.35)", margin: 0 }}>Deals, programs and product updates — no spam.</p>
-            </div>
-            <div style={{ display: "flex", gap: 8, width: "100%", maxWidth: 460, marginLeft: "auto" }}>
+      {/* ═══ FOOTER ═══ */}
+      <footer style={{ fontFamily: "'Plus Jakarta Sans','Inter Variable',ui-sans-serif,system-ui" }}>
+
+        {/* ── Newsletter band ── */}
+        <div style={{ background: "#4a0e10", padding: "22px 20px" }}>
+          <div style={{ maxWidth: 1240, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+            <p style={{ fontSize: 18, fontWeight: 700, color: "#fff", margin: 0 }}>Sign up to Newsletter</p>
+            <div style={{ display: "flex", gap: 0, width: "100%", maxWidth: 500 }}>
               <input
-                type="email" placeholder="Enter your email"
-                value={email} onChange={e => setEmail(e.target.value)}
-                style={{ flex: 1, height: 42, borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", padding: "0 14px", fontSize: 13, color: "#fff", outline: "none", boxSizing: "border-box" }}
+                type="email"
+                placeholder="Email address"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                style={{ flex: 1, height: 46, borderRadius: "100px 0 0 100px", border: "none", background: "#fff", padding: "0 20px", fontSize: 13.5, color: "#374151", outline: "none", boxSizing: "border-box" }}
               />
               <button
                 onClick={() => { if (email) setSubscribed(true); }}
-                style={{ height: 42, padding: "0 18px", borderRadius: 8, border: "none", background: "#f2760f", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
                 type="button"
+                style={{ height: 46, padding: "0 24px", borderRadius: "0 100px 100px 0", border: "none", background: "#111", color: "#fff", fontSize: 12, fontWeight: 800, cursor: "pointer", letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap", flexShrink: 0 }}
               >
                 {subscribed ? "Subscribed ✓" : "Subscribe"}
               </button>
@@ -790,51 +789,135 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Footer links */}
-        <div className="footer-grid" style={{ maxWidth: 1240, margin: "0 auto", padding: "36px 20px" }}>
-          <div>
-            <div style={{ marginBottom: 14 }}>
-              <RevricaLogo />
-            </div>
-            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", lineHeight: 1.65, margin: "0 0 16px", maxWidth: 210 }}>African hardware, built for impact. Proudly designed and assembled in Nigeria.</p>
-            <div style={{ display: "flex", gap: 8 }}>
-              {[Facebook, Twitter, Instagram, Linkedin, Youtube].map((Icon, i) => (
-                <div key={i} style={{ width: 30, height: 30, borderRadius: 7, background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Icon size={13} color="rgba(255,255,255,0.4)" />
+        {/* ── Main footer body ── */}
+        <div style={{ background: "#fff", padding: "48px 20px 36px", borderBottom: "1px solid #ebebeb" }}>
+          <div style={{ maxWidth: 1240, margin: "0 auto", display: "grid", gridTemplateColumns: "1.7fr 1fr 1fr 1fr", gap: 40 }} className="footer-cols">
+            {/* Column 1 — brand */}
+            <div>
+              <div style={{ marginBottom: 20 }}>
+                <RevricaLogo variant="light" />
+              </div>
+              {/* Phone */}
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 18 }}>
+                <div style={{ width: 38, height: 38, borderRadius: "50%", background: "#f0f0f0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.18 2 2 0 012.1 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/>
+                  </svg>
                 </div>
+                <div>
+                  <p style={{ fontSize: 12, color: "#9ca3af", margin: "0 0 3px" }}>Got questions? Call us!</p>
+                  <p style={{ fontSize: 15, fontWeight: 700, color: "#4a0e10", margin: 0, lineHeight: 1.4 }}>+234 813 611 7198</p>
+                </div>
+              </div>
+              {/* Address */}
+              <div style={{ marginBottom: 20 }}>
+                <p style={{ fontSize: 13.5, fontWeight: 700, color: "#111", margin: "0 0 4px" }}>Contact info</p>
+                <p style={{ fontSize: 13, color: "#6b7280", margin: 0, lineHeight: 1.6 }}>Lagos, Nigeria</p>
+                <p style={{ fontSize: 13, color: "#6b7280", margin: 0, lineHeight: 1.6 }}>support@revrica.com</p>
+              </div>
+              {/* Socials */}
+              <div style={{ display: "flex", gap: 8 }}>
+                {[
+                  { Icon: Facebook,  label: "Facebook" },
+                  { Icon: Instagram, label: "Instagram" },
+                  { Icon: Twitter,   label: "X / Twitter" },
+                  { Icon: Youtube,   label: "YouTube" },
+                ].map(({ Icon, label }) => (
+                  <a key={label} href="#" aria-label={label}
+                    style={{ width: 36, height: 36, borderRadius: "50%", background: "#374151", display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", flexShrink: 0 }}>
+                    <Icon size={15} color="#fff" />
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Column 2 — Customer Service */}
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 800, color: "#111", letterSpacing: "0.06em", textTransform: "uppercase", margin: "0 0 18px" }}>Customer Service</p>
+              {[
+                ["FAQ", "/faq"],
+                ["Warranty Policy", "/warranty"],
+                ["Privacy Policy", "/privacy"],
+                ["Terms & Conditions", "/terms"],
+              ].map(([label, href]) => (
+                <Link key={label} href={href}
+                  style={{ display: "block", fontSize: 13.5, color: "#6b7280", textDecoration: "none", marginBottom: 12, transition: "color 0.15s" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "#4a0e10")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "#6b7280")}
+                >
+                  {label}
+                </Link>
               ))}
             </div>
-          </div>
-          <div>
-            <p style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.14em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", margin: "0 0 14px" }}>Shop</p>
-            {["Laptops","Tablets","All-in-Ones","Mini PCs","Interactive Boards"].map(l => (
-              <Link key={l} href="/products" style={{ display: "block", fontSize: 13, color: "rgba(255,255,255,0.45)", textDecoration: "none", marginBottom: 9 }}>{l}</Link>
-            ))}
-          </div>
-          <div>
-            <p style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.14em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", margin: "0 0 14px" }}>Company</p>
-            {["About Us","Careers","Newsroom","Contact Us"].map(l => (
-              <Link key={l} href="#" style={{ display: "block", fontSize: 13, color: "rgba(255,255,255,0.45)", textDecoration: "none", marginBottom: 9 }}>{l}</Link>
-            ))}
-          </div>
-          <div>
-            <p style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.14em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", margin: "0 0 14px" }}>Support</p>
-            {["Support Center","Warranty","Shipping & Delivery","Returns"].map(l => (
-              <Link key={l} href="#" style={{ display: "block", fontSize: 13, color: "rgba(255,255,255,0.45)", textDecoration: "none", marginBottom: 9 }}>{l}</Link>
-            ))}
+
+            {/* Column 3 — Shop */}
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 800, color: "#111", letterSpacing: "0.06em", textTransform: "uppercase", margin: "0 0 18px" }}>Shop</p>
+              {[
+                ["All Products", "/products"],
+                ["Laptops", "/products"],
+                ["Tablets", "/products"],
+                ["All-in-Ones", "#"],
+                ["Mini PCs", "#"],
+              ].map(([label, href]) => (
+                <Link key={label} href={href}
+                  style={{ display: "block", fontSize: 13.5, color: "#6b7280", textDecoration: "none", marginBottom: 12, transition: "color 0.15s" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "#4a0e10")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "#6b7280")}
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+
+            {/* Column 4 — Information */}
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 800, color: "#111", letterSpacing: "0.06em", textTransform: "uppercase", margin: "0 0 18px" }}>Information</p>
+              {[
+                ["About Us", "/about"],
+                ["Teacher Empowerment", "/teacher-empowerment"],
+                ["Apply for Financing", "/apply"],
+                ["Find a Store", "#"],
+                ["Contact Us", "#"],
+              ].map(([label, href]) => (
+                <Link key={label} href={href}
+                  style={{ display: "block", fontSize: 13.5, color: "#6b7280", textDecoration: "none", marginBottom: 12, transition: "color 0.15s" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "#4a0e10")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "#6b7280")}
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "14px 20px" }}>
+        {/* ── Bottom bar ── */}
+        <div style={{ background: "#f5f5f5", padding: "14px 20px" }}>
           <div style={{ maxWidth: 1240, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
-            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", margin: 0 }}>© {new Date().getFullYear()} RevStore by Revrica. All rights reserved.</p>
-            <div style={{ display: "flex", gap: 20 }}>
-              {["Terms & Conditions","Privacy Policy"].map(l => (
-                <Link key={l} href="#" style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", textDecoration: "none" }}>{l}</Link>
-              ))}
+            <p style={{ fontSize: 12.5, color: "#9ca3af", margin: 0 }}>
+              © {new Date().getFullYear()} RevStore by Revrica — All rights reserved
+            </p>
+            {/* Payment partners */}
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", background: "#fff", borderRadius: 7, border: "1px solid #e8e8e8" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" fill="#4a0e10"/><path d="M2 10h20" stroke="#fff" strokeWidth="1.5"/></svg>
+                <span style={{ fontSize: 11.5, fontWeight: 800, color: "#4a0e10", letterSpacing: "0.04em" }}>Paystack</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", background: "#fff", borderRadius: 7, border: "1px solid #e8e8e8" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#4a0e10"/><path d="M8 12h8M12 8l4 4-4 4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                <span style={{ fontSize: 11.5, fontWeight: 800, color: "#4a0e10", letterSpacing: "0.04em" }}>Flutterwave</span>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Responsive footer cols */}
+        <style>{`
+          @media (max-width: 1024px) { .footer-cols { grid-template-columns: 1.4fr 1fr 1fr !important; } }
+          @media (max-width: 768px)  { .footer-cols { grid-template-columns: 1fr 1fr !important; } }
+          @media (max-width: 480px)  { .footer-cols { grid-template-columns: 1fr !important; } }
+        `}</style>
       </footer>
 
       {/* WhatsApp floating chat button */}

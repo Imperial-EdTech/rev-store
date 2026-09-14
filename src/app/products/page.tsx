@@ -2,326 +2,316 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  ArrowRight, Battery, CheckCircle2, ChevronDown, ChevronRight,
-  Cpu, Filter, HardDrive, Monitor, Search, Shield, SlidersHorizontal,
-  Star, Wifi, X,
+  ChevronDown, ChevronRight, Grid2x2, Heart, LayoutList,
+  Search, ShoppingCart, SlidersHorizontal, X,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
-import { RevricaLogo } from "@/components/brand";
+import { useState, useMemo } from "react";
+import { StorefrontHeader } from "@/components/StorefrontHeader";
+import { StorefrontFooter } from "@/components/StorefrontFooter";
 
 const SORA    = "'Sora','Archivo Variable',ui-sans-serif,system-ui";
 const JAKARTA = "'Plus Jakarta Sans','Inter Variable',ui-sans-serif,system-ui";
+const MAROON  = "#4a0e10";
 
 function fmt(n: number) { return "₦" + n.toLocaleString("en-NG"); }
 
-// ─── Canonical product catalogue ─────────────────────────────
+// ─── Product data ─────────────────────────────────────────────
 const PRODUCTS = [
   {
     id: "orion",
-    name: "Rev Orion",
-    size: '12"',
-    tagline: "The teacher's everyday laptop — lightweight, powerful, classroom-ready.",
+    name: "Rev Orion 12\"",
     category: "Laptops",
-    badge: "Most Popular",
-    badgeColor: "#581319",
+    brand: "Rev",
     price: 290000,
     was: 350000,
-    monthlyFrom: 14858,
-    save: 17,
     img: "/devices/rev-laptop.png",
-    accentColor: "#581319",
-    rating: 4.8,
-    reviews: 124,
     inStock: true,
-    isNew: false,
-    specs: [
-      { icon: "cpu",     label: "Processor",  value: "Intel® Celeron N4020", sub: "Up to 2.8GHz dual-core" },
-      { icon: "ram",     label: "RAM",         value: "4GB LPDDR4",           sub: "Smooth multitasking" },
-      { icon: "storage", label: "Storage",     value: "128GB eMMC",           sub: "+ MicroSD expandable" },
-      { icon: "display", label: "Display",     value: '12.5" IPS FHD',        sub: "1920×1080 · anti-glare" },
-      { icon: "battery", label: "Battery",     value: "Up to 8 hrs",          sub: "Full classroom day" },
-      { icon: "weight",  label: "Weight",      value: "0.98 kg",              sub: "Ultralight" },
-      { icon: "os",      label: "OS",          value: "Windows 11 Home",      sub: "+ Office 365 + RevLearn" },
-      { icon: "shield",  label: "Warranty",    value: "2 Years",              sub: "Local Nigeria support" },
-    ],
-    highlights: ["Splash-resistant keyboard","2MP FHD webcam","2× USB-A + USB-C + HDMI","Wi-Fi 5 + Bluetooth 5.0","Preloaded Office 365","RevLearn platform included"],
+    badge: "Most Popular",
+    badgeColor: "#16a34a",
+    specs: { ram: "4GB", storage: "128GB", display: "12.5\" FHD", cpu: "Intel Celeron N4020" },
   },
   {
     id: "aelia",
-    name: "Rev Aelia",
-    size: '14"',
-    tagline: "More screen, more power — built for serious teaching and productivity.",
+    name: "Rev Aelia 14\"",
     category: "Laptops",
-    badge: "Pre-order",
-    badgeColor: "#7c3aed",
+    brand: "Rev",
     price: 330000,
     was: 400000,
-    monthlyFrom: 17500,
-    save: 18,
     img: "/devices/rev-laptop.png",
-    accentColor: "#7c3aed",
-    rating: 4.9,
-    reviews: 47,
     inStock: true,
-    isNew: true,
-    specs: [
-      { icon: "cpu",     label: "Processor",  value: "Intel® Core i3-1215U", sub: "Up to 4.4GHz, 6 cores" },
-      { icon: "ram",     label: "RAM",         value: "8GB DDR4",             sub: "Heavy multitasking" },
-      { icon: "storage", label: "Storage",     value: "256GB NVMe SSD",       sub: "3× faster than HDD" },
-      { icon: "display", label: "Display",     value: '14" IPS FHD',          sub: "1920×1080 · anti-glare" },
-      { icon: "battery", label: "Battery",     value: "Up to 10 hrs",         sub: "School day + evening" },
-      { icon: "weight",  label: "Weight",      value: "1.4 kg",               sub: "Slim & portable" },
-      { icon: "os",      label: "OS",          value: "Windows 11 Pro",       sub: "+ Office 365 + RevLearn" },
-      { icon: "shield",  label: "Warranty",    value: "2 Years",              sub: "Local Nigeria support" },
-    ],
-    highlights: ["Backlit full-size keyboard","Fingerprint reader","Thunderbolt 4 + HDMI 2.0","Wi-Fi 6 + Bluetooth 5.2","Preloaded Office 365","Intel Iris Xe Graphics"],
+    badge: "New Arrival",
+    badgeColor: "#16a34a",
+    specs: { ram: "8GB", storage: "256GB SSD", display: "14\" FHD", cpu: "Intel Core i3" },
   },
   {
     id: "tab",
-    name: "Rev Tab",
-    size: '10"',
-    tagline: "Tablets for students — tough, light, affordable, classroom-ready.",
+    name: "Rev Tab 10\"",
     category: "Tablets",
-    badge: "47% off",
-    badgeColor: "#dc2626",
+    brand: "Rev",
     price: 80000,
     was: 150000,
-    monthlyFrom: null,
-    save: 47,
     img: "/devices/rev-tablet.png",
-    accentColor: "#dc2626",
-    rating: 4.6,
-    reviews: 89,
     inStock: true,
-    isNew: false,
-    specs: [
-      { icon: "display", label: "Display",      value: '10.1" IPS LCD',       sub: "1280×800 · vivid colour" },
-      { icon: "cpu",     label: "Processor",    value: "Quad-core ARM A55",   sub: "1.8GHz" },
-      { icon: "ram",     label: "RAM",          value: "3GB RAM · 32GB ROM",  sub: "+ MicroSD up to 256GB" },
-      { icon: "battery", label: "Battery",      value: "5,000mAh",            sub: "Up to 10 hours" },
-      { icon: "wifi",    label: "Connectivity", value: "Wi-Fi + BT 5.0",      sub: "802.11 b/g/n" },
-      { icon: "os",      label: "OS",           value: "Android 13",          sub: "Latest Android" },
-      { icon: "cam",     label: "Camera",       value: "5MP rear + 2MP front",sub: "For video calls" },
-      { icon: "shield",  label: "Warranty",     value: "1 Year",              sub: "Local support" },
-    ],
-    highlights: ["5MP rear camera","2MP front camera for video calls","Wi-Fi + Bluetooth 5.0","USB-C charging","Kids-tough casing","Google Play Store"],
+    badge: "In stock",
+    badgeColor: "#16a34a",
+    specs: { ram: "3GB", storage: "32GB", display: "10.1\" IPS", cpu: "Quad-core" },
   },
   {
     id: "tab-4g",
     name: "Rev Tab 4G",
-    size: '10"',
-    tagline: "All the Rev Tab — plus 4G LTE. Learn anywhere, no Wi-Fi needed.",
     category: "Tablets",
-    badge: "New",
-    badgeColor: "#0ea5e9",
+    brand: "Rev",
     price: 110000,
     was: 140000,
-    monthlyFrom: null,
-    save: 21,
     img: "/devices/rev-tablet.png",
-    accentColor: "#0ea5e9",
-    rating: 4.7,
-    reviews: 31,
     inStock: true,
-    isNew: true,
-    specs: [
-      { icon: "display", label: "Display",      value: '10.1" IPS FHD',       sub: "1920×1200 · vivid colour" },
-      { icon: "cpu",     label: "Processor",    value: "Octa-core ARM A55",   sub: "2.0GHz" },
-      { icon: "ram",     label: "RAM",          value: "4GB RAM · 64GB ROM",  sub: "+ MicroSD up to 256GB" },
-      { icon: "battery", label: "Battery",      value: "6,000mAh",            sub: "Up to 12 hours" },
-      { icon: "wifi",    label: "Connectivity", value: "4G LTE + Wi-Fi 6",    sub: "Dual SIM · nano SIM" },
-      { icon: "os",      label: "OS",           value: "Android 13",          sub: "Latest Android" },
-      { icon: "cam",     label: "Camera",       value: "8MP rear + 5MP front",sub: "FHD video" },
-      { icon: "shield",  label: "Warranty",     value: "1 Year",              sub: "Local support" },
-    ],
-    highlights: ["4G LTE — learn without Wi-Fi","Dual nano SIM","FHD display","8MP rear camera","6,000mAh all-day battery","Google Play Store"],
+    badge: "In stock",
+    badgeColor: "#16a34a",
+    specs: { ram: "4GB", storage: "64GB", display: "10.1\" FHD", cpu: "Octa-core" },
+  },
+  {
+    id: "orion-pro",
+    name: "Rev Orion Pro",
+    category: "Laptops",
+    brand: "Rev",
+    price: 420000,
+    was: 500000,
+    img: "/devices/rev-laptop.png",
+    inStock: false,
+    badge: "Coming Soon",
+    badgeColor: "#6b7280",
+    specs: { ram: "16GB", storage: "512GB SSD", display: "14\" 2K", cpu: "Intel Core i5" },
+  },
+  {
+    id: "smartboard-65",
+    name: "Rev SmartBoard 65\"",
+    category: "Interactive Boards",
+    brand: "Rev",
+    price: 980000,
+    was: 1200000,
+    img: "/devices/rev-laptop.png",
+    inStock: true,
+    badge: "In stock",
+    badgeColor: "#16a34a",
+    specs: { ram: "4GB", storage: "32GB", display: "65\" 4K Touch", cpu: "Octa-core" },
+  },
+  {
+    id: "mini-pc-1",
+    name: "Rev Mini PC M1",
+    category: "Mini PCs",
+    brand: "Rev",
+    price: 185000,
+    was: 220000,
+    img: "/devices/rev-laptop.png",
+    inStock: true,
+    badge: "In stock",
+    badgeColor: "#16a34a",
+    specs: { ram: "8GB", storage: "256GB SSD", display: "—", cpu: "Intel N100" },
+  },
+  {
+    id: "aio-21",
+    name: "Rev All-in-One 21\"",
+    category: "All-in-Ones",
+    brand: "Rev",
+    price: 520000,
+    was: 640000,
+    img: "/devices/rev-laptop.png",
+    inStock: true,
+    badge: "In stock",
+    badgeColor: "#16a34a",
+    specs: { ram: "8GB", storage: "256GB SSD", display: "21.5\" FHD", cpu: "Intel Core i3" },
   },
 ];
 
 type Product = typeof PRODUCTS[0];
 
-// ─── Spec icon helper ─────────────────────────────────────────
-function SpecIcon({ type, color }: { type: string; color: string }) {
-  const p = { fill: "none", stroke: color, strokeWidth: "1.7", strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" {...p}>
-      {type === "cpu"     && <><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M9 9h6v6H9zM9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3" /></>}
-      {type === "ram"     && <><rect x="2" y="8" width="20" height="8" rx="2" /><path d="M6 8V6M10 8V6M14 8V6M18 8V6M6 16v2M10 16v2M14 16v2M18 16v2" /></>}
-      {type === "storage" && <><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></>}
-      {type === "display" && <><rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" /></>}
-      {type === "battery" && <><rect x="1" y="6" width="18" height="12" rx="2" /><path d="M23 13v-2" /><path d="M5 9v6M9 9v6" /></>}
-      {type === "weight"  && <><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 01-8 0" /></>}
-      {type === "os"      && <><rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" /><path d="M7 8h2l2 5 2-5h2" /></>}
-      {type === "shield"  && <><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z" /><path d="M9 12l2 2 4-4" /></>}
-      {type === "wifi"    && <><path d="M5 12.55a11 11 0 0114.08 0" /><path d="M1.42 9a16 16 0 0121.16 0" /><path d="M8.53 16.11a6 6 0 016.95 0" /><circle cx="12" cy="20" r="1" /></>}
-      {type === "cam"     && <><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" /><circle cx="12" cy="13" r="4" /></>}
-    </svg>
-  );
-}
+// ─── Category tree for sidebar ────────────────────────────────
+const CATEGORIES = [
+  { label: "All Categories", value: "All" },
+  { label: "Laptops",           value: "Laptops",           count: 3 },
+  { label: "Tablets",           value: "Tablets",           count: 2 },
+  { label: "All-in-Ones",       value: "All-in-Ones",       count: 1 },
+  { label: "Mini PCs",          value: "Mini PCs",          count: 1 },
+  { label: "Interactive Boards",value: "Interactive Boards", count: 1 },
+];
 
-function DeviceImg({ src, alt, className }: { src: string; alt: string; className?: string }) {
+const BRANDS = ["Rev", "All brands"];
+const SORT_OPTIONS = [
+  { label: "Featured",           value: "featured" },
+  { label: "Price: Low to High", value: "price_asc" },
+  { label: "Price: High to Low", value: "price_desc" },
+  { label: "Newest First",       value: "newest" },
+];
+const SHOW_OPTIONS = [8, 16, 24, 48];
+
+// ─── Device image with fallback ───────────────────────────────
+function DeviceImg({ src, alt }: { src: string; alt: string }) {
   const [failed, setFailed] = useState(false);
   if (failed) return (
-    <div className={`${className ?? ""} flex items-center justify-center`} style={{ background: "rgba(88,19,25,0.04)", borderRadius: 12 }}>
-      <span style={{ fontSize: 12, color: "rgba(0,0,0,0.2)", fontWeight: 600 }}>{alt}</span>
+    <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#f9fafb" }}>
+      <span style={{ fontSize: 11, color: "#d1d5db", fontWeight: 600 }}>{alt}</span>
     </div>
   );
-  return <img alt={alt} className={className} onError={() => setFailed(true)} src={src} style={{ objectFit: "contain" }} />;
-}
-
-// ─── Star rating ──────────────────────────────────────────────
-function Stars({ rating }: { rating: number }) {
   return (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map(i => (
-        <Star key={i} size={11}
-          fill={i <= Math.floor(rating) ? "#f2760f" : "transparent"}
-          color={i <= Math.floor(rating) ? "#f2760f" : "#d1d5db"}
-          strokeWidth={1.5}
-        />
-      ))}
-    </div>
+    <img
+      src={src} alt={alt}
+      onError={() => setFailed(true)}
+      style={{ width: "100%", height: "100%", objectFit: "contain" }}
+    />
   );
 }
 
-// ─── Quick spec pills ─────────────────────────────────────────
-function QuickSpecs({ product }: { product: Product }) {
-  const quick = product.specs.slice(0, 4);
-  return (
-    <div className="flex flex-col gap-1.5">
-      {quick.map(s => (
-        <div key={s.label} className="flex items-center gap-2">
-          <SpecIcon type={s.icon} color={product.accentColor} />
-          <span style={{ fontSize: 11.5, color: "#374151" }}>
-            <span style={{ fontWeight: 700 }}>{s.value}</span>
-            {s.sub && <span style={{ color: "#9ca3af" }}> — {s.sub}</span>}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
+// ─── Product card — matches Slot style exactly ─────────────────
+function ProductCard({ product, view }: { product: Product; view: "grid" | "list" }) {
+  const [hovered, setHovered] = useState(false);
+  const saving = Math.round((1 - product.price / product.was) * 100);
 
-// ─── Expanded spec grid ───────────────────────────────────────
-function SpecGrid({ product }: { product: Product }) {
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: "#f0f0f0", border: "1px solid #f0f0f0", borderRadius: 12, overflow: "hidden" }}>
-      {product.specs.map((s, i) => (
-        <div key={s.label} style={{ background: "#fff", padding: "12px 14px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3 }}>
-            <SpecIcon type={s.icon} color={product.accentColor} />
-            <span style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.08em" }}>{s.label}</span>
+  if (view === "list") {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0 }}
+        style={{ background: "#fff", border: "1px solid #ebebeb", borderRadius: 12, display: "flex", gap: 0, overflow: "hidden" }}
+      >
+        {/* Image */}
+        <div style={{ width: 200, flexShrink: 0, background: "#f9fafb", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, position: "relative" }}>
+          <div style={{ position: "absolute", top: 10, left: 10 }}>
+            <span style={{ background: product.inStock ? "#16a34a" : "#6b7280", color: "#fff", fontSize: 10.5, fontWeight: 700, padding: "3px 9px", borderRadius: 5 }}>
+              {product.inStock ? "In stock" : "Coming soon"}
+            </span>
           </div>
-          <p style={{ fontSize: 13, fontWeight: 700, color: "#111", margin: "0 0 1px" }}>{s.value}</p>
-          <p style={{ fontSize: 11, color: "#9ca3af", margin: 0 }}>{s.sub}</p>
+          <div style={{ height: 120, width: "100%" }}>
+            <DeviceImg src={product.img} alt={product.name} />
+          </div>
         </div>
-      ))}
-    </div>
-  );
-}
-
-// ─── Product card ─────────────────────────────────────────────
-function ProductCard({ product }: { product: Product }) {
-  const [expanded, setExpanded] = useState(false);
-  const saving = product.was - product.price;
+        {/* Info */}
+        <div style={{ flex: 1, padding: "20px 24px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+          <div>
+            <p style={{ fontSize: 11, color: "#9ca3af", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.08em" }}>{product.category}</p>
+            <h3 style={{ fontFamily: SORA, fontWeight: 800, fontSize: 17, color: "#111", margin: "0 0 8px" }}>{product.name}</h3>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
+              {Object.entries(product.specs).filter(([, v]) => v !== "—").map(([k, v]) => (
+                <span key={k} style={{ fontSize: 11.5, background: "#f5f5f5", color: "#374151", padding: "3px 9px", borderRadius: 100, fontWeight: 600 }}>{v}</span>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <span style={{ fontFamily: SORA, fontSize: 22, fontWeight: 800, color: MAROON }}>{fmt(product.price)}</span>
+              <span style={{ fontSize: 13, color: "#d1d5db", textDecoration: "line-through", marginLeft: 8 }}>{fmt(product.was)}</span>
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: "#16a34a", marginLeft: 8 }}>Save {saving}%</span>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button style={{ height: 38, padding: "0 20px", borderRadius: 100, border: `1.5px solid ${MAROON}`, background: "transparent", color: MAROON, fontSize: 13, fontWeight: 700, cursor: "pointer" }} type="button">
+                Quick View
+              </button>
+              <Link href={`/pre-order?device=${product.id}`}>
+                <button style={{ height: 38, padding: "0 20px", borderRadius: 100, border: "none", background: MAROON, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }} type="button">
+                  Buy Now
+                </button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 8 }}
-      transition={{ duration: 0.35 }}
-      style={{ background: "#fff", borderRadius: 18, border: "1px solid #ebebeb", overflow: "hidden", display: "flex", flexDirection: "column" }}
+      exit={{ opacity: 0, y: 8, scale: 0.98 }}
+      transition={{ duration: 0.3 }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: "#fff",
+        border: "1px solid #ebebeb",
+        borderRadius: 10,
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        cursor: "pointer",
+        boxShadow: hovered ? "0 4px 20px rgba(0,0,0,0.09)" : "none",
+        transition: "box-shadow 0.2s",
+        position: "relative",
+      }}
     >
       {/* Image area */}
-      <div style={{ position: "relative", padding: "16px 16px 0", background: "#fafafa", borderBottom: "1px solid #f5f5f5" }}>
-        {/* Badges */}
-        <div style={{ position: "absolute", top: 12, left: 12, display: "flex", flexDirection: "column", gap: 5 }}>
-          <span style={{ background: product.badgeColor, color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "3px 8px", borderRadius: 5, letterSpacing: "0.04em", display: "block" }}>
-            {product.badge}
+      <div style={{ position: "relative", background: "#f9fafb", height: 200, overflow: "hidden" }}>
+        {/* Stock badge — top right, green, matches Slot */}
+        <div style={{ position: "absolute", top: 10, right: 10, zIndex: 2 }}>
+          <span style={{
+            background: product.inStock ? "#16a34a" : "#6b7280",
+            color: "#fff",
+            fontSize: 11,
+            fontWeight: 700,
+            padding: "4px 10px",
+            borderRadius: 6,
+          }}>
+            {product.inStock ? "In stock" : "Coming soon"}
           </span>
-          {product.isNew && (
-            <span style={{ background: "#111", color: "#fff", fontSize: 9.5, fontWeight: 700, padding: "3px 8px", borderRadius: 5, display: "block" }}>NEW</span>
-          )}
         </div>
-        <div style={{ height: 160, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <DeviceImg alt={product.name} src={product.img} className="h-36 w-auto" />
+        {/* Discount ribbon */}
+        {saving > 0 && (
+          <div style={{ position: "absolute", top: 10, left: 10, zIndex: 2 }}>
+            <span style={{ background: MAROON, color: "#fff", fontSize: 10.5, fontWeight: 800, padding: "3px 8px", borderRadius: 5 }}>
+              -{saving}%
+            </span>
+          </div>
+        )}
+        <div style={{ padding: "20px", height: "100%" }}>
+          <DeviceImg src={product.img} alt={product.name} />
         </div>
-      </div>
-
-      {/* Info */}
-      <div style={{ padding: "18px 18px 20px", flex: 1, display: "flex", flexDirection: "column" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-          <Stars rating={product.rating} />
-          <span style={{ fontSize: 11, color: "#9ca3af" }}>({product.reviews})</span>
-          {product.inStock && (
-            <span style={{ marginLeft: "auto", fontSize: 10, fontWeight: 700, color: "#16a34a", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "2px 7px", borderRadius: 100 }}>In stock</span>
-          )}
-        </div>
-
-        <h3 style={{ fontFamily: SORA, fontWeight: 800, fontSize: 16, color: "#111", margin: "0 0 3px", letterSpacing: "-0.01em" }}>
-          {product.name} <span style={{ color: "#9ca3af", fontWeight: 600, fontSize: 13 }}>{product.size}</span>
-        </h3>
-        <p style={{ fontSize: 12, color: "#6b7280", margin: "0 0 14px", lineHeight: 1.5 }}>{product.tagline}</p>
-
-        {/* Quick specs */}
-        <QuickSpecs product={product} />
-
-        {/* Expanded specs */}
+        {/* Hover overlay — Quick View + Wishlist */}
         <AnimatePresence>
-          {expanded && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} style={{ overflow: "hidden" }}>
-              <div style={{ marginTop: 14 }}>
-                <SpecGrid product={product} />
-                <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  {product.highlights.map(h => (
-                    <div key={h} style={{ display: "flex", alignItems: "center", gap: 5, background: `${product.accentColor}08`, border: `1px solid ${product.accentColor}20`, borderRadius: 100, padding: "4px 10px" }}>
-                      <CheckCircle2 size={11} color={product.accentColor} />
-                      <span style={{ fontSize: 11, fontWeight: 600, color: "#374151" }}>{h}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+          {hovered && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              style={{ position: "absolute", bottom: 10, left: 10, right: 10, display: "flex", gap: 8, zIndex: 3 }}
+            >
+              <button style={{ flex: 1, height: 34, borderRadius: 7, border: "1px solid #e0e0e0", background: "#fff", fontSize: 12, fontWeight: 700, color: "#374151", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }} type="button">
+                <Search size={12} /> Quick View
+              </button>
+              <button style={{ width: 34, height: 34, borderRadius: 7, border: "1px solid #e0e0e0", background: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }} type="button">
+                <Heart size={14} color="#374151" />
+              </button>
             </motion.div>
           )}
         </AnimatePresence>
+      </div>
 
-        {/* Toggle specs */}
-        <button type="button" onClick={() => setExpanded(!expanded)}
-          style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", padding: "10px 0 6px", fontSize: 12, fontWeight: 700, color: product.accentColor }}>
-          {expanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
-          {expanded ? "Hide specs" : "View all specs"}
-        </button>
+      {/* Info */}
+      <div style={{ padding: "14px 16px 18px", flex: 1, display: "flex", flexDirection: "column" }}>
+        <p style={{ fontSize: 11, color: "#9ca3af", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.07em" }}>{product.category}</p>
+        <h3 style={{ fontFamily: SORA, fontWeight: 800, fontSize: 14.5, color: "#111", margin: "0 0 12px", lineHeight: 1.3 }}>
+          {product.name}
+        </h3>
 
-        {/* Pricing */}
-        <div style={{ marginTop: 8, paddingTop: 14, borderTop: "1px solid #f5f5f5" }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 3 }}>
-            <span style={{ fontFamily: SORA, fontWeight: 900, fontSize: 22, color: "#111" }}>{fmt(product.price)}</span>
-            <span style={{ fontSize: 13, color: "#d1d5db", textDecoration: "line-through" }}>{fmt(product.was)}</span>
-            <span style={{ fontSize: 11.5, fontWeight: 700, color: "#16a34a" }}>Save {product.save}%</span>
+        {/* Price row — matches Slot exactly: price in maroon, crossed-out original, cart button */}
+        <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <p style={{ fontFamily: SORA, fontWeight: 800, fontSize: 17, color: MAROON, margin: "0 0 1px" }}>{fmt(product.price)}</p>
+            {product.was > product.price && (
+              <p style={{ fontSize: 12, color: "#d1d5db", textDecoration: "line-through", margin: 0 }}>{fmt(product.was)}</p>
+            )}
           </div>
-          {product.monthlyFrom && (
-            <p style={{ fontSize: 12, color: "#6b7280", margin: "0 0 12px" }}>
-              or from <strong style={{ color: product.accentColor }}>{fmt(product.monthlyFrom)}/month</strong>
-            </p>
-          )}
-        </div>
-
-        {/* CTAs */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <Link href={`/apply/devices?preselect=${product.id}`}>
-            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} type="button"
-              style={{ width: "100%", height: 46, borderRadius: 100, background: "#581319", border: "none", color: "#fff", fontSize: 13.5, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-              Apply for financing <ArrowRight size={14} />
-            </motion.button>
-          </Link>
+          {/* Circular cart button — maroon, exact Slot style */}
           <Link href={`/pre-order?device=${product.id}`}>
-            <button type="button"
-              style={{ width: "100%", height: 42, borderRadius: 100, border: "1.5px solid #581319", background: "transparent", color: "#581319", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
-              Buy outright
-            </button>
+            <motion.button
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.94 }}
+              style={{ width: 38, height: 38, borderRadius: "50%", border: "none", background: MAROON, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+              type="button"
+            >
+              <ShoppingCart size={16} color="#fff" />
+            </motion.button>
           </Link>
         </div>
       </div>
@@ -329,162 +319,411 @@ function ProductCard({ product }: { product: Product }) {
   );
 }
 
-// ─── Filter sidebar / bar ─────────────────────────────────────
-const CATEGORIES = ["All", "Laptops", "Tablets"];
-const SORT_OPTIONS = ["Featured", "Price: Low to High", "Price: High to Low", "Highest Rated"];
+// ─── Sidebar category item ────────────────────────────────────
+function SidebarCategory({
+  label, value, count, active, onClick,
+}: {
+  label: string; value: string; count?: number; active: boolean; onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        width: "100%",
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        padding: "9px 0",
+        textAlign: "left",
+        borderBottom: "1px solid #f5f5f5",
+      }}
+    >
+      <span style={{ fontSize: 14, color: active ? MAROON : "#374151", fontWeight: active ? 700 : 500, transition: "color 0.15s" }}>
+        {label}
+      </span>
+      {count !== undefined && (
+        <span style={{ fontSize: 12, color: "#9ca3af" }}>({count})</span>
+      )}
+    </button>
+  );
+}
+
+// ─── Price range filter ───────────────────────────────────────
+function PriceFilter({ min, max, onChange }: { min: number; max: number; onChange: (min: number, max: number) => void }) {
+  const [localMin, setLocalMin] = useState(min);
+  const [localMax, setLocalMax] = useState(max);
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+        <input
+          type="number"
+          value={localMin}
+          onChange={e => setLocalMin(Number(e.target.value))}
+          placeholder="Min"
+          style={{ flex: 1, height: 36, borderRadius: 7, border: "1.5px solid #e0e0e0", padding: "0 10px", fontSize: 12.5, color: "#111", outline: "none", boxSizing: "border-box" }}
+        />
+        <input
+          type="number"
+          value={localMax}
+          onChange={e => setLocalMax(Number(e.target.value))}
+          placeholder="Max"
+          style={{ flex: 1, height: 36, borderRadius: 7, border: "1.5px solid #e0e0e0", padding: "0 10px", fontSize: 12.5, color: "#111", outline: "none", boxSizing: "border-box" }}
+        />
+      </div>
+      <button
+        type="button"
+        onClick={() => onChange(localMin, localMax)}
+        style={{ width: "100%", height: 36, borderRadius: 7, border: "none", background: MAROON, color: "#fff", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
+      >
+        Apply
+      </button>
+    </div>
+  );
+}
 
 // ═══════════════════════════════════════════════════════════════
 // PAGE
 // ═══════════════════════════════════════════════════════════════
 export default function ProductsPage() {
-  const [category, setCategory] = useState("All");
-  const [sort, setSort] = useState("Featured");
-  const [search, setSearch] = useState("");
-  const [filterOpen, setFilterOpen] = useState(false);
-
-  let filtered = PRODUCTS.filter(p => {
-    const matchCat = category === "All" || p.category === category;
-    const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.tagline.toLowerCase().includes(search.toLowerCase());
-    return matchCat && matchSearch;
+  const [category,  setCategory]  = useState("All");
+  const [brand,     setBrand]     = useState("All brands");
+  const [sort,      setSort]      = useState("featured");
+  const [search,    setSearch]    = useState("");
+  const [view,      setView]      = useState<"grid" | "list">("grid");
+  const [showCount, setShowCount] = useState(16);
+  const [page,      setPage]      = useState(1);
+  const [priceMin,  setPriceMin]  = useState(0);
+  const [priceMax,  setPriceMax]  = useState(9999999);
+  const [expandedFilters, setExpandedFilters] = useState<Record<string, boolean>>({
+    categories: true,
+    price: true,
+    brand: true,
   });
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
-  if (sort === "Price: Low to High") filtered = [...filtered].sort((a, b) => a.price - b.price);
-  if (sort === "Price: High to Low") filtered = [...filtered].sort((a, b) => b.price - a.price);
-  if (sort === "Highest Rated") filtered = [...filtered].sort((a, b) => b.rating - a.rating);
+  const filtered = useMemo(() => {
+    let list = PRODUCTS.filter(p => {
+      const matchCat    = category === "All" || p.category === category;
+      const matchBrand  = brand === "All brands" || p.brand === brand;
+      const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase());
+      const matchPrice  = p.price >= priceMin && (priceMax === 0 || p.price <= priceMax);
+      return matchCat && matchBrand && matchSearch && matchPrice;
+    });
+    if (sort === "price_asc")  list = [...list].sort((a, b) => a.price - b.price);
+    if (sort === "price_desc") list = [...list].sort((a, b) => b.price - a.price);
+    return list;
+  }, [category, brand, sort, search, priceMin, priceMax]);
+
+  const totalPages   = Math.ceil(filtered.length / showCount);
+  const pageProducts = filtered.slice((page - 1) * showCount, page * showCount);
+
+  function toggleSection(key: string) {
+    setExpandedFilters(prev => ({ ...prev, [key]: !prev[key] }));
+  }
+
+  const SidebarContent = () => (
+    <div style={{ fontFamily: JAKARTA }}>
+      {/* Categories */}
+      <div style={{ marginBottom: 24 }}>
+        <button
+          type="button"
+          onClick={() => toggleSection("categories")}
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", cursor: "pointer", padding: "0 0 10px", borderBottom: "2px solid #111" }}
+        >
+          <span style={{ fontFamily: SORA, fontSize: 15, fontWeight: 800, color: "#111" }}>Categories</span>
+          <ChevronDown size={16} color="#374151" style={{ transform: expandedFilters.categories ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+        </button>
+        {expandedFilters.categories && (
+          <div style={{ paddingTop: 6 }}>
+            {CATEGORIES.map(cat => (
+              <SidebarCategory
+                key={cat.value}
+                label={cat.label}
+                value={cat.value}
+                count={(cat as any).count}
+                active={category === cat.value}
+                onClick={() => { setCategory(cat.value); setPage(1); }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Price range */}
+      <div style={{ marginBottom: 24 }}>
+        <button
+          type="button"
+          onClick={() => toggleSection("price")}
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", cursor: "pointer", padding: "0 0 10px", borderBottom: "2px solid #111" }}
+        >
+          <span style={{ fontFamily: SORA, fontSize: 15, fontWeight: 800, color: "#111" }}>Filter by Price</span>
+          <ChevronDown size={16} color="#374151" style={{ transform: expandedFilters.price ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+        </button>
+        {expandedFilters.price && (
+          <div style={{ paddingTop: 14 }}>
+            <PriceFilter
+              min={priceMin}
+              max={priceMax}
+              onChange={(mn, mx) => { setPriceMin(mn); setPriceMax(mx); setPage(1); }}
+            />
+            <div style={{ marginTop: 8, display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {[
+                ["Under ₦100k", 0, 100000],
+                ["₦100k–₦300k", 100000, 300000],
+                ["₦300k–₦600k", 300000, 600000],
+                ["₦600k+", 600000, 9999999],
+              ].map(([label, mn, mx]) => (
+                <button
+                  key={String(label)}
+                  type="button"
+                  onClick={() => { setPriceMin(Number(mn)); setPriceMax(Number(mx)); setPage(1); }}
+                  style={{ fontSize: 11.5, padding: "4px 10px", borderRadius: 100, border: `1.5px solid ${priceMin === mn && priceMax === mx ? MAROON : "#e0e0e0"}`, background: priceMin === mn && priceMax === mx ? `${MAROON}10` : "#fff", color: priceMin === mn && priceMax === mx ? MAROON : "#6b7280", fontWeight: 600, cursor: "pointer" }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Brand */}
+      <div style={{ marginBottom: 24 }}>
+        <button
+          type="button"
+          onClick={() => toggleSection("brand")}
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", cursor: "pointer", padding: "0 0 10px", borderBottom: "2px solid #111" }}
+        >
+          <span style={{ fontFamily: SORA, fontSize: 15, fontWeight: 800, color: "#111" }}>Filter by Brand</span>
+          <ChevronDown size={16} color="#374151" style={{ transform: expandedFilters.brand ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+        </button>
+        {expandedFilters.brand && (
+          <div style={{ paddingTop: 10 }}>
+            {BRANDS.map(b => (
+              <label key={b} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", cursor: "pointer", borderBottom: "1px solid #f5f5f5" }}>
+                <div style={{ width: 17, height: 17, borderRadius: 4, border: `2px solid ${brand === b ? MAROON : "#d1d5db"}`, background: brand === b ? MAROON : "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.15s" }}>
+                  {brand === b && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round"><path d="M5 12l5 5L20 7"/></svg>}
+                </div>
+                <input type="radio" checked={brand === b} onChange={() => setBrand(b)} style={{ display: "none" }} />
+                <span style={{ fontSize: 13.5, color: "#374151" }}>{b}</span>
+              </label>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div style={{ fontFamily: JAKARTA, background: "#f5f5f5", minHeight: "100vh" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@700;800;900&display=swap');
-        .products-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
-        @media (max-width: 1200px) { .products-grid { grid-template-columns: repeat(3, 1fr) !important; } }
-        @media (max-width: 900px)  { .products-grid { grid-template-columns: repeat(2, 1fr) !important; } }
-        @media (max-width: 520px)  { .products-grid { grid-template-columns: 1fr !important; } }
-        .filter-bar { display: flex; }
-        @media (max-width: 640px) { .filter-bar { flex-direction: column; gap: 10px !important; } }
+        .shop-layout { display: grid; grid-template-columns: 276px 1fr; gap: 24px; max-width: 1280px; margin: 0 auto; padding: 0 20px 60px; }
+        .products-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .products-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .toolbar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+        .sidebar-desktop { display: block; }
+        .mobile-filter-btn { display: none; }
+        @media (max-width: 1100px) { .products-grid-4 { grid-template-columns: repeat(3, 1fr) !important; } }
+        @media (max-width: 900px)  {
+          .shop-layout { grid-template-columns: 1fr !important; padding-top: 0 !important; }
+          .sidebar-desktop { display: none !important; }
+          .mobile-filter-btn { display: flex !important; }
+          .products-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (max-width: 520px)  { .products-grid-4 { grid-template-columns: 1fr !important; } }
       `}</style>
 
-      {/* ── Header ── */}
-      <header style={{ background: "#fff", borderBottom: "1px solid #e8e8e8", position: "sticky", top: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", height: 60, gap: 16 }}>
-          <RevricaLogo variant="light" />
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: 16, fontSize: 13 }}>
-            <Link href="/" style={{ color: "#9ca3af", textDecoration: "none" }}>Home</Link>
-            <ChevronRight size={12} color="#d1d5db" />
-            <span style={{ color: "#581319", fontWeight: 700 }}>All Products</span>
-          </div>
-          <Link href="/" style={{ marginLeft: "auto", fontSize: 13, fontWeight: 600, color: "#581319", textDecoration: "none" }}>← Back to store</Link>
-        </div>
-      </header>
+      {/* Shared header */}
+      <StorefrontHeader showInfoBar={false} />
 
-      {/* ── Hero band ── */}
-      <div style={{ background: "linear-gradient(135deg, #581319 0%, #3a0810 100%)", padding: "40px 20px" }}>
-        <div style={{ maxWidth: 1240, margin: "0 auto" }}>
-          <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.18em", color: "rgba(255,255,255,0.5)", textTransform: "uppercase", margin: "0 0 10px" }}>
-            Nigerian-made hardware
-          </p>
-          <h1 style={{ fontFamily: SORA, fontWeight: 900, fontSize: "clamp(26px,4vw,44px)", color: "#fff", margin: "0 0 10px", letterSpacing: "-0.025em", lineHeight: 1.08 }}>
-            Devices built for<br /><span style={{ color: "#FF6B1A" }}>African classrooms.</span>
-          </h1>
-          <p style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", margin: "0 0 28px", maxWidth: 500, lineHeight: 1.65 }}>
-            Every Rev device is designed, assembled and warranted locally. Financing from ₦14,858/month through our Teacher Empowerment Programme.
-          </p>
-          {/* Stats strip */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 20 }}>
-            {[
-              { val: "₦14,858", label: "Monthly from" },
-              { val: "2 Years", label: "Local warranty" },
-              { val: "48h", label: "Support response" },
-              { val: "500+", label: "Schools served" },
-            ].map(s => (
-              <div key={s.label}>
-                <p style={{ fontFamily: SORA, fontWeight: 800, fontSize: 20, color: "#FF6B1A", margin: "0 0 2px" }}>{s.val}</p>
-                <p style={{ fontSize: 11.5, color: "rgba(255,255,255,0.45)", margin: 0 }}>{s.label}</p>
+      {/* Breadcrumb */}
+      <div style={{ background: "#fff", borderBottom: "1px solid #ebebeb", padding: "12px 20px" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", alignItems: "center", gap: 6, fontSize: 13.5, color: "#9ca3af" }}>
+          <Link href="/" style={{ color: "#9ca3af", textDecoration: "none" }}>Home</Link>
+          <ChevronRight size={13} color="#d1d5db" />
+          <span style={{ color: "#111", fontWeight: 600 }}>Shop</span>
+          {category !== "All" && (
+            <>
+              <ChevronRight size={13} color="#d1d5db" />
+              <span style={{ color: "#111", fontWeight: 600 }}>{category}</span>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Main layout */}
+      <div style={{ paddingTop: 28 }}>
+        <div className="shop-layout">
+
+          {/* ── LEFT SIDEBAR ── */}
+          <aside className="sidebar-desktop">
+            <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #ebebeb", padding: "24px 20px", position: "sticky", top: 90 }}>
+              <SidebarContent />
+            </div>
+          </aside>
+
+          {/* ── RIGHT CONTENT ── */}
+          <div>
+            {/* Toolbar row — matches Slot exactly */}
+            <div className="toolbar-row">
+              {/* Mobile filter button */}
+              <button
+                className="mobile-filter-btn"
+                type="button"
+                onClick={() => setMobileFilterOpen(true)}
+                style={{ height: 40, padding: "0 16px", borderRadius: 8, border: "1.5px solid #e0e0e0", background: "#fff", fontSize: 13, fontWeight: 700, color: "#374151", cursor: "pointer", alignItems: "center", gap: 7 }}
+              >
+                <SlidersHorizontal size={14} /> Filters
+              </button>
+
+              {/* View toggles — grid/list/2-col exactly like Slot */}
+              <div style={{ display: "flex", gap: 0, border: "1.5px solid #e0e0e0", borderRadius: 8, overflow: "hidden" }}>
+                {([
+                  { v: "grid" as const, Icon: Grid2x2,    label: "Grid view"  },
+                  { v: "list" as const, Icon: LayoutList,  label: "List view"  },
+                ] as const).map(({ v, Icon, label }) => (
+                  <button
+                    key={v} type="button" onClick={() => setView(v)} aria-label={label}
+                    style={{ width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: view === v ? MAROON : "#fff", cursor: "pointer", transition: "background 0.15s" }}
+                  >
+                    <Icon size={15} color={view === v ? "#fff" : "#9ca3af"} />
+                  </button>
+                ))}
               </div>
-            ))}
+
+              <span style={{ fontSize: 13, color: "#9ca3af", flexShrink: 0 }}>
+                {filtered.length} product{filtered.length !== 1 ? "s" : ""}
+              </span>
+
+              {/* Spacer */}
+              <div style={{ flex: 1 }} />
+
+              {/* Sort — matches Slot's "Price: High to Low" dropdown */}
+              <div style={{ position: "relative" }}>
+                <select
+                  value={sort}
+                  onChange={e => { setSort(e.target.value); setPage(1); }}
+                  style={{ height: 40, padding: "0 36px 0 14px", borderRadius: 8, border: "1.5px solid #e0e0e0", background: "#fff", fontSize: 13, fontWeight: 600, color: "#374151", outline: "none", cursor: "pointer", appearance: "none" }}
+                >
+                  {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+                <ChevronDown size={13} style={{ position: "absolute", right: 11, top: "50%", transform: "translateY(-50%)", color: "#9ca3af", pointerEvents: "none" }} />
+              </div>
+
+              {/* Show count */}
+              <div style={{ position: "relative" }}>
+                <select
+                  value={showCount}
+                  onChange={e => { setShowCount(Number(e.target.value)); setPage(1); }}
+                  style={{ height: 40, padding: "0 36px 0 14px", borderRadius: 8, border: "1.5px solid #e0e0e0", background: "#fff", fontSize: 13, fontWeight: 600, color: "#374151", outline: "none", cursor: "pointer", appearance: "none" }}
+                >
+                  {SHOW_OPTIONS.map(n => <option key={n} value={n}>Show {n}</option>)}
+                </select>
+                <ChevronDown size={13} style={{ position: "absolute", right: 11, top: "50%", transform: "translateY(-50%)", color: "#9ca3af", pointerEvents: "none" }} />
+              </div>
+
+              {/* Page indicator */}
+              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#374151" }}>
+                Page
+                <input
+                  type="number" min={1} max={totalPages} value={page}
+                  onChange={e => setPage(Math.min(Math.max(1, Number(e.target.value)), totalPages))}
+                  style={{ width: 44, height: 40, textAlign: "center", borderRadius: 7, border: "1.5px solid #e0e0e0", fontSize: 13, color: "#111", outline: "none" }}
+                />
+                <span style={{ color: "#9ca3af" }}>of {totalPages}</span>
+              </div>
+            </div>
+
+            {/* Search bar */}
+            <div style={{ position: "relative", marginBottom: 20 }}>
+              <Search size={14} style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", color: "#bbb" }} />
+              <input
+                value={search}
+                onChange={e => { setSearch(e.target.value); setPage(1); }}
+                placeholder="Search products..."
+                style={{ width: "100%", height: 42, borderRadius: 9, border: "1.5px solid #e0e0e0", background: "#fff", paddingLeft: 38, paddingRight: search ? 38 : 14, fontSize: 13, color: "#111", outline: "none", boxSizing: "border-box" }}
+              />
+              {search && (
+                <button type="button" onClick={() => setSearch("")} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}>
+                  <X size={14} color="#9ca3af" />
+                </button>
+              )}
+            </div>
+
+            {/* Product grid / list */}
+            {pageProducts.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "72px 20px", background: "#fff", borderRadius: 12 }}>
+                <p style={{ fontFamily: SORA, fontSize: 20, fontWeight: 800, color: "#111", margin: "0 0 8px" }}>No products found</p>
+                <p style={{ fontSize: 14, color: "#9ca3af", marginBottom: 20 }}>Try adjusting your search or filters.</p>
+                <button type="button" onClick={() => { setSearch(""); setCategory("All"); setBrand("All brands"); setPriceMin(0); setPriceMax(9999999); setPage(1); }}
+                  style={{ height: 44, padding: "0 28px", borderRadius: 100, border: "none", background: MAROON, color: "#fff", fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}>
+                  Clear all filters
+                </button>
+              </div>
+            ) : (
+              <AnimatePresence mode="popLayout">
+                <div className={view === "grid" ? "products-grid-4" : ""} style={view === "list" ? { display: "flex", flexDirection: "column", gap: 14 } : {}}>
+                  {pageProducts.map(p => <ProductCard key={p.id} product={p} view={view} />)}
+                </div>
+              </AnimatePresence>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 36 }}>
+                <button type="button" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                  style={{ height: 38, padding: "0 16px", borderRadius: 8, border: "1.5px solid #e0e0e0", background: "#fff", fontSize: 13, fontWeight: 600, color: "#374151", cursor: page === 1 ? "not-allowed" : "pointer", opacity: page === 1 ? 0.4 : 1 }}>
+                  ← Prev
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
+                  <button key={n} type="button" onClick={() => setPage(n)}
+                    style={{ width: 38, height: 38, borderRadius: 8, border: `1.5px solid ${page === n ? MAROON : "#e0e0e0"}`, background: page === n ? MAROON : "#fff", fontSize: 13, fontWeight: 700, color: page === n ? "#fff" : "#374151", cursor: "pointer" }}>
+                    {n}
+                  </button>
+                ))}
+                <button type="button" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                  style={{ height: 38, padding: "0 16px", borderRadius: 8, border: "1.5px solid #e0e0e0", background: "#fff", fontSize: 13, fontWeight: 600, color: "#374151", cursor: page === totalPages ? "not-allowed" : "pointer", opacity: page === totalPages ? 0.4 : 1 }}>
+                  Next →
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <div style={{ maxWidth: 1240, margin: "0 auto", padding: "28px 20px 60px" }}>
-
-        {/* ── Filter bar ── */}
-        <div className="filter-bar" style={{ gap: 12, marginBottom: 24, alignItems: "center", flexWrap: "wrap" }}>
-          {/* Search */}
-          <div style={{ position: "relative", flex: "1 1 220px" }}>
-            <Search size={14} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }} />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search devices…"
-              style={{ width: "100%", height: 42, borderRadius: 10, border: "1.5px solid #e8e8e8", background: "#fff", paddingLeft: 36, paddingRight: 14, fontSize: 13, color: "#111", outline: "none", boxSizing: "border-box" }} />
-          </div>
-
-          {/* Category tabs */}
-          <div style={{ display: "flex", gap: 6, background: "#fff", borderRadius: 10, border: "1px solid #e8e8e8", padding: 4 }}>
-            {CATEGORIES.map(cat => (
-              <button key={cat} type="button" onClick={() => setCategory(cat)}
-                style={{ height: 34, padding: "0 14px", borderRadius: 7, border: "none", background: category === cat ? "#581319" : "transparent", color: category === cat ? "#fff" : "#6b7280", fontSize: 12.5, fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}>
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          {/* Sort */}
-          <div style={{ position: "relative" }}>
-            <select value={sort} onChange={e => setSort(e.target.value)}
-              style={{ height: 42, padding: "0 36px 0 14px", borderRadius: 10, border: "1.5px solid #e8e8e8", background: "#fff", fontSize: 12.5, fontWeight: 600, color: "#374151", outline: "none", cursor: "pointer", appearance: "none" }}>
-              {SORT_OPTIONS.map(o => <option key={o}>{o}</option>)}
-            </select>
-            <ChevronDown size={13} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "#9ca3af", pointerEvents: "none" }} />
-          </div>
-
-          <span style={{ fontSize: 12.5, color: "#9ca3af", flexShrink: 0 }}>{filtered.length} device{filtered.length !== 1 ? "s" : ""}</span>
-        </div>
-
-        {/* ── Grid ── */}
-        {filtered.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "60px 20px" }}>
-            <p style={{ fontFamily: SORA, fontSize: 20, fontWeight: 800, color: "#111", margin: "0 0 8px" }}>No devices found</p>
-            <p style={{ fontSize: 13.5, color: "#9ca3af" }}>Try adjusting your search or filter.</p>
-            <button type="button" onClick={() => { setSearch(""); setCategory("All"); }}
-              style={{ marginTop: 16, height: 42, padding: "0 24px", borderRadius: 100, background: "#581319", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-              Clear filters
-            </button>
-          </div>
-        ) : (
-          <div className="products-grid">
-            <AnimatePresence mode="popLayout">
-              {filtered.map(p => <ProductCard key={p.id} product={p} />)}
-            </AnimatePresence>
-          </div>
+      {/* Mobile filter drawer */}
+      <AnimatePresence>
+        {mobileFilterOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 200 }}
+              onClick={() => setMobileFilterOpen(false)}
+            />
+            <motion.div
+              initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              style={{ position: "fixed", inset: "0 auto 0 0", width: "85vw", maxWidth: 320, background: "#fff", zIndex: 201, padding: 20, overflowY: "auto" }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                <span style={{ fontFamily: SORA, fontWeight: 800, fontSize: 17 }}>Filters</span>
+                <button type="button" onClick={() => setMobileFilterOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+                  <X size={20} color="#374151" />
+                </button>
+              </div>
+              <SidebarContent />
+            </motion.div>
+          </>
         )}
+      </AnimatePresence>
 
-        {/* ── Financing CTA ── */}
-        <div style={{ marginTop: 52, borderRadius: 20, background: "linear-gradient(135deg, #581319 0%, #3a0810 100%)", padding: "36px 32px", display: "flex", flexWrap: "wrap", gap: 24, alignItems: "center", justifyContent: "space-between", position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", right: -40, top: -40, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,107,26,0.08)", pointerEvents: "none" }} />
-          <div style={{ position: "relative", zIndex: 1 }}>
-            <p style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.45)", letterSpacing: "0.14em", textTransform: "uppercase", margin: "0 0 8px" }}>Teacher Empowerment Programme</p>
-            <h2 style={{ fontFamily: SORA, fontWeight: 800, fontSize: "clamp(20px,2.5vw,28px)", color: "#fff", margin: "0 0 8px", letterSpacing: "-0.02em" }}>
-              Own your Rev device from ₦14,858/month.
-            </h2>
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.55)", margin: 0 }}>
-              No upfront payment. Spread over 12–36 months. Backed by licensed banks.
-            </p>
-          </div>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", position: "relative", zIndex: 1 }}>
-            <Link href="/apply/devices">
-              <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} type="button"
-                style={{ height: 48, padding: "0 26px", borderRadius: 100, background: "#FF6B1A", border: "none", color: "#fff", fontSize: 13.5, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
-                Apply now <ArrowRight size={14} />
-              </motion.button>
-            </Link>
-            <Link href="/teacher-empowerment">
-              <button type="button"
-                style={{ height: 48, padding: "0 22px", borderRadius: 100, border: "1.5px solid rgba(255,255,255,0.25)", background: "transparent", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-                Learn more
-              </button>
-            </Link>
-          </div>
-        </div>
-      </div>
+      <StorefrontFooter />
     </div>
   );
 }

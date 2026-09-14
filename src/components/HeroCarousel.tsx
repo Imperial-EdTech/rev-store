@@ -27,6 +27,8 @@ type Slide = {
   bg:      string;
   accentColor: string;
   rightContent: "tdep" | "ltbt" | "nigeria" | "bts";
+  /** Real device photo. Place at public/devices/<filename>.png */
+  imageSrc: string;
 };
 
 const SLIDES: Slide[] = [
@@ -44,6 +46,7 @@ const SLIDES: Slide[] = [
     bg: "linear-gradient(135deg, #0f0a05 0%, #1a0e06 40%, #2a1008 70%, #1a0906 100%)",
     accentColor: "#f2760f",
     rightContent: "tdep",
+    imageSrc: "/devices/hero-tdep.png",
   },
   {
     id: "ltbt",
@@ -59,6 +62,7 @@ const SLIDES: Slide[] = [
     bg: "linear-gradient(135deg, #050e1a 0%, #071628 40%, #0a1e35 70%, #060f1e 100%)",
     accentColor: "#f5a623",
     rightContent: "ltbt",
+    imageSrc: "/devices/hero-ltbt.png",
   },
   {
     id: "nigeria",
@@ -74,6 +78,7 @@ const SLIDES: Slide[] = [
     bg: "linear-gradient(135deg, #030d07 0%, #051408 40%, #071c0c 70%, #040e06 100%)",
     accentColor: "#22c55e",
     rightContent: "nigeria",
+    imageSrc: "/devices/hero-nigeria.png",
   },
   {
     id: "bts",
@@ -89,6 +94,7 @@ const SLIDES: Slide[] = [
     bg: "linear-gradient(135deg, #0f0805 0%, #1c0e06 40%, #2a1508 70%, #180b04 100%)",
     accentColor: "#f2760f",
     rightContent: "bts",
+    imageSrc: "/devices/hero-bts.png",
   },
 ];
 
@@ -141,187 +147,110 @@ function PillIcon({ type, color }: { type: string; color: string }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// RIGHT PANEL SCENES
+// DEVICE IMAGE — real photo with animated float + SVG fallback
 // ═══════════════════════════════════════════════════════════════
 
-// Dot-grid Nigeria map silhouette
-function NigeriaMap({ accent }: { accent: string }) {
-  return (
-    <svg viewBox="0 0 320 280" fill="none" style={{ position:"absolute", right:0, top:0, width:"65%", height:"100%", opacity:0.15 }}>
-      <defs>
-        <radialGradient id="ngmap" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor={accent} stopOpacity="1"/>
-          <stop offset="100%" stopColor={accent} stopOpacity="0"/>
-        </radialGradient>
-      </defs>
-      {Array.from({length:340}).map((_,i)=>{
-        const row=Math.floor(i/20), col=i%20;
-        const x=col*14+20, y=row*14+10;
-        const inShape = x>40&&x<280&&y>30&&y<260 &&
-          !(x<80&&y<80) && !(x>240&&y<60) && !(x<60&&y>200) && !(x>260&&y>180);
-        return inShape ? <circle key={i} cx={x} cy={y} r="2.5" fill={accent}/> : null;
-      })}
-    </svg>
-  );
-}
+/**
+ * Renders the real device photo for a hero slide.
+ * Falls back to the SVG illustration if the image hasn't been added yet —
+ * so the carousel never breaks during development.
+ *
+ * IMAGE PLACEMENT:
+ *   public/devices/hero-tdep.png    → Slide 1 (Teacher Empowerment)
+ *   public/devices/hero-ltbt.png    → Slide 2 (Let There Be Teachers)
+ *   public/devices/hero-nigeria.png → Slide 3 (Built in Nigeria)
+ *   public/devices/hero-bts.png     → Slide 4 (Back to School)
+ *
+ * TIPS FOR BEST RESULTS:
+ *   • PNG with transparent background (no white box behind device)
+ *   • At least 900 × 700 px so it looks sharp on large screens
+ *   • Landscape or 4:3 ratio works best in the right panel
+ *   • The image is given a coloured glow matching the slide accent colour
+ */
+function DeviceImage({
+  src,
+  alt,
+  accent,
+  floatAnimation = { y: [0, -14, 0] },
+  floatDuration = 5.5,
+}: {
+  src: string;
+  alt: string;
+  accent: string;
+  floatAnimation?: { y: number[] };
+  floatDuration?: number;
+}) {
+  const [failed, setFailed] = useState(false);
 
-// ── Scene: TDEP ── Laptop illustration + floating icons
-function SceneTDEP({ accent }: { accent: string }) {
-  const icons = [
-    { icon: "laptop", pos: { top:"12%", right:"38%" }, delay: 0 },
-    { icon: "grad",   pos: { top:"8%",  right:"22%" }, delay: 0.15 },
-    { icon: "school", pos: { top:"28%", right:"12%" }, delay: 0.3 },
-    { icon: "headset",pos: { top:"48%", right:"8%"  }, delay: 0.45 },
-    { icon: "flag",   pos: { top:"66%", right:"18%" }, delay: 0.6 },
-  ];
   return (
-    <div style={{ position:"relative", width:"100%", height:"100%", overflow:"hidden" }}>
-      <NigeriaMap accent={accent} />
-      {/* Laptop — bigger, more centered */}
-      <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", padding:"10% 8% 8% 4%" }}>
-        <motion.div
-          animate={{ y:[0,-14,0], rotateY:[0,6,0,-4,0] }}
-          transition={{ duration:6, ease:"easeInOut", repeat:Infinity }}
-          style={{ width:"88%", maxWidth:420 }}
-        >
-          <LaptopSVG accent={accent} />
-        </motion.div>
-      </div>
-      {/* Glow halo behind laptop */}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(ellipse 55% 50% at 55% 55%, ${accent}18 0%, transparent 70%)`, pointerEvents:"none" }} />
-      {/* Floating icon circles */}
-      {icons.map((item,i)=>(
-        <motion.div
-          key={i}
-          animate={{ y:[0,-8,0], opacity:[0.7,1,0.7] }}
-          initial={{ opacity:0, scale:0.5 }}
-          transition={{ duration:3+i*0.4, ease:"easeInOut", repeat:Infinity, delay:item.delay, opacity:{ duration:0.5, delay:item.delay } }}
-          whileInView={{ opacity:1, scale:1, transition:{ duration:0.4, delay:item.delay } }}
-          style={{ position:"absolute", ...item.pos as React.CSSProperties }}
-        >
-          <div style={{ width:44, height:44, borderRadius:"50%", border:`1.5px solid ${accent}55`, background:`${accent}14`, display:"flex", alignItems:"center", justifyContent:"center" }}>
-            <PillIcon type={item.icon} color={accent} />
-          </div>
-        </motion.div>
-      ))}
-    </div>
-  );
-}
+    <div style={{ position: "relative", width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: "6% 4%" }}>
+      {/* Accent glow behind image */}
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        background: `radial-gradient(ellipse 65% 55% at 55% 55%, ${accent}28 0%, transparent 70%)`,
+        pointerEvents: "none",
+      }} />
 
-// ── Scene: LTBT ── Teacher + laptop, clean layout, no text list
-function SceneLTBT({ accent }: { accent: string }) {
-  return (
-    <div style={{ position:"relative", width:"100%", height:"100%", overflow:"hidden", display:"flex", alignItems:"stretch" }}>
       {/* Dot-grid texture */}
-      <div style={{ position:"absolute", inset:0, backgroundImage:`radial-gradient(${accent}22 1px, transparent 1px)`, backgroundSize:"22px 22px", pointerEvents:"none" }} />
-      {/* Accent glow */}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(ellipse 60% 55% at 60% 60%, ${accent}15 0%, transparent 70%)`, pointerEvents:"none" }} />
-      {/* Logo badge — bottom left */}
-      <div style={{ position:"absolute", left:"8%", bottom:"18%", zIndex:10 }}>
-        <div style={{ background:"#fff", borderRadius:12, padding:"12px 20px", display:"flex", alignItems:"center", gap:12, boxShadow:"0 8px 32px rgba(0,0,0,0.35)" }}>
-          <div style={{ width:32, height:32, background:"#f5a623", borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          </div>
-          <div>
-            <p style={{ fontSize:10, fontWeight:800, color:"#111", margin:0, letterSpacing:"0.06em" }}>LET THERE BE</p>
-            <p style={{ fontSize:10, fontWeight:800, color:"#111", margin:0, letterSpacing:"0.06em" }}>TEACHERS</p>
-          </div>
-          <div style={{ width:1, height:32, background:"#e0e0e0" }}/>
-          <span style={{ fontFamily:SORA, fontWeight:800, fontSize:20, color:"#111" }}>rev</span>
-        </div>
-      </div>
-      {/* Laptop — large, centered, blended */}
-      <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", padding:"8% 6% 20% 10%" }}>
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        backgroundImage: `radial-gradient(${accent}18 1px, transparent 1px)`,
+        backgroundSize: "24px 24px",
+        pointerEvents: "none",
+      }} />
+
+      {failed ? (
+        /* ── SVG fallback — shown until real image is added ── */
         <motion.div
-          animate={{ y:[0,-10,0] }}
-          transition={{ duration:5, ease:"easeInOut", repeat:Infinity }}
-          style={{ width:"90%", maxWidth:440 }}
+          animate={floatAnimation}
+          transition={{ duration: floatDuration, ease: "easeInOut", repeat: Infinity }}
+          style={{ width: "88%", maxWidth: 420, position: "relative", zIndex: 1 }}
         >
           <LaptopSVG accent={accent} />
+          {/* "Add image" hint — only visible in dev */}
+          <div style={{
+            position: "absolute",
+            bottom: -32,
+            left: "50%",
+            transform: "translateX(-50%)",
+            whiteSpace: "nowrap",
+            fontSize: 11,
+            fontWeight: 600,
+            color: `${accent}80`,
+            letterSpacing: "0.04em",
+            fontFamily: JAKARTA,
+          }}>
+            📁 Add image → {src}
+          </div>
         </motion.div>
-      </div>
-    </div>
-  );
-}
-
-// ── Scene: Nigeria ── Device cluster + glow
-function SceneNigeria({ accent }: { accent: string }) {
-  return (
-    <div style={{ position:"relative", width:"100%", height:"100%", overflow:"hidden" }}>
-      <NigeriaMap accent={accent} />
-      {/* Glow */}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(ellipse 55% 50% at 60% 50%, ${accent}18 0%, transparent 70%)`, pointerEvents:"none" }} />
-      {/* Device cluster — bigger, centered */}
-      <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:16, padding:"8%" }}>
-        {/* Laptop */}
+      ) : (
+        /* ── Real device photo ── */
         <motion.div
-          animate={{ y:[0,-8,0], rotateZ:[0,1,0,-1,0] }}
-          transition={{ duration:4.5, ease:"easeInOut", repeat:Infinity }}
-          style={{ width:"80%", maxWidth:320 }}
+          animate={floatAnimation}
+          transition={{ duration: floatDuration, ease: "easeInOut", repeat: Infinity }}
+          style={{
+            position: "relative",
+            zIndex: 1,
+            width: "92%",
+            maxWidth: 520,
+            filter: `drop-shadow(0 32px 64px ${accent}50)`,
+          }}
         >
-          <LaptopSVG accent={accent} />
+          <img
+            src={src}
+            alt={alt}
+            onError={() => setFailed(true)}
+            style={{
+              width: "100%",
+              height: "auto",
+              objectFit: "contain",
+              display: "block",
+            }}
+          />
         </motion.div>
-        {/* Tablet + Mini PC side by side */}
-        <div style={{ display:"flex", gap:16, justifyContent:"center", width:"70%" }}>
-          <motion.div
-            animate={{ y:[0,-6,0] }}
-            transition={{ duration:3.8, ease:"easeInOut", repeat:Infinity, delay:0.7 }}
-            style={{ width:"38%" }}
-          >
-            <TabletSVG accent={accent} />
-          </motion.div>
-          <motion.div
-            animate={{ y:[0,-5,0] }}
-            transition={{ duration:4.2, ease:"easeInOut", repeat:Infinity, delay:1.3 }}
-            style={{ width:"52%" }}
-          >
-            <MiniPCSVG accent={accent} />
-          </motion.div>
-        </div>
-      </div>
-      {/* rev label */}
-      <div style={{ position:"absolute", right:"6%", bottom:"8%", fontSize:11, fontWeight:700, color:accent, letterSpacing:"0.08em", fontFamily:SORA }}>rev</div>
-    </div>
-  );
-}
-
-// ── Scene: Back to School ── Devices + discount badge
-function SceneBTS({ accent }: { accent: string }) {
-  return (
-    <div style={{ position:"relative", width:"100%", height:"100%", overflow:"hidden" }}>
-      {/* Glow */}
-      <div style={{ position:"absolute", inset:0, background:`radial-gradient(ellipse 60% 55% at 58% 48%, ${accent}18 0%, transparent 70%)`, pointerEvents:"none" }} />
-      <motion.div
-        animate={{ rotate:[0,2,0,-1,0], y:[0,-8,0] }}
-        transition={{ duration:5, ease:"easeInOut", repeat:Infinity }}
-        style={{ position:"absolute", right:"36%", top:"8%", width:110, height:110 }}
-      >
-        <BackpackSVG accent={accent} />
-      </motion.div>
-      <motion.div
-        animate={{ y:[0,-10,0], rotateY:[0,8,0] }}
-        transition={{ duration:4.5, ease:"easeInOut", repeat:Infinity, delay:0.5 }}
-        style={{ position:"absolute", right:"4%", top:"14%", width:"55%" }}
-      >
-        <LaptopSVG accent={accent} />
-      </motion.div>
-      <motion.div
-        animate={{ y:[0,-6,0] }}
-        transition={{ duration:3.8, ease:"easeInOut", repeat:Infinity, delay:1.1 }}
-        style={{ position:"absolute", right:"10%", bottom:"12%", width:"28%" }}
-      >
-        <TabletSVG accent={accent} />
-      </motion.div>
-      {/* Discount badge */}
-      <motion.div
-        animate={{ scale:[1,1.04,1], rotate:[0,2,0,-1,0] }}
-        transition={{ duration:3, ease:"easeInOut", repeat:Infinity }}
-        style={{ position:"absolute", right:"6%", bottom:"22%", width:72, height:72, borderRadius:"50%", background:accent, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", boxShadow:`0 8px 28px ${accent}55` }}
-      >
-        <span style={{ fontSize:11, fontWeight:800, color:"#fff", lineHeight:1.1 }}>UP TO</span>
-        <span style={{ fontSize:20, fontWeight:900, color:"#fff", lineHeight:1.1, fontFamily:SORA }}>15%</span>
-        <span style={{ fontSize:10, fontWeight:700, color:"rgba(255,255,255,0.85)" }}>OFF</span>
-      </motion.div>
+      )}
     </div>
   );
 }
@@ -365,42 +294,6 @@ function LaptopSVG({ accent }: { accent: string }) {
   );
 }
 
-function TabletSVG({ accent }: { accent: string }) {
-  return (
-    <svg viewBox="0 0 120 170" fill="none" style={{ width:"100%", filter:`drop-shadow(0 10px 24px ${accent}30)` }}>
-      <rect x="4" y="4" width="112" height="162" rx="14" fill="#1a1b1e" stroke="#2e2f33" strokeWidth="1"/>
-      <rect x="10" y="10" width="100" height="150" rx="10" fill="#0d0e10"/>
-      <rect x="14" y="18" width="92" height="134" rx="7" fill={`${accent}25`}/>
-      <text x="60" y="88" fontFamily={SORA} fontWeight="800" fontSize="16" fill={accent} opacity="0.55" textAnchor="middle">rev</text>
-      <circle cx="60" cy="6" r="3" fill="#0d0e10"/>
-    </svg>
-  );
-}
-
-function MiniPCSVG({ accent }: { accent: string }) {
-  return (
-    <svg viewBox="0 0 140 90" fill="none" style={{ width:"100%", filter:`drop-shadow(0 8px 20px ${accent}25)` }}>
-      <rect x="4" y="4" width="132" height="82" rx="10" fill="#1a1b1e" stroke="#2e2f33" strokeWidth="1"/>
-      <rect x="12" y="12" width="116" height="66" rx="6" fill="#0d0e10"/>
-      <rect x="18" y="18" width="104" height="54" rx="4" fill={`${accent}22`}/>
-      <circle cx="20" cy="78" r="3" fill={accent} opacity="0.6"/>
-      <text x="70" y="50" fontFamily={SORA} fontWeight="800" fontSize="14" fill={accent} opacity="0.45" textAnchor="middle">rev</text>
-    </svg>
-  );
-}
-
-function BackpackSVG({ accent }: { accent: string }) {
-  return (
-    <svg viewBox="0 0 120 140" fill="none" style={{ width:"100%", filter:`drop-shadow(0 10px 24px ${accent}35)` }}>
-      <rect x="18" y="24" width="84" height="104" rx="16" fill={accent}/>
-      <rect x="26" y="32" width="68" height="50" rx="10" fill={`${accent}bb`}/>
-      <rect x="34" y="48" width="52" height="20" rx="6" fill={`${accent}88`}/>
-      <path d="M44 24 Q60 10 76 24" stroke="rgba(0,0,0,0.2)" strokeWidth="6" strokeLinecap="round" fill="none"/>
-      <rect x="48" y="86" width="24" height="30" rx="8" fill="rgba(0,0,0,0.15)"/>
-    </svg>
-  );
-}
-
 // ═══════════════════════════════════════════════════════════════
 // ROOT CAROUSEL
 // ═══════════════════════════════════════════════════════════════
@@ -427,12 +320,12 @@ export function HeroCarousel() {
 
   const s = SLIDES[current];
 
-  const rightScene = {
-    tdep:    <SceneTDEP    accent={s.accentColor} />,
-    ltbt:    <SceneLTBT    accent={s.accentColor} />,
-    nigeria: <SceneNigeria accent={s.accentColor} />,
-    bts:     <SceneBTS     accent={s.accentColor} />,
-  }[s.rightContent];
+  const floatConfigs: Record<string, { y: number[]; duration: number }> = {
+    tdep:    { y: [0, -14, 0], duration: 5.5 },
+    ltbt:    { y: [0, -10, 0], duration: 5.0 },
+    nigeria: { y: [0, -12, 0], duration: 6.0 },
+    bts:     { y: [0, -10, 0], duration: 4.8 },
+  };
 
   return (
     <div
@@ -528,7 +421,7 @@ export function HeroCarousel() {
             </motion.div>
           </AnimatePresence>
 
-          {/* RIGHT — scene */}
+          {/* RIGHT — real device image */}
           <AnimatePresence mode="wait">
             <motion.div
               key={`scene-${s.id}`}
@@ -536,7 +429,13 @@ export function HeroCarousel() {
               variants={rightV}
               className="hero-scene"
             >
-              {rightScene}
+              <DeviceImage
+                src={s.imageSrc}
+                alt={`${s.title1} ${s.title2}`}
+                accent={s.accentColor}
+                floatAnimation={{ y: floatConfigs[s.rightContent].y }}
+                floatDuration={floatConfigs[s.rightContent].duration}
+              />
             </motion.div>
           </AnimatePresence>
         </div>

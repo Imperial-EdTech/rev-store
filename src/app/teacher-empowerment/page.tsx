@@ -20,10 +20,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { SiteFooter, SiteHeader } from "@/components/shell";
 import { PreOrderPopup } from "@/components/preorder-popup";
 import { Button } from "@/components/ui";
 import { Reveal } from "@/components/reveal";
+import { StorefrontHeader } from "@/components/StorefrontHeader";
+import { StorefrontFooter } from "@/components/StorefrontFooter";
 
 // ─────────────────────────────────────────────────────────────
 // Both laptop models use /public/devices/rev-laptop.png until
@@ -190,7 +191,7 @@ export default function TeacherEmpowermentPage() {
 
   return (
     <>
-      <SiteHeader />
+      <StorefrontHeader />
       <PreOrderPopup />
       <main className="overflow-hidden bg-white">
 
@@ -537,7 +538,7 @@ export default function TeacherEmpowermentPage() {
         </section>
 
       </main>
-      <SiteFooter />
+      <StorefrontFooter />
     </>
   );
 }

@@ -21,9 +21,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { SiteFooter, SiteHeader } from "@/components/shell";
 import { Reveal } from "@/components/reveal";
 import { Button } from "@/components/ui";
+import { StorefrontHeader } from "@/components/StorefrontHeader";
+import { StorefrontFooter } from "@/components/StorefrontFooter";
 
 // ─────────────────────────────────────────────────────────────
 // UPDATE THIS CONSTANT to change pricing, specs, or the WhatsApp
@@ -125,7 +126,7 @@ export default function TabletsPage() {
 
   return (
     <>
-      <SiteHeader />
+      <StorefrontHeader />
       <main className="overflow-hidden bg-white">
 
         {/* ── HERO CAROUSEL ── */}
@@ -336,7 +337,7 @@ export default function TabletsPage() {
         </section>
 
       </main>
-      <SiteFooter />
+      <StorefrontFooter />
     </>
   );
 }

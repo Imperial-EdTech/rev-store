@@ -14,7 +14,8 @@ import { ArrowLeft, ArrowRight, Check, CheckCircle2, Loader2 } from "lucide-reac
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { SiteHeader } from "@/components/shell";
+import { StorefrontHeader } from "@/components/StorefrontHeader";
+import { StorefrontFooter } from "@/components/StorefrontFooter";
 
 const JAKARTA = "'Plus Jakarta Sans', ui-sans-serif, system-ui";
 const SORA    = "'Sora', ui-sans-serif, system-ui";
@@ -153,7 +154,7 @@ export default function SchoolApplyPage() {
 
   return (
     <>
-      <SiteHeader />
+      <StorefrontHeader />
       <main className="maroon-glow relative min-h-screen py-12" style={{ fontFamily: JAKARTA }}>
         <div className="noise-overlay" />
         <div style={{ maxWidth: 740, margin: "0 auto", padding: "0 20px", position: "relative", zIndex: 10 }}>
@@ -290,8 +291,7 @@ export default function SchoolApplyPage() {
                   style={{ ...inp, height: "auto", minHeight: 90, padding: "12px 14px", resize: "vertical" }}
                   placeholder="Timeline, budget, specific requirements, questions…"
                   value={form.comments}
-                  onChange={e => setF("comments", e.target.value)}
-                />
+                  onChange={e => setF("comments", e.target.value)} />
               </Field>
 
               {submitError && (
@@ -307,8 +307,7 @@ export default function SchoolApplyPage() {
               >
                 {submitting
                   ? <><Loader2 size={18} style={{ animation: "spin 1s linear infinite" }} /> Submitting…</>
-                  : <>Submit school enquiry <ArrowRight size={16} /></>
-                }
+                  : <>Submit school enquiry <ArrowRight size={16} /></>}
               </motion.button>
 
               <p style={{ textAlign: "center", fontSize: 12, color: "#9ca3af", margin: 0 }}>
@@ -325,6 +324,7 @@ export default function SchoolApplyPage() {
           @keyframes spin { to { transform: rotate(360deg); } }
         `}</style>
       </main>
+      <StorefrontFooter />
     </>
   );
 }

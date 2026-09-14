@@ -18,7 +18,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Reveal } from "@/components/reveal";
-import { SiteFooter, SiteHeader } from "@/components/shell";
 import { Button } from "@/components/ui";
 import {
   allQuestions,
@@ -26,6 +25,8 @@ import {
   type AuditOption
 } from "@/lib/audit-data";
 import { roles } from "@/lib/data";
+import { StorefrontHeader } from "@/components/StorefrontHeader";
+import { StorefrontFooter } from "@/components/StorefrontFooter";
 
 // ─── Schema ────────────────────────────────────────────────────────────────────
 
@@ -152,7 +153,7 @@ export default function TechAuditPage() {
 
   return (
     <>
-      <SiteHeader />
+      <StorefrontHeader />
       <main className="maroon-glow relative min-h-screen py-12">
         <div className="noise-overlay" />
         <div className="container-x relative z-10 grid gap-8 lg:grid-cols-[0.8fr_1.1fr]">
@@ -473,7 +474,7 @@ export default function TechAuditPage() {
 function TechAuditLanding({ onStart }: { onStart: () => void }) {
   return (
     <>
-      <SiteHeader />
+      <StorefrontHeader />
       <main className="maroon-glow relative min-h-screen">
         <div className="noise-overlay" />
         <section className="container-x relative z-10 grid items-center gap-12 py-16 md:py-24 lg:grid-cols-[1.05fr_0.95fr]">
@@ -542,7 +543,7 @@ function TechAuditLanding({ onStart }: { onStart: () => void }) {
           </div>
         </section>
       </main>
-      <SiteFooter />
+      <StorefrontFooter />
     </>
   );
 }
