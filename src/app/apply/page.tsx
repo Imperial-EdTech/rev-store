@@ -407,6 +407,7 @@ function ApplyForm() {
                     <p className="mt-1 text-sm text-slate-body">{STEPS[step].sub}</p>
                   </div>
 
+
                   {/* ── STEP 0: Pathway ── */}
                   {step === 0 && (
                     <div className="space-y-4">

@@ -82,7 +82,7 @@ const DEALS = [
     name: 'Rev Orion 12"',
     spec: "Intel Celeron N4020 · 4GB RAM · 128GB eMMC · Win 11",
     price: 290000, was: 350000, save: 17,
-    img: "/devices/rev-laptop.png",
+    img: "/devices/rev_orion_laptop.png",
     badge: "Most Popular",
   },
   {
@@ -90,7 +90,7 @@ const DEALS = [
     name: 'Rev Aelia 14"',
     spec: "Intel Core i3 · 8GB RAM · 256GB SSD · Win 11 Pro",
     price: 330000, was: 400000, save: 18,
-    img: "/devices/rev-laptop.png",
+    img: "/devices/rev_orion_laptop.png",
     badge: "Pre-order",
   },
   {
@@ -98,7 +98,7 @@ const DEALS = [
     name: 'Rev Tab 10"',
     spec: "Quad-core ARM · 3GB RAM · 32GB ROM · Android 13",
     price: 80000, was: 150000, save: 47,
-    img: "/devices/rev-tablet.png",
+    img: "/devices/rev_tablet.png",
     badge: "47% off",
   },
   {
@@ -106,7 +106,7 @@ const DEALS = [
     name: 'Rev Tab 4G 10"',
     spec: "Octa-core · 4GB RAM · 64GB · 4G LTE · Android 13",
     price: 110000, was: 140000, save: 21,
-    img: "/devices/rev-tablet.png",
+    img: "/devices/rev_tablet.png",
     badge: "New",
   },
 ];
@@ -483,7 +483,7 @@ export default function Home() {
             </div>
             <div className="deals-grid">
               {DEALS.map((p, idx) => (
-                <Link key={p.id} href={`/products/${p.id}`} style={{ textDecoration: "none" }}>
+                <Link key={p.id} href={p.id.startsWith("tab") ? `/products/${p.id}` : `/pre-order?device=${p.id}`} style={{ textDecoration: "none" }}>
                   <motion.div
                     initial={{ opacity: 0, y: 28 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -522,13 +522,6 @@ export default function Home() {
                   </motion.div>
                 </Link>
               ))}
-            </div>
-            <div style={{ textAlign: "center", marginTop: 28 }}>
-              <Link href="/products">
-                <button style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 46, padding: "0 32px", borderRadius: 100, border: "1.5px solid #e0e0e0", background: "#fff", fontSize: 13, fontWeight: 700, color: "#374151", cursor: "pointer" }} type="button">
-                  View all offers <ArrowRight size={13} />
-                </button>
-              </Link>
             </div>
           </div>
         </section>
@@ -693,7 +686,6 @@ export default function Home() {
                   </Link>
                 </div>
                 <div style={{ flexShrink: 0, width: 120, alignSelf: "flex-end" }}>
-                  <DeviceImg alt="Teacher with laptop" src="/images/ltbt-teacher.png" className="w-full object-contain" />
                 </div>
               </div>
               <div style={{ borderRadius: 16, background: "linear-gradient(140deg,#0f2a1a 0%,#061408 100%)", padding: "32px 28px", position: "relative", overflow: "hidden", minHeight: 210 }}>
@@ -735,6 +727,7 @@ export default function Home() {
 
         {/* 7. BULK ORDERS FOR SCHOOLS */}
         <BulkOrderSection />
+        
 
         {/* 8. FREE TECH AUDIT */}
         <TechAuditSection />
@@ -760,34 +753,13 @@ export default function Home() {
             ))}
           </div>
         </section>
+        
       </main>
 
       {/* ── FOOTER ── */}
       {/* ═══ FOOTER ═══ */}
       <footer style={{ fontFamily: "'Plus Jakarta Sans','Inter Variable',ui-sans-serif,system-ui" }}>
 
-        {/* ── Newsletter band ── */}
-        <div style={{ background: "#4a0e10", padding: "22px 20px" }}>
-          <div style={{ maxWidth: 1240, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-            <p style={{ fontSize: 18, fontWeight: 700, color: "#fff", margin: 0 }}>Sign up to Newsletter</p>
-            <div style={{ display: "flex", gap: 0, width: "100%", maxWidth: 500 }}>
-              <input
-                type="email"
-                placeholder="Email address"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                style={{ flex: 1, height: 46, borderRadius: "100px 0 0 100px", border: "none", background: "#fff", padding: "0 20px", fontSize: 13.5, color: "#374151", outline: "none", boxSizing: "border-box" }}
-              />
-              <button
-                onClick={() => { if (email) setSubscribed(true); }}
-                type="button"
-                style={{ height: 46, padding: "0 24px", borderRadius: "0 100px 100px 0", border: "none", background: "#111", color: "#fff", fontSize: 12, fontWeight: 800, cursor: "pointer", letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap", flexShrink: 0 }}
-              >
-                {subscribed ? "Subscribed ✓" : "Subscribe"}
-              </button>
-            </div>
-          </div>
-        </div>
 
         {/* ── Main footer body ── */}
         <div style={{ background: "#fff", padding: "48px 20px 36px", borderBottom: "1px solid #ebebeb" }}>
@@ -892,26 +864,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ── Bottom bar ── */}
-        <div style={{ background: "#f5f5f5", padding: "14px 20px" }}>
-          <div style={{ maxWidth: 1240, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
-            <p style={{ fontSize: 12.5, color: "#9ca3af", margin: 0 }}>
-              © {new Date().getFullYear()} RevStore by Revrica — All rights reserved
-            </p>
-            {/* Payment partners */}
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", background: "#fff", borderRadius: 7, border: "1px solid #e8e8e8" }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" fill="#4a0e10"/><path d="M2 10h20" stroke="#fff" strokeWidth="1.5"/></svg>
-                <span style={{ fontSize: 11.5, fontWeight: 800, color: "#4a0e10", letterSpacing: "0.04em" }}>Paystack</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", background: "#fff", borderRadius: 7, border: "1px solid #e8e8e8" }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#4a0e10"/><path d="M8 12h8M12 8l4 4-4 4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                <span style={{ fontSize: 11.5, fontWeight: 800, color: "#4a0e10", letterSpacing: "0.04em" }}>Flutterwave</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Responsive footer cols */}
         <style>{`
           @media (max-width: 1024px) { .footer-cols { grid-template-columns: 1.4fr 1fr 1fr !important; } }
@@ -949,9 +901,6 @@ function BulkOrderSection() {
             Equipping your whole school?<br />
             <span style={{ color: "#f2760f" }}>Let's talk bulk.</span>
           </h2>
-          <p style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, maxWidth: 540, margin: "0 0 36px" }}>
-            Whether you're setting up a computer lab, rolling out devices for your teachers, or building a custom solution for your students — we work with you to get it right. Volume pricing, flexible delivery, and on-site support included.
-          </p>
         </motion.div>
 
         <div className="bulk-grid" style={{ gap: 14 }}>
@@ -983,6 +932,12 @@ function BulkOrderSection() {
           transition={{ duration: 0.5, delay: 0.42 }}
           style={{ marginTop: 36, display: "flex", flexWrap: "wrap", gap: 12 }}
         >
+          <Link
+            href="/apply/school"
+            style={{ display: "inline-flex", alignItems: "center", gap: 9, height: 48, padding: "0 26px", borderRadius: 100, background: "#f2760f", color: "#fff", fontSize: 13.5, fontWeight: 700, textDecoration: "none" }}
+          >
+            Let's Talk<ArrowRight size={15} />
+          </Link>
           <a
             href={`https://wa.me/2348136117198?text=${encodeURIComponent("Hi Revrica, I'd like to enquire about a bulk order for my school/institution.")}`}
             target="_blank" rel="noreferrer"
@@ -991,18 +946,9 @@ function BulkOrderSection() {
             <MessageCircle size={16} />
             WhatsApp us
           </a>
-          <a
-            href="mailto:schools@revrica.com?subject=Bulk Order Enquiry"
-            style={{ display: "inline-flex", alignItems: "center", gap: 9, height: 48, padding: "0 26px", borderRadius: 100, border: "1.5px solid rgba(255,255,255,0.18)", background: "transparent", color: "#fff", fontSize: 13.5, fontWeight: 700, cursor: "pointer", textDecoration: "none" }}
-          >
-            <Mail size={15} />
-            Email us
-          </a>
         </motion.div>
 
-        <p style={{ marginTop: 16, fontSize: 11.5, color: "rgba(255,255,255,0.28)" }}>
-          We typically respond within one business day. You can also call us on <span style={{ color: "#f2760f" }}>+234 813 611 7198</span>.
-        </p>
+        
       </div>
     </section>
   );
@@ -1015,8 +961,7 @@ function TechAuditSection() {
 
   const steps = [
     { n: "01", title: "Fill the form", body: "Tell us about your school — size, current setup, and what you need." },
-    { n: "02", title: "We visit or call", body: "Our team will contact you to arrange a walkthrough, in person or online." },
-    { n: "03", title: "Get your report", body: "A clear, actionable plan — gaps, recommendations and next steps." },
+    { n: "02", title: "Get your report", body: "A clear, actionable plan — gaps, recommendations and next steps." },
   ];
 
   return (
@@ -1036,7 +981,7 @@ function TechAuditSection() {
               <span style={{ color: "#f2760f" }}>ready for the future?</span>
             </h2>
             <p style={{ fontSize: 14.5, color: "#374151", lineHeight: 1.7, margin: "0 0 28px", maxWidth: 460 }}>
-              Our free Tech Audit gives you a clear picture of where your school's technology stands — and a practical roadmap to get it where it needs to be. No sales pitch. No obligation.
+              Get a clear picture of where your school's technology stands — and a practical roadmap to get it where it needs to be.
             </p>
             <Link href="/tech-audit">
               <motion.button
@@ -1050,7 +995,7 @@ function TechAuditSection() {
                 <ArrowRight size={14} />
               </motion.button>
             </Link>
-            <p style={{ marginTop: 12, fontSize: 12, color: "#9ca3af" }}>Free · No commitment · Takes 5 minutes to book</p>
+            
           </motion.div>
 
           {/* Right: steps */}

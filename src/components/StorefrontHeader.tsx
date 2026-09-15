@@ -1,30 +1,24 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Search } from "lucide-react";
+import { ArrowRight, Search } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { RevricaLogo } from "@/components/brand";
 
-const NAV_CATEGORIES: [string, string][] = [
-  ["Laptops", "/products"],
-  ["Tablets", "/products/tablets"],
-  ["All-in-Ones", "#"],
-  ["Mini PCs", "#"],
-  ["Interactive Boards", "#"],
-  ["Content Servers", "#"],
-];
-
-const MOBILE_NAV: [string, string][] = [
-  ["Laptops", "/products"],
-  ["Tablets", "/products/tablets"],
-  ["All-in-Ones", "#"],
-  ["Mini PCs", "#"],
-  ["Interactive Boards", "#"],
-  ["Programs", "/teacher-empowerment"],
-];
-
+// ─── Mobile slide-out menu ────────────────────────────────────
 function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const navLinks: [string, string][] = [
+    ["Home",               "/"],
+    ["About",              "/about"],
+    ["Shop Now",           "/products"],
+    ["Laptops",            "/products"],
+    ["Tablets",            "/products/tablets"],
+    ["All-in-Ones",        "#"],
+    ["Mini PCs",           "#"],
+    ["Interactive Boards", "#"],
+  ];
+
   return (
     <AnimatePresence>
       {open && (
@@ -55,27 +49,31 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
                 </svg>
               </button>
             </div>
+
             <nav className="flex flex-1 flex-col gap-1 px-4 py-5">
-              {MOBILE_NAV.map(([label, href]) => (
+              {navLinks.map(([label, href]) => (
                 <Link
                   key={label}
                   href={href}
                   onClick={onClose}
                   className="flex items-center gap-3 rounded-xl px-3 py-3.5 text-[14px] font-semibold text-[#1a1a1a] transition hover:bg-orange-50"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f2760f" strokeWidth="2.2" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
+                  <ArrowRight size={14} className="text-[#f2760f]" />
                   {label}
                 </Link>
               ))}
             </nav>
+
             <div className="flex flex-col gap-3 px-4 pb-6">
               <Link href="/pre-order" onClick={onClose}>
                 <button
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#f2760f] text-[13px] font-bold text-white"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#4a0e10] text-[13px] font-bold text-white"
                   style={{ height: 48 }}
                   type="button"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff">
+                    <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
                   Pre-order Now
                 </button>
               </Link>
@@ -96,74 +94,90 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   );
 }
 
+// ─── Props ────────────────────────────────────────────────────
 interface StorefrontHeaderProps {
-  /** Show the top info bar (phone / email / pre-order status). Defaults to true. */
+  /** Hide the maroon top info bar. Defaults to true (shown). */
   showInfoBar?: boolean;
-  /** Show the category nav row below the main header bar. Defaults to true. */
+  /**
+   * Show the desktop category sub-nav below the main bar.
+   * Defaults to false — matches the homepage which uses the
+   * centred primary nav instead.
+   */
   showCategoryNav?: boolean;
 }
 
 /**
- * Shared storefront header used across all RevStore pages.
- * Renders the top info bar, the sticky main header (logo + search + CTA),
- * and the desktop category nav. The mobile slide-out menu is self-contained.
+ * Shared storefront header — matches the homepage design exactly.
+ *
+ * Layout:
+ *   1. Maroon top strip  "Welcome to RevStore by Revrica"
+ *   2. Sticky white bar  logo · centred nav · search · Pre-order CTA
  */
 export function StorefrontHeader({
   showInfoBar = true,
-  showCategoryNav = true,
+  showCategoryNav = false,
 }: StorefrontHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <>
       <style>{`
-        .sh-nav-desktop { display: flex; }
-        .sh-nav-mobile  { display: none; }
-        .sh-search      { display: block; }
-        .sh-top-bar     { display: flex; }
+        .sh2-desktop { display: flex; }
+        .sh2-mobile  { display: none; }
+        .sh2-search  { display: block; }
+        .sh2-topbar  { display: block; }
         @media (max-width: 768px) {
-          .sh-nav-desktop { display: none !important; }
-          .sh-nav-mobile  { display: flex !important; }
-          .sh-search      { display: none !important; }
-          .sh-top-bar     { display: none !important; }
+          .sh2-desktop { display: none !important; }
+          .sh2-mobile  { display: flex !important; }
+          .sh2-search  { display: none !important; }
+          .sh2-topbar  { display: none !important; }
         }
       `}</style>
 
       <MobileMenu open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
 
-      {/* Top info bar */}
+      {/* ── Top info bar ── */}
       {showInfoBar && (
-        <div className="sh-top-bar" style={{ background: "#111", padding: "8px 0" }}>
-          <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 20, fontSize: 11.5, color: "rgba(255,255,255,0.5)" }}>
-              <span>About</span><span>Support</span><span>FAQ</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5 }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#f2760f", display: "inline-block" }} />
-              <span style={{ color: "#f2760f", fontWeight: 700 }}>Pre-order open</span>
-              <span style={{ color: "rgba(255,255,255,0.45)" }}>— Rev Orion from ₦290,000</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 20, fontSize: 11.5, color: "rgba(255,255,255,0.5)" }}>
-              <span>+234 813 611 7198</span>
-              <span style={{ color: "#f2760f" }}>support@revrica.com</span>
-            </div>
-          </div>
+        <div
+          className="sh2-topbar"
+          style={{ background: "#4a0e10", padding: "9px 20px", textAlign: "center" }}
+        >
+          <span style={{ fontSize: 12.5, fontWeight: 600, color: "rgba(255,255,255,0.92)", letterSpacing: "0.01em" }}>
+            Welcome to{" "}
+            <span style={{ fontWeight: 800, color: "#fff" }}>RevStore</span>
+            <span style={{ color: "rgba(255,255,255,0.55)", fontWeight: 400 }}> by Revrica</span>
+          </span>
         </div>
       )}
 
-      {/* Main header */}
-      <header style={{ background: "#fff", borderBottom: "1px solid #e8e8e8", position: "sticky", top: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 20px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 16, height: 64 }}>
+      {/* ── Sticky main header ── */}
+      <header
+        style={{
+          background: "#fff",
+          borderBottom: "1px solid #e8e8e8",
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+          boxShadow: "0 1px 12px rgba(0,0,0,0.05)",
+        }}
+      >
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 28px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 20, height: 82 }}>
+
             {/* Hamburger — mobile only */}
             <button
-              className="sh-nav-mobile"
+              className="sh2-mobile"
               onClick={() => setMobileMenuOpen(true)}
-              style={{ height: 36, width: 36, alignItems: "center", justifyContent: "center", borderRadius: 8, border: "1.5px solid #e8e8e8", background: "transparent", cursor: "pointer", flexShrink: 0 }}
+              style={{
+                height: 40, width: 40,
+                alignItems: "center", justifyContent: "center",
+                borderRadius: 10, border: "1.5px solid #e8e8e8",
+                background: "transparent", cursor: "pointer", flexShrink: 0,
+              }}
               type="button"
               aria-label="Open menu"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2.2" strokeLinecap="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2.2" strokeLinecap="round">
                 <path d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
@@ -173,53 +187,137 @@ export function StorefrontHeader({
               <RevricaLogo variant="light" />
             </div>
 
-            {/* Search — hidden on mobile */}
-            <div className="sh-search" style={{ flex: 1, maxWidth: 500, position: "relative" }}>
-              <Search size={14} style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", color: "#aaa" }} />
+            {/* Primary nav — desktop, centred */}
+            <nav
+              className="sh2-desktop"
+              style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 4 }}
+            >
+              {([
+                ["Home",     "/"],
+                ["About",    "/about"],
+                ["Shop Now", "/products"],
+              ] as [string, string][]).map(([label, href]) => (
+                <Link
+                  key={label}
+                  href={href}
+                  style={{
+                    padding: "10px 22px",
+                    display: "flex",
+                    alignItems: "center",
+                    fontSize: 14.5,
+                    fontWeight: 700,
+                    color: "#1a1a1a",
+                    whiteSpace: "nowrap",
+                    textDecoration: "none",
+                    borderRadius: 10,
+                    transition: "background 0.15s, color 0.15s",
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = "rgba(74,14,16,0.06)";
+                    e.currentTarget.style.color = "#4a0e10";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = "transparent";
+                    e.currentTarget.style.color = "#1a1a1a";
+                  }}
+                >
+                  {label}
+                </Link>
+              ))}
+            </nav>
+
+            {/* Search — desktop only */}
+            <div className="sh2-search" style={{ flex: 1, maxWidth: 420, position: "relative" }}>
+              <Search
+                size={15}
+                style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#bbb" }}
+              />
               <input
                 placeholder="Search laptops, tablets, accessories..."
-                style={{ width: "100%", height: 38, borderRadius: 9, border: "1.5px solid #e8e8e8", background: "#fafafa", paddingLeft: 36, paddingRight: 14, fontSize: 12.5, color: "#111", outline: "none", boxSizing: "border-box" }}
+                style={{
+                  width: "100%", height: 44, borderRadius: 11,
+                  border: "1.5px solid #e8e8e8", background: "#fafafa",
+                  paddingLeft: 40, paddingRight: 16,
+                  fontSize: 13, color: "#111", outline: "none",
+                  boxSizing: "border-box", transition: "border-color 0.15s",
+                }}
+                onFocus={e => (e.target.style.borderColor = "#4a0e10")}
+                onBlur={e => (e.target.style.borderColor = "#e8e8e8")}
               />
             </div>
 
-            {/* Desktop CTA */}
-            <div className="sh-nav-desktop" style={{ alignItems: "center", gap: 8, marginLeft: "auto" }}>
+            {/* Pre-order CTA — desktop */}
+            <div className="sh2-desktop" style={{ alignItems: "center", gap: 10, flexShrink: 0 }}>
               <Link href="/pre-order">
                 <button
-                  style={{ height: 37, padding: "0 18px", borderRadius: 8, border: "none", background: "#f2760f", fontSize: 12.5, fontWeight: 700, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 7, whiteSpace: "nowrap" }}
+                  style={{
+                    height: 44, padding: "0 22px", borderRadius: 11,
+                    border: "none", background: "#4a0e10",
+                    fontSize: 13.5, fontWeight: 700, color: "#fff",
+                    cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
+                    whiteSpace: "nowrap",
+                    boxShadow: "0 2px 10px rgba(74,14,16,0.25)",
+                    transition: "background 0.15s",
+                  }}
+                  onMouseEnter={e => ((e.currentTarget as HTMLButtonElement).style.background = "#3a0a0d")}
+                  onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.background = "#4a0e10")}
                   type="button"
                 >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="#fff"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff">
+                    <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
                   Pre-order
                 </button>
               </Link>
             </div>
 
-            {/* Mobile: pre-order pill */}
-            <div className="sh-nav-mobile" style={{ marginLeft: "auto" }}>
+            {/* Pre-order — mobile */}
+            <div className="sh2-mobile" style={{ marginLeft: "auto" }}>
               <Link href="/pre-order">
                 <button
-                  style={{ height: 36, padding: "0 14px", borderRadius: 8, border: "none", background: "#f2760f", fontSize: 12, fontWeight: 700, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
+                  style={{
+                    height: 40, padding: "0 16px", borderRadius: 10,
+                    border: "none", background: "#4a0e10",
+                    fontSize: 12.5, fontWeight: 700, color: "#fff",
+                    cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
+                  }}
                   type="button"
                 >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#fff">
+                    <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
                   Pre-order
                 </button>
               </Link>
             </div>
           </div>
 
-          {/* Category nav — desktop only */}
+          {/* Optional category sub-nav */}
           {showCategoryNav && (
             <nav
-              className="sh-nav-desktop"
-              style={{ alignItems: "center", gap: 4, height: 40, borderTop: "1px solid #f0f0f0", overflowX: "auto" }}
+              className="sh2-desktop"
+              style={{
+                alignItems: "center", gap: 4, height: 40,
+                borderTop: "1px solid #f0f0f0", overflowX: "auto",
+              }}
             >
-              {NAV_CATEGORIES.map(([label, href]) => (
+              {([
+                ["Laptops",           "/products"],
+                ["Tablets",           "/products/tablets"],
+                ["All-in-Ones",       "#"],
+                ["Mini PCs",          "#"],
+                ["Interactive Boards","#"],
+                ["Content Servers",   "#"],
+              ] as [string, string][]).map(([label, href]) => (
                 <Link
                   key={label}
                   href={href}
-                  style={{ padding: "0 12px", height: "100%", display: "flex", alignItems: "center", fontSize: 12.5, fontWeight: 600, color: "#374151", whiteSpace: "nowrap", textDecoration: "none" }}
+                  style={{
+                    padding: "0 12px", height: "100%",
+                    display: "flex", alignItems: "center",
+                    fontSize: 12.5, fontWeight: 600,
+                    color: "#374151", whiteSpace: "nowrap", textDecoration: "none",
+                  }}
                 >
                   {label}
                 </Link>

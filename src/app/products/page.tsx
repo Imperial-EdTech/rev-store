@@ -165,8 +165,6 @@ function DeviceImg({ src, alt }: { src: string; alt: string }) {
 // ─── Product card — matches Slot style exactly ─────────────────
 function ProductCard({ product, view }: { product: Product; view: "grid" | "list" }) {
   const [hovered, setHovered] = useState(false);
-  const saving = Math.round((1 - product.price / product.was) * 100);
-
   if (view === "list") {
     return (
       <motion.div
@@ -200,8 +198,6 @@ function ProductCard({ product, view }: { product: Product; view: "grid" | "list
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
               <span style={{ fontFamily: SORA, fontSize: 22, fontWeight: 800, color: MAROON }}>{fmt(product.price)}</span>
-              <span style={{ fontSize: 13, color: "#d1d5db", textDecoration: "line-through", marginLeft: 8 }}>{fmt(product.was)}</span>
-              <span style={{ fontSize: 11.5, fontWeight: 700, color: "#16a34a", marginLeft: 8 }}>Save {saving}%</span>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               <button style={{ height: 38, padding: "0 20px", borderRadius: 100, border: `1.5px solid ${MAROON}`, background: "transparent", color: MAROON, fontSize: 13, fontWeight: 700, cursor: "pointer" }} type="button">
@@ -255,14 +251,6 @@ function ProductCard({ product, view }: { product: Product; view: "grid" | "list
             {product.inStock ? "In stock" : "Coming soon"}
           </span>
         </div>
-        {/* Discount ribbon */}
-        {saving > 0 && (
-          <div style={{ position: "absolute", top: 10, left: 10, zIndex: 2 }}>
-            <span style={{ background: MAROON, color: "#fff", fontSize: 10.5, fontWeight: 800, padding: "3px 8px", borderRadius: 5 }}>
-              -{saving}%
-            </span>
-          </div>
-        )}
         <div style={{ padding: "20px", height: "100%" }}>
           <DeviceImg src={product.img} alt={product.name} />
         </div>
@@ -298,9 +286,6 @@ function ProductCard({ product, view }: { product: Product; view: "grid" | "list
         <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <p style={{ fontFamily: SORA, fontWeight: 800, fontSize: 17, color: MAROON, margin: "0 0 1px" }}>{fmt(product.price)}</p>
-            {product.was > product.price && (
-              <p style={{ fontSize: 12, color: "#d1d5db", textDecoration: "line-through", margin: 0 }}>{fmt(product.was)}</p>
-            )}
           </div>
           {/* Circular cart button — maroon, exact Slot style */}
           <Link href={`/pre-order?device=${product.id}`}>

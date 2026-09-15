@@ -3,7 +3,6 @@
 import { AnimatePresence, motion, useInView } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
-// ─── Device image with fallback SVG ───────────────────────────
 function DeviceThumb({ src, alt, fallback, className }: {
   src: string; alt: string; fallback: React.ReactNode; className?: string;
 }) {
@@ -24,39 +23,26 @@ function LaptopSVG({ className }: { className?: string }) {
   );
 }
 
-function TabletSVG({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 80 110">
-      <rect fill="#2a0a0e" height="106" rx="10" width="76" x="2" y="2" />
-      <rect fill="#150406" height="88" rx="6" width="62" x="9" y="10" />
-      <rect fill="#581319" opacity="0.7" height="68" rx="3" width="52" x="14" y="18" />
-      <circle cx="40" cy="106" fill="#581319" r="4" />
-    </svg>
-  );
-}
-
-// ─── Word-by-word headline — loops indefinitely ───────────────
 function AnimatedHeadline({ inView }: { inView: boolean }) {
   const [cycle, setCycle] = useState(0);
 
-  // Re-trigger animation every 6 seconds
   useEffect(() => {
     if (!inView) return;
     const id = setInterval(() => setCycle(c => c + 1), 6000);
     return () => clearInterval(id);
   }, [inView]);
 
-  const line1 = ["Back", "to", "School"];
-  const line2 = ["Deals", "Are", "Coming!"];
+  const line1 = ["Welcome", "Back"];
+  const line2 = ["To", "School", "DEALS"];
 
   return (
     <AnimatePresence mode="wait">
-      <motion.div key={cycle}>
-        <div className="flex flex-wrap gap-x-[0.28em]">
+      <motion.div key={cycle} className="text-center">
+        <div className="flex flex-wrap justify-center gap-x-[0.28em]">
           {line1.map((word, i) => (
             <motion.span key={word + i}
               className="font-display font-black uppercase leading-[1.1] tracking-tight text-white"
-              style={{ fontSize: "clamp(17px, 2.4vw, 24px)" }}
+              style={{ fontSize: "clamp(20px, 2.8vw, 30px)" }}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.38, delay: 0.05 + i * 0.07, ease: [0.16, 1, 0.3, 1] }}
@@ -65,11 +51,11 @@ function AnimatedHeadline({ inView }: { inView: boolean }) {
             </motion.span>
           ))}
         </div>
-        <div className="flex flex-wrap gap-x-[0.28em]">
+        <div className="flex flex-wrap justify-center gap-x-[0.28em]">
           {line2.map((word, i) => (
             <motion.span key={word + i}
               className="font-display font-black uppercase leading-[1.1] tracking-tight text-[#FF6B1A]"
-              style={{ fontSize: "clamp(17px, 2.4vw, 24px)" }}
+              style={{ fontSize: "clamp(20px, 2.8vw, 30px)" }}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.38, delay: 0.2 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
@@ -83,16 +69,13 @@ function AnimatedHeadline({ inView }: { inView: boolean }) {
   );
 }
 
-// ─── Main ─────────────────────────────────────────────────────
 export function BackToSchoolBanner() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: false, margin: "-40px" });
 
-  // Only 3 devices: 2 laptops + 1 tablet
   const devices = [
-    { src: "/devices/rev-laptop.png",  alt: "Rev Orion laptop",  svg: <LaptopSVG className="h-16 w-auto" />,  label: "Rev Orion" },
-    { src: "/devices/rev-laptop.png",  alt: "Rev Aelia laptop",  svg: <LaptopSVG className="h-14 w-auto" />,  label: "Rev Aelia" },
-    { src: "/devices/rev-tablet.png",  alt: "Rev Tab tablet",    svg: <TabletSVG className="h-14 w-auto" />,  label: "Rev Tab" },
+    { src: "/devices/rev_orion_laptop.png", alt: "Rev Orion laptop", svg: <LaptopSVG className="h-16 w-auto" />, label: "Rev Orion" },
+    { src: "/devices/rev_orion_laptop.png", alt: "Rev Aelia laptop", svg: <LaptopSVG className="h-14 w-auto" />, label: "Rev Aelia" },
   ];
 
   return (
@@ -112,82 +95,82 @@ export function BackToSchoolBanner() {
 
       {/* ── DESKTOP ── */}
       <div className="container-x relative z-10 hidden md:block">
-        <div className="flex items-center gap-0 py-5">
+        <div className="flex flex-col items-center py-8 text-center">
 
-          {/* Headline */}
-          <div className="flex shrink-0 flex-col gap-0.5 pr-7">
-            <motion.p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FF6B1A]"
-              initial={{ opacity: 0 }}
-              animate={inView ? { opacity: 1 } : { opacity: 0 }}
-              transition={{ duration: 0.35 }}>
-              Coming Soon
-            </motion.p>
-            <AnimatedHeadline inView={inView} />
-          </div>
+          {/* Headline centred */}
+          <AnimatedHeadline inView={inView} />
 
-          <div className="mx-6 h-14 w-px shrink-0 bg-white/10" />
+          {/* Divider */}
+          <div className="my-5 h-px w-24 bg-white/15" />
 
-          {/* Body copy */}
-          <motion.div className="flex shrink-0 items-center gap-3 pr-7"
-            initial={{ opacity: 0, x: -10 }}
-            animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -10 }}
+          {/* Sub-copy centred */}
+          <motion.p className="max-w-md text-[13px] leading-[1.65] text-white/55"
+            initial={{ opacity: 0, y: 8 }}
+            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
             transition={{ duration: 0.45, delay: 0.28 }}>
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#FF6B1A]/15">
-              <svg fill="none" height="20" stroke="#FF6B1A" strokeWidth="1.6" viewBox="0 0 24 24" width="20">
-                <rect height="16" rx="2" width="18" x="3" y="4" />
-                <path d="M3 9h18" /><path d="M8 2v4M16 2v4" />
-                <rect fill="#FF6B1A" height="4" rx="1" stroke="none" width="6" x="9" y="13" />
-              </svg>
-            </div>
-            <p className="max-w-[150px] text-[12.5px] leading-[1.55] text-white/55">
-              Big savings on laptops &amp; tablets for students, teachers and schools.
-            </p>
-          </motion.div>
+            Big savings on laptops for students, teachers and schools.
+          </motion.p>
 
-          <div className="mx-6 h-14 w-px shrink-0 bg-white/10" />
-
-          {/* Device images — staggered rise */}
-          <div className="flex flex-1 items-end justify-center gap-6">
+          {/* Device images centred */}
+          <motion.div className="mt-6 flex items-end justify-center gap-10"
+            initial={{ opacity: 0, y: 18 }}
+            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
+            transition={{ duration: 0.42, delay: 0.38 }}>
             {devices.map((d, i) => (
               <motion.div key={d.label}
                 initial={{ opacity: 0, y: 18 }}
                 animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
-                transition={{ duration: 0.42, delay: 0.32 + i * 0.08 }}
+                transition={{ duration: 0.42, delay: 0.4 + i * 0.1 }}
                 className="flex flex-col items-center gap-1.5"
-                style={{ transition: "transform 0.2s ease" }}
               >
-                <DeviceThumb alt={d.alt} className="h-16 w-auto object-contain drop-shadow-lg" fallback={d.svg} src={d.src} />
-                <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: "0.06em" }}>{d.label}</span>
+                <DeviceThumb alt={d.alt} className="h-20 w-auto object-contain drop-shadow-lg" fallback={d.svg} src={d.src} />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-white/30">{d.label}</span>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
+
+          {/* CTA */}
+          <motion.a href="/apply/devices"
+            initial={{ opacity: 0, y: 8 }}
+            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
+            transition={{ duration: 0.4, delay: 0.55 }}
+            className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#FF6B1A] px-6 py-2.5 text-[13px] font-bold text-white shadow-md transition hover:bg-[#e55d10]"
+          >
+            Apply Now
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </motion.a>
         </div>
       </div>
 
       {/* ── MOBILE ── */}
-      <div className="container-x relative z-10 block py-6 md:hidden">
-        <motion.p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em] text-[#FF6B1A]"
-          initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ duration: 0.35 }}>
-          Coming Soon
-        </motion.p>
+      <div className="container-x relative z-10 block py-7 text-center md:hidden">
         <AnimatedHeadline inView={inView} />
 
-        <motion.p className="mt-3 max-w-xs text-[12.5px] leading-[1.6] text-white/52"
+        <motion.p className="mx-auto mt-3 max-w-xs text-[12.5px] leading-[1.6] text-white/52"
           initial={{ opacity: 0, y: 8 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.4, delay: 0.3 }}>
-          Big savings on laptops &amp; tablets for students, teachers and schools.
+          Big savings on laptops for students, teachers and schools.
         </motion.p>
 
-        {/* Device row */}
-        <motion.div className="mt-4 flex items-end gap-5"
+        <motion.div className="mt-4 flex items-end justify-center gap-6"
           initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ duration: 0.4, delay: 0.4 }}>
           {devices.map(d => (
             <div key={d.label} className="flex flex-col items-center gap-1">
               <DeviceThumb alt={d.alt} className="h-12 w-auto object-contain drop-shadow-md" fallback={d.svg} src={d.src} />
-              <span style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.32)" }}>{d.label}</span>
+              <span className="text-[9px] font-bold uppercase tracking-wider text-white/30">{d.label}</span>
             </div>
           ))}
         </motion.div>
-        </div>
+
+        <motion.a href="/apply/devices"
+          initial={{ opacity: 0, y: 8 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.4, delay: 0.5 }}
+          className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#FF6B1A] px-5 py-2 text-[12.5px] font-bold text-white"
+        >
+          Apply Now
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </motion.a>
+      </div>
 
       <div className="absolute inset-x-0 bottom-0 h-[1px] bg-white/6" />
     </div>

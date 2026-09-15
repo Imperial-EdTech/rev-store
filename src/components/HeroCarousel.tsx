@@ -46,7 +46,7 @@ const SLIDES: Slide[] = [
     bg: "linear-gradient(135deg, #0f0a05 0%, #1a0e06 40%, #2a1008 70%, #1a0906 100%)",
     accentColor: "#f2760f",
     rightContent: "tdep",
-    imageSrc: "/devices/hero-tdep.png",
+    imageSrc: "/devices/rev_orion_laptop.png",
   },
   {
     id: "ltbt",
@@ -57,18 +57,18 @@ const SLIDES: Slide[] = [
     body: "Making quality teaching possible by putting powerful devices in the hands of teachers.",
     pills: ["For every educator", "Bank-backed financing", "Classroom-ready devices", "Nationwide impact"],
     pillIcon: ["grad", "wallet", "laptop", "flag"],
-    cta1: "Learn more", cta1Href: "/partners", cta1Style: "outline",
+    cta1: "Learn more", cta1Href: "/apply", cta1Style: "outline",
     cta2: "", cta2Href: "",
     bg: "linear-gradient(135deg, #050e1a 0%, #071628 40%, #0a1e35 70%, #060f1e 100%)",
     accentColor: "#f5a623",
     rightContent: "ltbt",
-    imageSrc: "/devices/hero-ltbt.png",
+    imageSrc: "/devices/rev_orion_laptop.png",
   },
   {
     id: "nigeria",
     kicker: "Built in Nigeria",
-    title1: "For Nigerian schools.",
-    title2: "By Nigerians.",
+    title1: "Built in Nigeria.",
+    title2: "Built for All.",
     title2Color: "#22c55e",
     body: "Designed, assembled and supported locally for real African realities.",
     pills: ["Nigerian OEM", "Local support", "Built to last", "Affordable"],
@@ -78,13 +78,13 @@ const SLIDES: Slide[] = [
     bg: "linear-gradient(135deg, #030d07 0%, #051408 40%, #071c0c 70%, #040e06 100%)",
     accentColor: "#22c55e",
     rightContent: "nigeria",
-    imageSrc: "/devices/hero-nigeria.png",
+    imageSrc: "/devices/rev_orion_laptop.png",
   },
   {
     id: "bts",
-    kicker: "Coming Soon",
-    title1: "Back to School",
-    title2: "Deals",
+    kicker: "WELCOME BACK",
+    title1: "BACK TO",
+    title2: "SCHOOL DEALS",
     title2Color: "#f2760f",
     body: "Big savings on laptops & devices for students, teachers and schools.",
     pills: ["Up to 15% off", "All devices", "Limited time", "Schools & teachers"],
@@ -94,7 +94,7 @@ const SLIDES: Slide[] = [
     bg: "linear-gradient(135deg, #0f0805 0%, #1c0e06 40%, #2a1508 70%, #180b04 100%)",
     accentColor: "#f2760f",
     rightContent: "bts",
-    imageSrc: "/devices/hero-bts.png",
+    imageSrc: "/devices/rev_orion_laptop.png",
   },
 ];
 
@@ -150,23 +150,7 @@ function PillIcon({ type, color }: { type: string; color: string }) {
 // DEVICE IMAGE — real photo with animated float + SVG fallback
 // ═══════════════════════════════════════════════════════════════
 
-/**
- * Renders the real device photo for a hero slide.
- * Falls back to the SVG illustration if the image hasn't been added yet —
- * so the carousel never breaks during development.
- *
- * IMAGE PLACEMENT:
- *   public/devices/hero-tdep.png    → Slide 1 (Teacher Empowerment)
- *   public/devices/hero-ltbt.png    → Slide 2 (Let There Be Teachers)
- *   public/devices/hero-nigeria.png → Slide 3 (Built in Nigeria)
- *   public/devices/hero-bts.png     → Slide 4 (Back to School)
- *
- * TIPS FOR BEST RESULTS:
- *   • PNG with transparent background (no white box behind device)
- *   • At least 900 × 700 px so it looks sharp on large screens
- *   • Landscape or 4:3 ratio works best in the right panel
- *   • The image is given a coloured glow matching the slide accent colour
- */
+
 function DeviceImage({
   src,
   alt,
