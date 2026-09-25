@@ -25,11 +25,11 @@ import { Reveal } from "@/components/reveal";
 import { Button } from "@/components/ui";
 import { StorefrontHeader } from "@/components/StorefrontHeader";
 import { StorefrontFooter } from "@/components/StorefrontFooter";
+import { WHATSAPP_NUMBER } from "@/lib/contact";
 
 // ─────────────────────────────────────────────────────────────
 // UPDATE THIS CONSTANT to change pricing, specs, or the WhatsApp
 // ─────────────────────────────────────────────────────────────
-const WHATSAPP_NUMBER = "2348012345678"; // update with real number
 
 const TABLET = {
   name:         "Rev Tab",

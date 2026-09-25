@@ -5,6 +5,7 @@ import { CheckCircle2, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui";
 import { StorefrontHeader } from "@/components/StorefrontHeader";
+import { WHATSAPP_NUMBER } from "@/lib/contact";
 import { StorefrontFooter } from "@/components/StorefrontFooter";
 
 export default function SuccessPage() {
@@ -78,7 +79,7 @@ export default function SuccessPage() {
               <Button variant="ghost">Back to RevStore</Button>
             </Link>
             <a
-              href="https://wa.me/234XXXXXXXXXX"
+              href={`https://wa.me/${WHATSAPP_NUMBER}`}
               rel="noopener noreferrer"
               target="_blank"
             >

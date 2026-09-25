@@ -133,3 +133,29 @@ a { color: inherit; text-decoration: none; }
     scroll-behavior: auto !important;
   }
 }
+/* ── Storefront tokens (shop, product, cart, checkout) ──────────
+   Used by the CSS modules under components/shop and app/{products,cart,checkout}. */
+:root {
+  --rs-maroon:        #5a1016;
+  --rs-maroon-hover:  #470c11;
+  --rs-maroon-tint:   #f8ecec;
+  --rs-orange:        #f2760f;
+  --rs-ink:           #17171a;
+  --rs-ink-2:         #3f3f46;
+  --rs-muted:         #8b8b94;
+  --rs-line:          #ebebee;
+  --rs-line-strong:   #dcdce1;
+  --rs-surface:       #ffffff;
+  --rs-page:          #f6f6f8;
+  --rs-ok:            #15803d;
+  --rs-ok-dot:        #22c55e;
+  --rs-ok-tint:       #eaf7ef;
+  --rs-warn:          #c2410c;
+  --rs-warn-dot:      #f59e0b;
+  --rs-warn-tint:     #fff4e5;
+  --rs-bad:           #dc2626;
+  --rs-bad-dot:       #ef4444;
+  --rs-bad-tint:      #fdeeee;
+  --rs-radius:        12px;
+  --rs-radius-sm:     8px;
+}

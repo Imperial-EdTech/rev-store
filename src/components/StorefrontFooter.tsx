@@ -16,10 +16,10 @@ const FOOTER_LINKS = {
   ],
   "Shop": [
     ["All Products",  "/products"],
-    ["Laptops",       "/products"],
-    ["Tablets",       "/products/tablets"],
-    ["All-in-Ones",   "#"],
-    ["Mini PCs",      "#"],
+    ["Laptops",       "/products?category=laptops"],
+    ["Tablets",       "/products?category=tablets"],
+    ["All-in-Ones",   "/products?category=all-in-ones"],
+    ["Mini PCs",      "/products?category=mini-pcs"],
   ],
   "Information": [
     ["About Us",             "/about"],

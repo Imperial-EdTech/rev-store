@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useInView } from "framer-motion";
 import {
   ArrowRight, Facebook, FlaskConical,
   Instagram, Linkedin, Mail, MessageCircle,
-  Search, ShoppingCart, Twitter, Youtube,
+  ShoppingCart, Twitter, Youtube,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -12,6 +12,8 @@ import type React from "react";
 import { BackToSchoolBanner } from "@/components/BackToSchoolBanner";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { PreOrderPopup } from "@/components/preorder-popup";
+import { StorefrontHeader } from "@/components/StorefrontHeader";
+import { getProduct, specSummary } from "@/lib/catalog";
 import { RevricaLogo } from "@/components/brand";
 
 // ─── Helpers ──────────────────────────────────────────────────
@@ -75,102 +77,31 @@ function TrustIcon({ type }: { type: string }) {
   );
 }
 
-// ─── Real deal products ───────────────────────────────────────
-const DEALS = [
-  {
-    id: "orion",
-    name: 'Rev Orion 12"',
-    spec: "Intel Celeron N4020 · 4GB RAM · 128GB eMMC · Win 11",
-    price: 290000, was: 350000, save: 17,
-    img: "/devices/rev_orion_laptop.png",
-    badge: "Most Popular",
-  },
-  {
-    id: "aelia",
-    name: 'Rev Aelia 14"',
-    spec: "Intel Core i3 · 8GB RAM · 256GB SSD · Win 11 Pro",
-    price: 330000, was: 400000, save: 18,
-    img: "/devices/rev_orion_laptop.png",
-    badge: "Pre-order",
-  },
-  {
-    id: "tab",
-    name: 'Rev Tab 10"',
-    spec: "Quad-core ARM · 3GB RAM · 32GB ROM · Android 13",
-    price: 80000, was: 150000, save: 47,
-    img: "/devices/rev_tablet.png",
-    badge: "47% off",
-  },
-  {
-    id: "tab-4g",
-    name: 'Rev Tab 4G 10"',
-    spec: "Octa-core · 4GB RAM · 64GB · 4G LTE · Android 13",
-    price: 110000, was: 140000, save: 21,
-    img: "/devices/rev_tablet.png",
-    badge: "New",
-  },
+// ─── Deal products ────────────────────────────────────────────
+// Name, specs, price and image come from the catalogue (src/lib/catalog.ts);
+// only the marketing badge is set here.
+const DEAL_BADGES: [id: string, badge: string][] = [
+  ["orion", "Most Popular"],
+  ["aelia", "Pre-order"],
+  ["tab", "47% off"],
+  ["tab-4g", "New"],
 ];
 
-// ─── Mobile menu ──────────────────────────────────────────────
-function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const navLinks = [
-    ["Home",               "/"],
-    ["About",              "/about"],
-    ["Shop Now",           "/products"],
-    ["Laptops",            "/products"],
-    ["Tablets",            "/products"],
-    ["All-in-Ones",        "#"],
-    ["Mini PCs",           "#"],
-    ["Interactive Boards", "#"],
-  ];
-  return (
-    <AnimatePresence>
-      {open && (
-        <>
-          <motion.div
-            className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={onClose}
-          />
-          <motion.div
-            className="fixed inset-y-0 left-0 z-[200] w-[80vw] max-w-xs bg-white shadow-2xl flex flex-col"
-            initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
-            transition={{ type: "spring", stiffness: 320, damping: 32 }}
-          >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-black/8">
-              <RevricaLogo variant="light" />
-              <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-black/5 text-black/60" type="button">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-              </button>
-            </div>
-            <nav className="flex flex-col gap-1 px-4 py-5 flex-1">
-              {navLinks.map(([label, href]) => (
-                <Link key={label} href={href} onClick={onClose}
-                  className="flex items-center gap-3 rounded-xl px-3 py-3.5 text-[14px] font-600 text-[#1a1a1a] hover:bg-orange-50 transition">
-                  <ArrowRight size={14} className="text-[#f2760f]" />
-                  {label}
-                </Link>
-              ))}
-            </nav>
-            <div className="px-4 pb-6 flex flex-col gap-3">
-              <Link href="/pre-order" onClick={onClose}>
-                <button className="w-full h-12 rounded-xl bg-[#f2760f] text-white text-[13px] font-700 flex items-center justify-center gap-2" type="button">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                  Pre-order Now
-                </button>
-              </Link>
-              <Link href="/early-access" onClick={onClose}>
-                <button className="w-full h-12 rounded-xl border border-black/12 text-[#374151] text-[13px] font-600 flex items-center justify-center gap-2" type="button">
-                  Join Waitlist
-                </button>
-              </Link>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  );
-}
+const DEALS = DEAL_BADGES.flatMap(([id, badge]) => {
+  const p = getProduct(id);
+  if (!p || p.price === null || !p.image) return [];
+  const was = p.compareAtPrice ?? p.price;
+  return [{
+    id,
+    name: p.name,
+    spec: specSummary(p),
+    price: p.price,
+    was,
+    save: Math.round(((was - p.price) / was) * 100),
+    img: p.image,
+    badge,
+  }];
+});
 
 // ─── Section entrance animation wrapper ───────────────────────
 function AnimatedSection({ children }: { children: React.ReactNode }) {
@@ -307,12 +238,10 @@ function WhatsAppButton() {
 export default function Home() {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <div style={{ background: "#f5f5f5", fontFamily: "'Plus Jakarta Sans','Inter Variable',ui-sans-serif,system-ui" }}>
       <PreOrderPopup />
-      <MobileMenu open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@700;800&display=swap');
@@ -326,9 +255,6 @@ export default function Home() {
         .top-info-bar { display: flex; }
         .deals-header { display: flex; align-items: flex-end; justify-content: space-between; }
         .bulk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .nav-desktop { display: flex; }
-        .nav-mobile-btn { display: none; }
-        .search-bar { display: block; }
         @media (max-width: 1024px) {
           .deals-grid { grid-template-columns: repeat(2,1fr) !important; }
           .shop-cat-grid { grid-template-columns: repeat(2,1fr) !important; }
@@ -347,9 +273,6 @@ export default function Home() {
           .deals-header { flex-direction: column; align-items: flex-start !important; gap: 12px !important; }
           .newsletter-row { flex-direction: column; align-items: flex-start !important; gap: 14px !important; }
           .bulk-grid { grid-template-columns: 1fr !important; }
-          .nav-desktop { display: none !important; }
-          .nav-mobile-btn { display: flex !important; }
-          .search-bar { display: none !important; }
         }
         @media (max-width: 480px) {
           .deals-grid { grid-template-columns: 1fr !important; }
@@ -359,100 +282,8 @@ export default function Home() {
         }
       `}</style>
 
-      {/* ── TOP INFO BAR ── */}
-      <div style={{ background: "#4a0e10", padding: "9px 20px", textAlign: "center" }}>
-        <span style={{ fontSize: 12.5, fontWeight: 600, color: "rgba(255,255,255,0.92)", letterSpacing: "0.01em" }}>
-          Welcome to{" "}
-          <span style={{ fontWeight: 800, color: "#fff" }}>RevStore</span>
-          <span style={{ color: "rgba(255,255,255,0.55)", fontWeight: 400 }}> by Revrica</span>
-        </span>
-      </div>
-
-      {/* ── HEADER ── */}
-      <header style={{ background: "#fff", borderBottom: "1px solid #e8e8e8", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 1px 12px rgba(0,0,0,0.05)" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 28px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 20, height: 82 }}>
-
-            {/* Hamburger — mobile only */}
-            <button
-              className="nav-mobile-btn"
-              onClick={() => setMobileMenuOpen(true)}
-              style={{ height: 40, width: 40, alignItems: "center", justifyContent: "center", borderRadius: 10, border: "1.5px solid #e8e8e8", background: "transparent", cursor: "pointer", flexShrink: 0 }}
-              type="button" aria-label="Open menu"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2.2" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-            </button>
-
-            {/* Logo */}
-            <div style={{ flexShrink: 0 }}>
-              <RevricaLogo variant="light" />
-            </div>
-
-            {/* Primary nav — desktop only, centred */}
-            <nav className="nav-desktop" style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 4 }}>
-              {([
-                ["Home",     "/"],
-                ["About",    "/about"],
-                ["Shop Now", "/products"],
-              ] as [string, string][]).map(([label, href], i) => (
-                <Link key={label} href={href}
-                  style={{
-                    padding: "10px 22px",
-                    display: "flex",
-                    alignItems: "center",
-                    fontSize: 14.5,
-                    fontWeight: 700,
-                    color: i === 0 ? "#4a0e10" : "#1a1a1a",
-                    whiteSpace: "nowrap",
-                    textDecoration: "none",
-                    borderRadius: 10,
-                    transition: "background 0.15s, color 0.15s",
-                    background: i === 0 ? "rgba(74,14,16,0.06)" : "transparent",
-                  }}
-                >
-                  {label}
-                </Link>
-              ))}
-            </nav>
-
-            {/* Search — hidden on mobile */}
-            <div className="search-bar" style={{ flex: 1, maxWidth: 420, position: "relative" }}>
-              <Search size={15} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#bbb" }} />
-              <input
-                placeholder="Search laptops, tablets, accessories..."
-                style={{ width: "100%", height: 44, borderRadius: 11, border: "1.5px solid #e8e8e8", background: "#fafafa", paddingLeft: 40, paddingRight: 16, fontSize: 13, color: "#111", outline: "none", boxSizing: "border-box", transition: "border-color 0.15s" }}
-                onFocus={e => (e.target.style.borderColor = "#4a0e10")}
-                onBlur={e => (e.target.style.borderColor = "#e8e8e8")}
-              />
-            </div>
-
-            {/* Pre-order CTA */}
-            <div className="nav-desktop" style={{ alignItems: "center", gap: 10, flexShrink: 0 }}>
-              <Link href="/pre-order">
-                <button
-                  style={{ height: 44, padding: "0 22px", borderRadius: 11, border: "none", background: "#4a0e10", fontSize: 13.5, fontWeight: 700, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, whiteSpace: "nowrap", boxShadow: "0 2px 10px rgba(74,14,16,0.25)", transition: "background 0.15s" }}
-                  onMouseEnter={e => ((e.currentTarget as HTMLButtonElement).style.background = "#3a0a0d")}
-                  onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.background = "#4a0e10")}
-                  type="button"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                  Pre-order
-                </button>
-              </Link>
-            </div>
-
-            {/* Mobile: pre-order pill */}
-            <div className="nav-mobile-btn" style={{ marginLeft: "auto" }}>
-              <Link href="/pre-order">
-                <button style={{ height: 40, padding: "0 16px", borderRadius: 10, border: "none", background: "#4a0e10", fontSize: 12.5, fontWeight: 700, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }} type="button">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                  Pre-order
-                </button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Shared storefront header (info bar, nav, search, cart) */}
+      <StorefrontHeader />
 
       <main>
         {/* 1. HERO CAROUSEL */}
@@ -483,7 +314,7 @@ export default function Home() {
             </div>
             <div className="deals-grid">
               {DEALS.map((p, idx) => (
-                <Link key={p.id} href={p.id.startsWith("tab") ? `/products/${p.id}` : `/pre-order?device=${p.id}`} style={{ textDecoration: "none" }}>
+                <Link key={p.id} href={`/products/${p.id}`} style={{ textDecoration: "none" }}>
                   <motion.div
                     initial={{ opacity: 0, y: 28 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -544,7 +375,7 @@ export default function Home() {
                 {
                   label: "Laptops",
                   sub: "Work, learn & create",
-                  href: "/products",
+                  href: "/products?category=laptops",
                   bg: "linear-gradient(135deg,#f0f4ff 0%,#e8eeff 100%)",
                   accent: "#3b5bdb",
                   icon: (
@@ -557,7 +388,7 @@ export default function Home() {
                 {
                   label: "Tablets",
                   sub: "Portable & powerful",
-                  href: "/products",
+                  href: "/products?category=tablets",
                   bg: "linear-gradient(135deg,#fff0f6 0%,#ffe3ec 100%)",
                   accent: "#c2255c",
                   icon: (
@@ -570,7 +401,7 @@ export default function Home() {
                 {
                   label: "All-in-Ones",
                   sub: "Desktop, reinvented",
-                  href: "#",
+                  href: "/products?category=all-in-ones",
                   bg: "linear-gradient(135deg,#f3fff3 0%,#e6ffe6 100%)",
                   accent: "#2f9e44",
                   icon: (
@@ -583,7 +414,7 @@ export default function Home() {
                 {
                   label: "Mini PCs",
                   sub: "Big power, tiny form",
-                  href: "#",
+                  href: "/products?category=mini-pcs",
                   bg: "linear-gradient(135deg,#fff9f0 0%,#fff3e0 100%)",
                   accent: "#e67700",
                   icon: (

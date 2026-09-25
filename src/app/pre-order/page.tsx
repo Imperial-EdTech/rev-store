@@ -7,17 +7,19 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { RevricaLogo } from "@/components/brand";
+import { BANK_ACCOUNT as SHARED_BANK_ACCOUNT, ORDERS_EMAIL, WHATSAPP_NUMBER } from "@/lib/contact";
 
 const SORA = "'Sora','Archivo Variable',ui-sans-serif,system-ui";
 const JAKARTA = "'Plus Jakarta Sans','Inter Variable',ui-sans-serif,system-ui";
 
-const BANK_ACCOUNT = {
-  bankName: "Sterling Bank",
+// Contact and payment details are shared with the shop checkout (src/lib/contact.ts).
+const CONTACT_EMAIL = ORDERS_EMAIL;
+// This page always shows an account; if the shared one is switched off, say so rather than crash.
+const BANK_ACCOUNT = SHARED_BANK_ACCOUNT ?? {
+  bankName: "Payment details sent on WhatsApp",
   accountName: "Revrica Technology Ltd",
-  accountNumber: "0123456789",
+  accountNumber: "Ask us on WhatsApp",
 };
-const WHATSAPP_NUMBER = "2348136117198";
-const CONTACT_EMAIL   = "orders@revrica.com";
 
 const DEVICES = [
   { id: "orion",  name: "Rev Orion", size: '12"', normalPrice: 350000, preorderPrice: 290000, img: "/devices/rev-laptop.png",

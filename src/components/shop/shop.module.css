@@ -1,0 +1,141 @@
+/* Shared shop components: pill, image, action button, stepper, product card. */
+
+.srOnly {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ── Stock pill ── */
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 26px; padding: 0 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 700; white-space: nowrap;
+}
+.pillDot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.pillOk   { background: var(--rs-ok-tint);   color: var(--rs-ok); }
+.pillOk .pillDot   { background: var(--rs-ok-dot); }
+.pillWarn { background: var(--rs-warn-tint); color: var(--rs-warn); }
+.pillWarn .pillDot { background: var(--rs-warn-dot); }
+.pillInfo { background: #eef1fe; color: #3f3fb8; }
+.pillInfo .pillDot { background: #6366f1; }
+.pillBad  { background: var(--rs-bad-tint);  color: var(--rs-bad); }
+.pillBad .pillDot  { background: var(--rs-bad-dot); }
+
+/* ── Image ── */
+.image {
+  object-fit: contain;
+  padding: 10px;
+  /* Blends white photo backgrounds into the grey media panel. */
+  mix-blend-mode: multiply;
+}
+.imagePlaceholder {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  color: #b4b4bc; font-size: 12px; font-weight: 600; text-align: center; padding: 16px;
+}
+
+/* ── Action button ── */
+.action {
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  width: 100%; height: 44px; padding: 0 14px;
+  border: none; border-radius: var(--rs-radius-sm);
+  font: inherit; font-size: 14px; font-weight: 700; white-space: nowrap;
+  cursor: pointer; text-decoration: none;
+  transition: background-color 0.15s, color 0.15s, transform 0.1s;
+}
+.action:active:not(:disabled) { transform: scale(0.98); }
+.action:focus-visible { outline: 2px solid var(--rs-maroon); outline-offset: 2px; }
+.actionLg { height: 52px; font-size: 15px; border-radius: 10px; }
+.actionInner { display: inline-flex; align-items: center; gap: 9px; }
+
+.actionPrimary { background: var(--rs-maroon); color: #fff; }
+.actionPrimary:hover { background: var(--rs-maroon-hover); }
+.actionAdded, .actionAdded:hover { background: var(--rs-ok); }
+
+.actionWhatsapp { background: var(--rs-ok-tint); color: #14532d; }
+.actionWhatsapp svg { color: #16a34a; }
+.actionWhatsapp:hover { background: #d9f1e2; }
+
+.actionDisabled { background: #f0f0f3; color: var(--rs-muted); cursor: not-allowed; }
+
+/* ── Quantity stepper ── */
+.stepper {
+  display: inline-flex; align-items: center; flex-shrink: 0;
+  height: 40px; border: 1.5px solid var(--rs-line-strong); border-radius: var(--rs-radius-sm);
+  background: var(--rs-surface); overflow: hidden;
+}
+.stepper button {
+  width: 36px; height: 100%; border: none; background: transparent; color: var(--rs-ink-2);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.stepper button:hover:not(:disabled) { background: #f4f4f6; }
+.stepper button:disabled { color: #cfcfd5; cursor: not-allowed; }
+.stepper button:focus-visible { outline: 2px solid var(--rs-maroon); outline-offset: -2px; }
+.stepper span {
+  min-width: 34px; text-align: center; font-size: 14px; font-weight: 700; color: var(--rs-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Product card ── */
+.card {
+  display: flex; flex-direction: column;
+  background: var(--rs-surface);
+  border: 1px solid var(--rs-line);
+  border-radius: var(--rs-radius);
+  padding: 12px;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.card:hover { border-color: var(--rs-line-strong); box-shadow: 0 6px 24px rgba(20, 20, 30, 0.07); }
+
+.cardMedia {
+  position: relative; display: block;
+  aspect-ratio: 6 / 5;
+  border-radius: var(--rs-radius-sm);
+  background: #f6f6f8;
+  overflow: hidden;
+}
+.cardPill { position: absolute; top: 8px; right: 8px; z-index: 1; }
+
+.cardBody { display: flex; flex-direction: column; flex: 1; padding: 14px 6px 4px; }
+.cardCategory {
+  margin: 0 0 4px; font-size: 11.5px; font-weight: 600; color: var(--rs-muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.cardName {
+  margin: 0; font-family: var(--font-display); font-size: 16.5px; font-weight: 700;
+  line-height: 1.3; color: var(--rs-ink); overflow-wrap: anywhere;
+}
+.cardName a:hover { color: var(--rs-maroon); }
+.cardName a:focus-visible { outline: 2px solid var(--rs-maroon); outline-offset: 2px; border-radius: 3px; }
+.cardVariant { margin: 2px 0 0; font-size: 12.5px; font-weight: 600; color: var(--rs-ink-2); }
+.cardSpecs {
+  margin: 6px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--rs-muted);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.cardFooter { margin-top: auto; padding-top: 12px; display: flex; flex-direction: column; gap: 12px; }
+.cardPrice {
+  margin: 0; font-family: var(--font-display); font-size: 19px; font-weight: 800;
+  color: var(--rs-maroon); font-variant-numeric: tabular-nums;
+}
+.cardPriceMuted { font-size: 15px; color: var(--rs-ink-2); }
+.cardPriceRow { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; }
+.cardCompare { font-size: 13px; color: var(--rs-muted); text-decoration: line-through; font-variant-numeric: tabular-nums; }
+
+/* List view */
+.cardList { flex-direction: row; gap: 18px; }
+.cardList .cardMedia { width: 220px; flex-shrink: 0; aspect-ratio: auto; min-height: 170px; }
+.cardList .cardBody { padding: 6px 4px; }
+.cardList .cardFooter { flex-direction: row; align-items: center; justify-content: space-between; }
+.cardList .cardFooter > :last-child { width: auto; min-width: 200px; }
+.cardList .cardSpecs { -webkit-line-clamp: 3; max-width: 520px; }
+
+@media (max-width: 640px) {
+  .cardList { flex-direction: column; }
+  .cardList .cardMedia { width: 100%; aspect-ratio: 6 / 5; min-height: 0; }
+  .cardList .cardFooter { flex-direction: column; align-items: stretch; }
+  .cardList .cardFooter > :last-child { width: 100%; min-width: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action, .card { transition: none; }
+}

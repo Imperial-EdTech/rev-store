@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Check, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { FEATURES } from "@/lib/features";
 
 const JAKARTA = "'Plus Jakarta Sans', ui-sans-serif, system-ui";
 const SORA    = "'Sora', ui-sans-serif, system-ui";
@@ -38,11 +39,21 @@ const DEVICES = [
 
 function fmt(n: number) { return "₦" + n.toLocaleString("en-NG"); }
 
+/**
+ * Teacher Empowerment pre-order modal.
+ * Controlled by FEATURES.preorderPopup (src/lib/features.ts); set it to true to re-enable.
+ * The check happens here, so pages can keep rendering <PreOrderPopup /> unchanged.
+ */
 export function PreOrderPopup() {
+  if (!FEATURES.preorderPopup) return null;
+  return <PreOrderPopupModal />;
+}
+
+function PreOrderPopupModal() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // Show after 2.5s; suppress for 48h after dismissal
+    // Show after 2.5s; suppress for DISMISS_HOURS after dismissal
     const t = setTimeout(() => {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
