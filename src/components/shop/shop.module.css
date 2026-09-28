@@ -16,8 +16,6 @@
 .pillOk .pillDot   { background: var(--rs-ok-dot); }
 .pillWarn { background: var(--rs-warn-tint); color: var(--rs-warn); }
 .pillWarn .pillDot { background: var(--rs-warn-dot); }
-.pillInfo { background: #eef1fe; color: #3f3fb8; }
-.pillInfo .pillDot { background: #6366f1; }
 .pillBad  { background: var(--rs-bad-tint);  color: var(--rs-bad); }
 .pillBad .pillDot  { background: var(--rs-bad-dot); }
 
@@ -94,7 +92,29 @@
   background: #f6f6f8;
   overflow: hidden;
 }
-.cardPill { position: absolute; top: 8px; right: 8px; z-index: 1; }
+.cardMediaLink { position: absolute; inset: 0; display: block; }
+.cardPill { position: absolute; top: 8px; right: 8px; z-index: 1; pointer-events: none; }
+
+/* Quick view: revealed on hover or keyboard focus; always shown on touch screens. */
+.quickView {
+  position: absolute; left: 50%; bottom: 10px; z-index: 1; transform: translate(-50%, 6px);
+  display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 14px;
+  border: none; border-radius: 999px; background: rgba(23, 23, 26, 0.88); color: #fff; cursor: pointer;
+  font: inherit; font-size: 13px; font-weight: 700; white-space: nowrap;
+  opacity: 0; transition: opacity 0.18s, transform 0.18s, background-color 0.15s;
+}
+.quickView:hover { background: var(--rs-maroon); }
+.card:hover .quickView, .quickView:focus-visible { opacity: 1; transform: translate(-50%, 0); }
+.quickView:focus-visible { outline: 2px solid #fff; outline-offset: 2px; box-shadow: 0 0 0 4px var(--rs-maroon); }
+@media (hover: none) {
+  /* No hover on touch: show a compact icon button instead. */
+  .quickView {
+    opacity: 1; left: 8px; bottom: auto; top: 8px; transform: none;
+    width: 34px; height: 34px; padding: 0; justify-content: center; background: rgba(255, 255, 255, 0.94); color: var(--rs-ink);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  }
+  .quickView > span { display: none; }
+}
 
 .cardBody { display: flex; flex-direction: column; flex: 1; padding: 14px 6px 4px; }
 .cardCategory {

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { supabase } from "@/lib/supabase";
 import type { Resource } from "@/lib/revlearn-types";
+import { requireAdmin } from "@/lib/auth/guard";
 
 export async function GET() {
-  const client = supabaseAdmin ?? supabase;
+  const client = supabaseAdmin; // RLS locks every table to the server key
   if (!client) return NextResponse.json({ error: "Not configured." }, { status: 503 });
   const { data, error } = await client.from("revlearn_resources").select("*").order("position");
   if (error) return NextResponse.json({ error: "Could not load." }, { status: 500 });
@@ -19,6 +19,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
   if (!supabaseAdmin) return NextResponse.json({ error: "Admin only." }, { status: 503 });
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid JSON." }, { status: 400 });
@@ -28,6 +30,8 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
   if (!supabaseAdmin) return NextResponse.json({ error: "Admin only." }, { status: 503 });
   const { id } = await req.json().catch(() => ({}));
   if (!id) return NextResponse.json({ error: "Missing id." }, { status: 400 });

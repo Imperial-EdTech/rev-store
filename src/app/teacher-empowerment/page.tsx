@@ -25,6 +25,7 @@ import { Button } from "@/components/ui";
 import { Reveal } from "@/components/reveal";
 import { StorefrontHeader } from "@/components/StorefrontHeader";
 import { StorefrontFooter } from "@/components/StorefrontFooter";
+import { getProduct } from "@/lib/catalog";
 
 // ─────────────────────────────────────────────────────────────
 // Both laptop models use /public/devices/rev-laptop.png until
@@ -56,27 +57,30 @@ function DeviceImg({ src, alt, className }: { src: string; alt: string; classNam
 }
 
 // ── Financing data ────────────────────────────────────────────
-// Profit rates from Revrica financing document (same rates applied to both models):
-//   12 months → 16.98%
-//   24 months → 34.19%
-//   36 months → 52.83%
-//
-// Rev Orion 12"  — ₦350,000 — exact figures from document
-// Rev Aelia 14"  — ₦400,000 — same rates applied
+// Prices and repayment plans come from the catalogue (src/lib/catalog.ts),
+// the same figures the shop's product pages show. Only presentation
+// (copy, images, highlight specs) is defined here.
+
+/** Catalogue plans in this page's shape. Throws at build time if a device loses its financing. */
+function financeable(id: string) {
+  const product = getProduct(id);
+  if (!product || product.price === null || !product.financing) {
+    throw new Error(`Teacher Empowerment: catalogue product "${id}" needs a price and financing plans.`);
+  }
+  return {
+    price: product.price,
+    plans: product.financing.map((p) => ({ months: p.months, monthly: p.monthly, profitRate: p.rate })),
+  };
+}
 
 const DEVICES = [
   {
     id: "orion",
     name: "Rev Orion",
     size: '12"',
-    price: 350000,
+    ...financeable("orion"),
     img: "/devices/rev-laptop.png",
     desc: "Compact and lightweight — ideal for individual teachers who commute between classrooms or schools.",
-    plans: [
-      { months: 12, monthly: 34120.49, profitRate: "16.98%" },
-      { months: 24, monthly: 19569.49, profitRate: "34.19%" },
-      { months: 36, monthly: 14858.05, profitRate: "52.83%" },
-    ],
     // Specs — Rev Orion (from product PDF)
     specs: [
       { label: "Display",        value: '11.6" HD LCD (1366 × 768)' },
@@ -98,14 +102,9 @@ const DEVICES = [
     id: "aelia",
     name: "Rev Aelia",
     size: '14"',
-    price: 400000,
+    ...financeable("aelia"),
     img: "/devices/rev-laptop.png",
     desc: "Larger screen and more room to work — suited for administrators, content creators, and senior staff.",
-    plans: [
-      { months: 12, monthly: 38993.33, profitRate: "16.98%" },
-      { months: 24, monthly: 22365.00, profitRate: "34.19%" },
-      { months: 36, monthly: 16981.11, profitRate: "52.83%" },
-    ],
     // Same internals as Orion, larger chassis
     specs: [
       { label: "Display",        value: '14.0" HD LCD (1366 × 768)' },

@@ -2,9 +2,7 @@
 
 import { AnimatePresence, motion, useInView } from "framer-motion";
 import {
-  ArrowRight, Facebook, FlaskConical,
-  Instagram, Linkedin, Mail, MessageCircle,
-  ShoppingCart, Twitter, Youtube,
+  ArrowRight, FlaskConical, MessageCircle, ShoppingCart,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -13,8 +11,10 @@ import { BackToSchoolBanner } from "@/components/BackToSchoolBanner";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { PreOrderPopup } from "@/components/preorder-popup";
 import { StorefrontHeader } from "@/components/StorefrontHeader";
+import { StorefrontFooter } from "@/components/StorefrontFooter";
 import { getProduct, specSummary } from "@/lib/catalog";
-import { RevricaLogo } from "@/components/brand";
+import { WHATSAPP_NUMBER } from "@/lib/contact";
+import { FEATURES } from "@/lib/features";
 
 // ─── Helpers ──────────────────────────────────────────────────
 function fmt(n: number) { return "₦" + n.toLocaleString("en-NG"); }
@@ -120,13 +120,12 @@ function AnimatedSection({ children }: { children: React.ReactNode }) {
 }
 
 // ─── WhatsApp Chat Button ──────────────────────────────────────
-const WA_NUMBER = "2348136117198";
 const WA_MESSAGE = encodeURIComponent(
   "Hi! I just visited the RevStore website and I'm interested in learning more about your devices and payment options. " +
   "Could you please help me with information on the available laptops/tablets, pricing, and your financing plans? " +
   "I'd love to find the best option for my needs. Thank you!"
 );
-const WA_URL = `https://wa.me/${WA_NUMBER}?text=${WA_MESSAGE}`;
+const WA_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WA_MESSAGE}`;
 
 function WhatsAppButton() {
   const [open, setOpen] = useState(false);
@@ -258,7 +257,6 @@ export default function Home() {
         @media (max-width: 1024px) {
           .deals-grid { grid-template-columns: repeat(2,1fr) !important; }
           .shop-cat-grid { grid-template-columns: repeat(2,1fr) !important; }
-          .footer-grid { grid-template-columns: 1fr 1fr 1fr !important; }
         }
         @media (max-width: 768px) {
           .serve-grid { grid-template-columns: 1fr !important; }
@@ -267,7 +265,6 @@ export default function Home() {
           .why-grid { grid-template-columns: 1fr 1fr !important; }
           .programs-grid { grid-template-columns: 1fr !important; }
           .trust-grid { grid-template-columns: 1fr 1fr !important; }
-          .footer-grid { grid-template-columns: 1fr 1fr !important; }
           .financing-bar { flex-direction: column !important; align-items: flex-start !important; gap: 14px !important; }
           .top-info-bar { display: none !important; }
           .deals-header { flex-direction: column; align-items: flex-start !important; gap: 12px !important; }
@@ -278,7 +275,6 @@ export default function Home() {
           .deals-grid { grid-template-columns: 1fr !important; }
           .why-grid { grid-template-columns: 1fr !important; }
           .trust-grid { grid-template-columns: 1fr !important; }
-          .footer-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
@@ -296,7 +292,8 @@ export default function Home() {
 
         {/* WHO WE SERVE moved to /about page */}
 
-        {/* 3. LIMITED OFFERS */}
+        {/* 3. LIMITED OFFERS (hidden while FEATURES.homepageOffers is off) */}
+        {FEATURES.homepageOffers && DEALS.length > 0 && (
         <AnimatedSection>
         <section style={{ background: "#f5f5f5", padding: "56px 20px" }}>
           <div style={{ maxWidth: 1240, margin: "0 auto" }}>
@@ -357,6 +354,7 @@ export default function Home() {
           </div>
         </section>
         </AnimatedSection>
+        )}
 
         {/* 4b. SHOP BY CATEGORY */}
         <AnimatedSection>
@@ -589,119 +587,7 @@ export default function Home() {
 
       {/* ── FOOTER ── */}
       {/* ═══ FOOTER ═══ */}
-      <footer style={{ fontFamily: "'Plus Jakarta Sans','Inter Variable',ui-sans-serif,system-ui" }}>
-
-
-        {/* ── Main footer body ── */}
-        <div style={{ background: "#fff", padding: "48px 20px 36px", borderBottom: "1px solid #ebebeb" }}>
-          <div style={{ maxWidth: 1240, margin: "0 auto", display: "grid", gridTemplateColumns: "1.7fr 1fr 1fr 1fr", gap: 40 }} className="footer-cols">
-            {/* Column 1 — brand */}
-            <div>
-              <div style={{ marginBottom: 20 }}>
-                <RevricaLogo variant="light" />
-              </div>
-              {/* Phone */}
-              <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 18 }}>
-                <div style={{ width: 38, height: 38, borderRadius: "50%", background: "#f0f0f0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.18 2 2 0 012.1 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/>
-                  </svg>
-                </div>
-                <div>
-                  <p style={{ fontSize: 12, color: "#9ca3af", margin: "0 0 3px" }}>Got questions? Call us!</p>
-                  <p style={{ fontSize: 15, fontWeight: 700, color: "#4a0e10", margin: 0, lineHeight: 1.4 }}>+234 813 611 7198</p>
-                </div>
-              </div>
-              {/* Address */}
-              <div style={{ marginBottom: 20 }}>
-                <p style={{ fontSize: 13.5, fontWeight: 700, color: "#111", margin: "0 0 4px" }}>Contact info</p>
-                <p style={{ fontSize: 13, color: "#6b7280", margin: 0, lineHeight: 1.6 }}>Lagos, Nigeria</p>
-                <p style={{ fontSize: 13, color: "#6b7280", margin: 0, lineHeight: 1.6 }}>support@revrica.com</p>
-              </div>
-              {/* Socials */}
-              <div style={{ display: "flex", gap: 8 }}>
-                {[
-                  { Icon: Facebook,  label: "Facebook" },
-                  { Icon: Instagram, label: "Instagram" },
-                  { Icon: Twitter,   label: "X / Twitter" },
-                  { Icon: Youtube,   label: "YouTube" },
-                ].map(({ Icon, label }) => (
-                  <a key={label} href="#" aria-label={label}
-                    style={{ width: 36, height: 36, borderRadius: "50%", background: "#374151", display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", flexShrink: 0 }}>
-                    <Icon size={15} color="#fff" />
-                  </a>
-                ))}
-              </div>
-            </div>
-
-            {/* Column 2 — Customer Service */}
-            <div>
-              <p style={{ fontSize: 13, fontWeight: 800, color: "#111", letterSpacing: "0.06em", textTransform: "uppercase", margin: "0 0 18px" }}>Customer Service</p>
-              {[
-                ["FAQ", "/faq"],
-                ["Warranty Policy", "/warranty"],
-                ["Privacy Policy", "/privacy"],
-                ["Terms & Conditions", "/terms"],
-              ].map(([label, href]) => (
-                <Link key={label} href={href}
-                  style={{ display: "block", fontSize: 13.5, color: "#6b7280", textDecoration: "none", marginBottom: 12, transition: "color 0.15s" }}
-                  onMouseEnter={e => (e.currentTarget.style.color = "#4a0e10")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "#6b7280")}
-                >
-                  {label}
-                </Link>
-              ))}
-            </div>
-
-            {/* Column 3 — Shop */}
-            <div>
-              <p style={{ fontSize: 13, fontWeight: 800, color: "#111", letterSpacing: "0.06em", textTransform: "uppercase", margin: "0 0 18px" }}>Shop</p>
-              {[
-                ["All Products", "/products"],
-                ["Laptops", "/products"],
-                ["Tablets", "/products"],
-                ["All-in-Ones", "#"],
-                ["Mini PCs", "#"],
-              ].map(([label, href]) => (
-                <Link key={label} href={href}
-                  style={{ display: "block", fontSize: 13.5, color: "#6b7280", textDecoration: "none", marginBottom: 12, transition: "color 0.15s" }}
-                  onMouseEnter={e => (e.currentTarget.style.color = "#4a0e10")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "#6b7280")}
-                >
-                  {label}
-                </Link>
-              ))}
-            </div>
-
-            {/* Column 4 — Information */}
-            <div>
-              <p style={{ fontSize: 13, fontWeight: 800, color: "#111", letterSpacing: "0.06em", textTransform: "uppercase", margin: "0 0 18px" }}>Information</p>
-              {[
-                ["About Us", "/about"],
-                ["Teacher Empowerment", "/teacher-empowerment"],
-                ["Apply for Financing", "/apply"],
-                ["Find a Store", "#"],
-                ["Contact Us", "#"],
-              ].map(([label, href]) => (
-                <Link key={label} href={href}
-                  style={{ display: "block", fontSize: 13.5, color: "#6b7280", textDecoration: "none", marginBottom: 12, transition: "color 0.15s" }}
-                  onMouseEnter={e => (e.currentTarget.style.color = "#4a0e10")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "#6b7280")}
-                >
-                  {label}
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Responsive footer cols */}
-        <style>{`
-          @media (max-width: 1024px) { .footer-cols { grid-template-columns: 1.4fr 1fr 1fr !important; } }
-          @media (max-width: 768px)  { .footer-cols { grid-template-columns: 1fr 1fr !important; } }
-          @media (max-width: 480px)  { .footer-cols { grid-template-columns: 1fr !important; } }
-        `}</style>
-      </footer>
+      <StorefrontFooter />
 
       {/* WhatsApp floating chat button */}
       <WhatsAppButton />
@@ -770,7 +656,7 @@ function BulkOrderSection() {
             Let's Talk<ArrowRight size={15} />
           </Link>
           <a
-            href={`https://wa.me/2348136117198?text=${encodeURIComponent("Hi Revrica, I'd like to enquire about a bulk order for my school/institution.")}`}
+            href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hi Revrica, I'd like to enquire about a bulk order for my school/institution.")}`}
             target="_blank" rel="noreferrer"
             style={{ display: "inline-flex", alignItems: "center", gap: 9, height: 48, padding: "0 26px", borderRadius: 100, background: "#25D366", border: "none", color: "#fff", fontSize: 13.5, fontWeight: 700, cursor: "pointer", textDecoration: "none" }}
           >

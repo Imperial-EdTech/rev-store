@@ -1,24 +1,48 @@
 "use client";
 
+import { Eye } from "lucide-react";
 import Link from "next/link";
 import { clsx } from "clsx";
 import { formatNaira, getCategory, specSummary, type Product } from "@/lib/catalog";
 import { ProductAction, ProductImage, StockPill } from "./primitives";
 import styles from "./shop.module.css";
 
-export function ProductCard({ product, view }: { product: Product; view: "grid" | "list" }) {
+export function ProductCard({
+  product,
+  view,
+  onQuickView,
+}: {
+  product: Product;
+  view: "grid" | "list";
+  /** When provided, the card shows a Quick view button. */
+  onQuickView?: (product: Product) => void;
+}) {
   const href = `/products/${product.id}`;
   const category = getCategory(product.category);
 
   return (
     <article className={clsx(styles.card, view === "list" && styles.cardList)}>
-      <Link aria-label={`View ${product.name}`} className={styles.cardMedia} href={href} tabIndex={-1}>
+      <div className={styles.cardMedia}>
+        <Link aria-label={`View ${product.name}`} className={styles.cardMediaLink} href={href} tabIndex={-1}>
+          <ProductImage
+            product={product}
+            sizes={view === "list" ? "220px" : "(min-width: 1100px) 260px, (min-width: 520px) 45vw, 90vw"}
+          />
+        </Link>
         <StockPill className={styles.cardPill} status={product.stock} />
-        <ProductImage
-          product={product}
-          sizes={view === "list" ? "220px" : "(min-width: 1100px) 260px, (min-width: 520px) 45vw, 90vw"}
-        />
-      </Link>
+        {onQuickView && (
+          <button
+            // Explicit label: on touch screens the visible text is hidden (icon only).
+            aria-label={`Quick view ${product.name}`}
+            className={styles.quickView}
+            onClick={() => onQuickView(product)}
+            type="button"
+          >
+            <Eye aria-hidden size={15} />
+            <span aria-hidden>Quick view</span>
+          </button>
+        )}
+      </div>
 
       <div className={styles.cardBody}>
         <p className={styles.cardCategory}>{category.label}</p>

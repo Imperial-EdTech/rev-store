@@ -1,10 +1,19 @@
 /**
- * Contact and payment details used across the storefront.
- * Change them here only; nothing else should hard-code a number or account.
+ * Contact and payment details used across the site.
+ * Change them here only; nothing else should hard-code a number, address or account.
  */
 
-/** International format, no "+" or spaces (wa.me requires this). */
-export const WHATSAPP_NUMBER = "2348136117198";
+export const CONTACT = {
+  /** Display format. */
+  phone: "+234 813 611 7759",
+  /** International format, no "+" or spaces (tel: and wa.me require this). */
+  phoneE164: "2348136117759",
+  supportEmail: "support@revrica.com",
+  address: "32, Alh. Kofoworola Cresc., Off Awolowo Way, Ikeja, Lagos",
+} as const;
+
+/** WhatsApp line that receives order confirmations and product enquiries. */
+export const WHATSAPP_NUMBER = CONTACT.phoneE164;
 
 export const ORDERS_EMAIL = "orders@revrica.com";
 
@@ -20,9 +29,9 @@ export type BankAccount = {
  * payment details instead.
  */
 export const BANK_ACCOUNT: BankAccount | null = {
-  bankName: "Sterling Bank",
-  accountName: "Revrica Technology Ltd",
-  accountNumber: "0123456789",
+  bankName: "Providus Unitybank Limited",
+  accountName: "Revrica Technologies Limited",
+  accountNumber: "1306627034",
 };
 
 export function whatsappLink(message: string): string {

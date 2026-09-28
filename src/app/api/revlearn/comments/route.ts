@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { supabase } from "@/lib/supabase";
 
 export async function GET(req: Request) {
-  const client = supabaseAdmin ?? supabase;
+  const client = supabaseAdmin; // RLS locks every table to the server key
   if (!client) return NextResponse.json({ error: "Not configured." }, { status: 503 });
   const { searchParams } = new URL(req.url);
   const postId = searchParams.get("postId");
@@ -20,7 +19,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const client = supabaseAdmin ?? supabase;
+  const client = supabaseAdmin; // RLS locks every table to the server key
   if (!client) return NextResponse.json({ error: "Not configured." }, { status: 503 });
   const body = await req.json().catch(() => null);
   if (!body?.post_id || !body?.content || !body?.author_name)

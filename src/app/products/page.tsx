@@ -7,11 +7,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useState, type FormEvent } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { clsx } from "clsx";
 import { StorefrontFooter } from "@/components/StorefrontFooter";
 import { StorefrontHeader } from "@/components/StorefrontHeader";
+import { PriceRangeSlider, type Range } from "@/components/shop/PriceRangeSlider";
 import { ProductCard } from "@/components/shop/ProductCard";
+import { QuickView } from "@/components/shop/QuickView";
 import {
   CATEGORIES, PRODUCTS, formatNaira, getCategory, isCategoryId,
   type CategoryId, type Product,
@@ -35,8 +37,23 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 ];
 const PAGE_SIZES = [8, 12, 16, 24] as const;
 
-type PriceRange = { min: number | null; max: number | null };
-const NO_PRICE_FILTER: PriceRange = { min: null, max: null };
+/** Price filter: the committed slider range, or null when the whole range is selected. */
+type PriceFilter = Range | null;
+
+/**
+ * Slider bounds come from the products that have a listed price, so the
+ * range stays correct as prices are added. Null when fewer than two distinct
+ * prices exist (a slider would have nothing to filter).
+ */
+const PRICED = PRODUCTS.flatMap((p) => (p.price === null ? [] : [p.price]));
+const PRICE_STEP = 5_000;
+const PRICE_BOUNDS: Range | null =
+  new Set(PRICED).size >= 2
+    ? [
+        Math.floor(Math.min(...PRICED) / PRICE_STEP) * PRICE_STEP,
+        Math.ceil(Math.max(...PRICED) / PRICE_STEP) * PRICE_STEP,
+      ]
+    : null;
 
 const CATEGORY_COUNTS = Object.fromEntries(
   CATEGORIES.map((c) => [c.id, PRODUCTS.filter((p) => p.category === c.id).length]),
@@ -53,17 +70,14 @@ function matchesQuery(p: Product, q: string): boolean {
 
 function applyFilters(
   products: readonly Product[],
-  { category, q, price, sort }: { category: CategoryId | null; q: string; price: PriceRange; sort: SortKey },
+  { category, q, price, sort }: { category: CategoryId | null; q: string; price: PriceFilter; sort: SortKey },
 ): Product[] {
-  const hasPrice = price.min !== null || price.max !== null;
   const list = products.filter((p) => {
     if (category && p.category !== category) return false;
     if (q && !matchesQuery(p, q)) return false;
-    if (hasPrice) {
+    if (price) {
       // Products without a listed price can't satisfy a price range.
-      if (p.price === null) return false;
-      if (price.min !== null && p.price < price.min) return false;
-      if (price.max !== null && p.price > price.max) return false;
+      if (p.price === null || p.price < price[0] || p.price > price[1]) return false;
     }
     return true;
   });
@@ -99,46 +113,17 @@ function SidebarSection({
   );
 }
 
-const digitsOnly = (v: string) => v.replace(/\D/g, "").slice(0, 9);
-const withCommas = (digits: string) => (digits ? Number(digits).toLocaleString("en-NG") : "");
+function PriceFilterControl({ bounds, applied, onApply }: {
+  bounds: Range; applied: PriceFilter; onApply: (next: PriceFilter) => void;
+}) {
+  // Live position while dragging; resyncs when the filter changes elsewhere (chip, "Clear all").
+  const [draft, setDraft] = useState<Range>(applied ?? bounds);
+  useEffect(() => setDraft(applied ?? bounds), [applied, bounds]);
 
-function PriceForm({ applied, onApply }: { applied: PriceRange; onApply: (range: PriceRange) => void }) {
-  const [min, setMin] = useState(applied.min?.toString() ?? "");
-  const [max, setMax] = useState(applied.max?.toString() ?? "");
+  const commit = ([lo, hi]: Range) =>
+    onApply(lo <= bounds[0] && hi >= bounds[1] ? null : [lo, hi]);
 
-  // Keep inputs in sync when the filter is cleared elsewhere (e.g. "Clear all").
-  useEffect(() => {
-    setMin(applied.min?.toString() ?? "");
-    setMax(applied.max?.toString() ?? "");
-  }, [applied.min, applied.max]);
-
-  function submit(e: FormEvent) {
-    e.preventDefault();
-    let lo = min ? Number(min) : null;
-    let hi = max ? Number(max) : null;
-    if (lo !== null && hi !== null && lo > hi) [lo, hi] = [hi, lo];
-    onApply({ min: lo, max: hi });
-  }
-
-  return (
-    <form className={styles.priceForm} onSubmit={submit}>
-      <div className={styles.priceInputs}>
-        {([["Min price", min, setMin], ["Max price", max, setMax]] as const).map(([label, value, set]) => (
-          <label className={styles.priceField} key={label}>
-            <span aria-hidden className={styles.nairaSign}>₦</span>
-            <input
-              aria-label={label}
-              inputMode="numeric"
-              onChange={(e) => set(digitsOnly(e.target.value))}
-              placeholder={label}
-              value={withCommas(value)}
-            />
-          </label>
-        ))}
-      </div>
-      <button className={styles.applyButton} type="submit">Apply</button>
-    </form>
-  );
+  return <PriceRangeSlider bounds={bounds} onChange={setDraft} onCommit={commit} step={PRICE_STEP} value={draft} />;
 }
 
 function Sidebar({
@@ -146,8 +131,8 @@ function Sidebar({
 }: {
   category: CategoryId | null;
   onCategory: (c: CategoryId | null) => void;
-  price: PriceRange;
-  onPrice: (r: PriceRange) => void;
+  price: PriceFilter;
+  onPrice: (r: PriceFilter) => void;
 }) {
   const rows: { id: CategoryId | null; label: string; count: number; Icon: LucideIcon }[] = [
     { id: null, label: "All Categories", count: PRODUCTS.length, Icon: Grip },
@@ -178,9 +163,11 @@ function Sidebar({
         </ul>
       </SidebarSection>
 
-      <SidebarSection icon={Banknote} title="Filter by Price">
-        <PriceForm applied={price} onApply={onPrice} />
-      </SidebarSection>
+      {PRICE_BOUNDS && (
+        <SidebarSection icon={Banknote} title="Filter by Price">
+          <PriceFilterControl applied={price} bounds={PRICE_BOUNDS} onApply={onPrice} />
+        </SidebarSection>
+      )}
     </div>
   );
 }
@@ -200,7 +187,8 @@ function ShopPage() {
   const [view, setView] = useState<"grid" | "list">("grid");
   const [pageSize, setPageSize] = useState<number>(16);
   const [page, setPage] = useState(1);
-  const [price, setPrice] = useState<PriceRange>(NO_PRICE_FILTER);
+  const [price, setPrice] = useState<PriceFilter>(null);
+  const [quickView, setQuickView] = useState<Product | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Any change to what's being filtered sends you back to page 1.
@@ -232,10 +220,10 @@ function ShopPage() {
   const currentPage = Math.min(page, totalPages);
   const visible = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  const priceActive = price.min !== null || price.max !== null;
+  const priceActive = price !== null;
   const hasFilters = Boolean(category || q || priceActive);
   const clearAll = () => {
-    setPrice(NO_PRICE_FILTER);
+    setPrice(null);
     updateUrl({ category: null, q: null });
   };
 
@@ -243,16 +231,12 @@ function ShopPage() {
     <Sidebar
       category={category}
       onCategory={(c) => { updateUrl({ category: c }); setFiltersOpen(false); }}
-      onPrice={(r) => { setPrice(r); setFiltersOpen(false); }}
+      onPrice={setPrice}
       price={price}
     />
   );
 
-  const priceChipLabel =
-    price.min !== null && price.max !== null ? `${formatNaira(price.min)} – ${formatNaira(price.max)}`
-    : price.min !== null ? `From ${formatNaira(price.min)}`
-    : price.max !== null ? `Up to ${formatNaira(price.max)}`
-    : "";
+  const priceChipLabel = price ? `${formatNaira(price[0])} – ${formatNaira(price[1])}` : "";
 
   return (
     <div className={styles.page}>
@@ -359,7 +343,7 @@ function ShopPage() {
                   </button>
                 )}
                 {priceActive && (
-                  <button className={styles.chip} onClick={() => setPrice(NO_PRICE_FILTER)} type="button">
+                  <button className={styles.chip} onClick={() => setPrice(null)} type="button">
                     {priceChipLabel} <X aria-hidden size={13} />
                     <span className={styles.srOnly}>Remove price filter</span>
                   </button>
@@ -381,7 +365,7 @@ function ShopPage() {
               </div>
             ) : (
               <div className={view === "grid" ? styles.grid : styles.list}>
-                {visible.map((p) => <ProductCard key={p.id} product={p} view={view} />)}
+                {visible.map((p) => <ProductCard key={p.id} onQuickView={setQuickView} product={p} view={view} />)}
               </div>
             )}
           </main>
@@ -389,6 +373,8 @@ function ShopPage() {
       </div>
 
       <StorefrontFooter />
+
+      <QuickView onClose={() => setQuickView(null)} product={quickView} />
 
       {/* Mobile filter drawer */}
       <AnimatePresence>

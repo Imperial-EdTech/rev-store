@@ -3,51 +3,59 @@
 import { Users, RefreshCw, Loader2, AlertCircle, Inbox } from "lucide-react";
 import type React from "react";
 import { useState, useEffect, useMemo } from "react";
-import type { WaitlistRegistration } from "@/lib/types";
+import type { PartnerApplicant } from "@/lib/partners";
 import { StorefrontHeader } from "@/components/StorefrontHeader";
 import { StorefrontFooter } from "@/components/StorefrontFooter";
+import { CONTACT } from "@/lib/contact";
 
-// ── Partner config ────────────────────────────────────────────
-// Each partner has: their display name, the value stored in notes.partnerOrg,
-// and a unique passcode (set via env vars or hardcoded for now).
-const PARTNERS = [
-  {
-    id: "let-there-be-teachers",
-    name: "Let There Be Teachers Laptop Scheme",
-    orgLabel: "Let There Be Teachers Laptop Scheme",
-    // Set NEXT_PUBLIC_LTBT_PASSCODE in .env.local
-    passcode: process.env.NEXT_PUBLIC_LTBT_PASSCODE ?? "ltbt-2026",
-  },
-] as const;
-
-type PartnerId = (typeof PARTNERS)[number]["id"];
+// Partner sign-in is checked on the server (/api/auth/partner), and
+// /api/partner/applications returns only the signed-in partner's applicants.
+type SignedInPartner = { id: string; name: string };
 type FetchState = "idle" | "loading" | "error" | "ready";
 
-// ── Extract partnerOrg from notes JSON ────────────────────────
-function getPartnerOrg(notes: string | null | undefined): string {
-  if (!notes) return "Independent";
-  try { return JSON.parse(notes)?.partnerOrg ?? "Independent"; } catch { return "Independent"; }
-}
-
-function getNoteField(notes: string | null | undefined, key: string): string {
-  if (!notes) return "—";
-  try { return JSON.parse(notes)?.[key] ?? "—"; } catch { return "—"; }
-}
 
 // ── Page ──────────────────────────────────────────────────────
 export default function PartnersPage() {
-  const [partnerId, setPartnerId] = useState<PartnerId | null>(null);
-  const [passcode, setPasscode]   = useState("");
-  const [authError, setAuthError] = useState("");
+  const [partner, setPartner]       = useState<SignedInPartner | null>(null);
+  const [checking, setChecking]     = useState(true);
+  const [passcode, setPasscode]     = useState("");
+  const [authError, setAuthError]   = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const partner = PARTNERS.find((p) => p.id === partnerId) ?? null;
+  // Restore an existing session (httpOnly cookie) on load.
+  useEffect(() => {
+    fetch("/api/auth/partner")
+      .then((res) => res.json())
+      .then((body) => setPartner(body?.partner ?? null))
+      .catch(() => setPartner(null))
+      .finally(() => setChecking(false));
+  }, []);
 
-  function handleLogin(e: React.FormEvent) {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    const matched = PARTNERS.find((p) => p.passcode === passcode);
-    if (matched) { setPartnerId(matched.id); setAuthError(""); }
-    else setAuthError("Incorrect passcode. Contact Revrica to retrieve yours.");
+    setSubmitting(true);
+    setAuthError("");
+    try {
+      const res  = await fetch("/api/auth/partner", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ passcode }),
+      });
+      const body = await res.json().catch(() => null);
+      if (res.ok && body?.partner) { setPartner(body.partner); setPasscode(""); }
+      else setAuthError(body?.error ?? "Could not sign in. Try again.");
+    } catch {
+      setAuthError("Could not reach the server. Check your connection.");
+    }
+    setSubmitting(false);
   }
+
+  async function handleSignOut() {
+    await fetch("/api/auth/partner", { method: "DELETE" });
+    setPartner(null);
+  }
+
+  if (checking) return <StorefrontHeader />;
 
   if (!partner) {
     return (
@@ -71,17 +79,18 @@ export default function PartnersPage() {
                   type="password"
                   value={passcode}
                 />
-                {authError && <p className="text-sm font-bold text-rev-orange">{authError}</p>}
+                {authError && <p className="text-sm font-bold text-rev-orange" role="alert">{authError}</p>}
                 <button
-                  className="focus-ring h-12 w-full rounded-full bg-rev-orange text-sm font-bold text-white shadow-glow transition hover:bg-rev-orangeDeep"
+                  className="focus-ring h-12 w-full rounded-full bg-rev-orange text-sm font-bold text-white shadow-glow transition hover:bg-rev-orangeDeep disabled:opacity-60"
+                  disabled={submitting || !passcode}
                   type="submit"
                 >
-                  Access Partner Dashboard
+                  {submitting ? "Checking…" : "Access Partner Dashboard"}
                 </button>
               </form>
               <p className="mt-6 text-center text-xs text-slate-body/50">
                 Don&apos;t have a passcode?{" "}
-                <a className="font-bold text-rev-orange hover:underline" href="mailto:hello@revrica.com">
+                <a className="font-bold text-rev-orange hover:underline" href={`mailto:${CONTACT.supportEmail}`}>
                   Contact Revrica
                 </a>
               </p>
@@ -92,12 +101,12 @@ export default function PartnersPage() {
     );
   }
 
-  return <PartnerDashboard partner={partner} />;
+  return <PartnerDashboard onSignOut={handleSignOut} partner={partner} />;
 }
 
 // ── Dashboard ─────────────────────────────────────────────────
-function PartnerDashboard({ partner }: { partner: (typeof PARTNERS)[number] }) {
-  const [registrations, setRegistrations] = useState<WaitlistRegistration[]>([]);
+function PartnerDashboard({ partner, onSignOut }: { partner: SignedInPartner; onSignOut: () => void }) {
+  const [applicants, setApplicants]       = useState<PartnerApplicant[]>([]);
   const [fetchState, setFetchState]       = useState<FetchState>("idle");
   const [fetchError, setFetchError]       = useState<string | null>(null);
   const [query, setQuery]                 = useState("");
@@ -106,10 +115,10 @@ function PartnerDashboard({ partner }: { partner: (typeof PARTNERS)[number] }) {
     setFetchState("loading");
     setFetchError(null);
     try {
-      const res  = await fetch("/api/admin/registrations");
+      const res  = await fetch("/api/partner/applications");
       const body = await res.json();
       if (!res.ok) { setFetchError(body?.error ?? "Could not load data."); setFetchState("error"); return; }
-      setRegistrations(body.registrations);
+      setApplicants(body.applications);
       setFetchState("ready");
     } catch {
       setFetchError("Could not reach the server. Check your connection.");
@@ -119,17 +128,14 @@ function PartnerDashboard({ partner }: { partner: (typeof PARTNERS)[number] }) {
 
   useEffect(() => { load(); }, []);
 
-  // Filter to only this partner's applicants
-  const partnerApplicants = useMemo(
-    () => registrations.filter((r) => getPartnerOrg(r.notes) === partner.orgLabel),
-    [registrations, partner.orgLabel]
-  );
+  // Already limited to this partner by the server.
+  const partnerApplicants = applicants;
 
   const filtered = useMemo(() => {
     if (!query) return partnerApplicants;
     const q = query.toLowerCase();
     return partnerApplicants.filter(
-      (r) => r.fullName.toLowerCase().includes(q) || r.phone.toLowerCase().includes(q)
+      (r) => [r.name, r.ref, r.school ?? "", r.state ?? ""].join(" ").toLowerCase().includes(q)
     );
   }, [partnerApplicants, query]);
 
@@ -148,6 +154,9 @@ function PartnerDashboard({ partner }: { partner: (typeof PARTNERS)[number] }) {
                 {partner.name}
               </h1>
               <p className="mt-2 text-white/55">Application data for your scheme members.</p>
+              <button className="mt-3 text-xs font-bold text-white/50 underline underline-offset-4 hover:text-white" onClick={onSignOut} type="button">
+                Sign out
+              </button>
             </div>
             <button
               className="inline-flex h-11 items-center gap-2 rounded-full border border-white/20 bg-white/5 px-5 text-sm font-bold text-white transition hover:border-white/40 hover:bg-white/10"
@@ -196,12 +205,12 @@ function PartnerDashboard({ partner }: { partner: (typeof PARTNERS)[number] }) {
                 </div>
 
                 {/* Payment split */}
-                {["12 Months", "24 Months", "36 Months"].map((term) => {
-                  const count = partnerApplicants.filter((r) => getNoteField(r.notes, "paymentOption") === term).length;
+                {[12, 24, 36].map((term) => {
+                  const count = partnerApplicants.filter((r) => r.termMonths === term).length;
                   return (
                     <div className="rounded-2xl border border-black/8 bg-white p-7 shadow-sm" key={term}>
                       <p className="font-display text-4xl font-extrabold text-slate-ink">{count}</p>
-                      <p className="mt-1 text-xs font-bold uppercase tracking-[0.1em] text-slate-body/70">{term} plan</p>
+                      <p className="mt-1 text-xs font-bold uppercase tracking-[0.1em] text-slate-body/70">{term}-month plan</p>
                     </div>
                   );
                 })}
@@ -222,28 +231,32 @@ function PartnerDashboard({ partner }: { partner: (typeof PARTNERS)[number] }) {
                     <input
                       className="focus-ring h-11 w-full rounded-xl border border-black/12 bg-white px-4 text-sm text-slate-ink placeholder:text-slate-body/50"
                       onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Search by name or phone…"
+                      placeholder="Search by name, reference, school or state…"
                       value={query}
                     />
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="w-full min-w-[520px] text-left text-sm">
+                    <table className="w-full min-w-[760px] text-left text-sm">
                       <thead className="bg-black/3 text-xs uppercase tracking-[0.1em] text-slate-body/70">
                         <tr>
-                          <th className="px-6 py-4">#</th>
+                          <th className="px-6 py-4">Reference</th>
                           <th className="px-6 py-4">Full Name</th>
-                          <th className="px-6 py-4">State</th>
-                          <th className="px-6 py-4">Payment Plan</th>
+                          <th className="px-6 py-4">School &amp; state</th>
+                          <th className="px-6 py-4">Device &amp; plan</th>
+                          <th className="px-6 py-4">Status</th>
                           <th className="px-6 py-4">Date Applied</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {filtered.map((r, i) => (
-                          <tr className="border-t border-black/6 hover:bg-black/[0.015]" key={r.id}>
-                            <td className="px-6 py-4 text-slate-body">{i + 1}</td>
-                            <td className="px-6 py-4 font-bold text-slate-ink">{r.fullName}</td>
-                            <td className="px-6 py-4 text-slate-body">{getNoteField(r.notes, "state")}</td>
-                            <td className="px-6 py-4 text-slate-body">{getNoteField(r.notes, "paymentOption")}</td>
+                        {filtered.map((r) => (
+                          <tr className="border-t border-black/6 hover:bg-black/[0.015]" key={r.ref}>
+                            <td className="px-6 py-4 font-mono text-xs font-bold text-slate-body">{r.ref}</td>
+                            <td className="px-6 py-4 font-bold text-slate-ink">{r.name}</td>
+                            <td className="px-6 py-4 text-slate-body">{[r.school, r.state].filter(Boolean).join(", ") || "—"}</td>
+                            <td className="px-6 py-4 text-slate-body">
+                              {r.device ?? "Not chosen"}{r.termMonths ? ` · ${r.termMonths} months` : ""}
+                            </td>
+                            <td className="px-6 py-4 font-bold text-slate-ink">{r.statusLabel}</td>
                             <td className="px-6 py-4 text-slate-body">{new Date(r.createdAt).toLocaleDateString("en-NG")}</td>
                           </tr>
                         ))}

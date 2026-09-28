@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { supabase } from "@/lib/supabase";
 
 export async function GET() {
-  const client = supabaseAdmin ?? supabase;
+  const client = supabaseAdmin; // RLS locks every table to the server key
   if (!client) return NextResponse.json({ error: "Not configured." }, { status: 503 });
   const { data, error } = await client
     .from("revlearn_posts")
@@ -22,7 +21,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const client = supabaseAdmin ?? supabase;
+  const client = supabaseAdmin; // RLS locks every table to the server key
   if (!client) return NextResponse.json({ error: "Not configured." }, { status: 503 });
   const body = await req.json().catch(() => null);
   if (!body?.content || !body?.author_name)
@@ -36,7 +35,7 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const client = supabaseAdmin ?? supabase;
+  const client = supabaseAdmin; // RLS locks every table to the server key
   if (!client) return NextResponse.json({ error: "Not configured." }, { status: 503 });
   const { id, increment } = await req.json().catch(() => ({}));
   if (!id) return NextResponse.json({ error: "Missing id." }, { status: 400 });

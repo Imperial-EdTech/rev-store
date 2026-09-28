@@ -1,0 +1,27 @@
+.srOnly {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.priceBlock { margin: 24px 0; padding: 20px 0; border-block: 1px solid var(--rs-line); }
+.priceRow { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 12px; }
+.price {
+  margin: 0; font-family: var(--font-display); font-weight: 800; color: var(--rs-maroon);
+  font-size: 34px; letter-spacing: -0.01em; font-variant-numeric: tabular-nums;
+}
+.compare { font-size: 17px; color: var(--rs-muted); font-variant-numeric: tabular-nums; }
+.saving {
+  align-self: center; padding: 4px 10px; border-radius: 999px;
+  background: var(--rs-ok-tint); color: var(--rs-ok); font-size: 13px; font-weight: 700;
+}
+.priceOnRequest { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: 26px; color: var(--rs-ink); }
+.priceNote { margin: 6px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--rs-muted); }
+
+.buyRow { display: flex; gap: 12px; align-items: stretch; }
+.buyRow > div[role="group"] { height: 52px; }
+.buyAction { flex: 1; }
+
+/* Quick view variant */
+.compact .priceBlock { margin: 16px 0; padding: 14px 0; }
+.compact .price { font-size: 28px; }
+.compact .priceOnRequest { font-size: 22px; }

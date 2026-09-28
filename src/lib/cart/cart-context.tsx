@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { getProduct, isPurchasable, type Product } from "@/lib/catalog";
+import { MAX_QTY_PER_LINE } from "./limits";
 
 /**
  * Cart state.
@@ -26,7 +27,7 @@ import { getProduct, isPurchasable, type Product } from "@/lib/catalog";
  */
 
 const STORAGE_KEY = "revstore_cart_v1";
-export const MAX_QTY_PER_LINE = 50; // Larger orders go through the bulk-order WhatsApp flow.
+export { MAX_QTY_PER_LINE };
 
 type CartLine = { productId: string; qty: number };
 

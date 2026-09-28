@@ -16,33 +16,15 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { StorefrontHeader } from "@/components/StorefrontHeader";
 import { StorefrontFooter } from "@/components/StorefrontFooter";
+import { SCHOOL_DEVICE_TYPES, SCHOOL_PURPOSES, SCHOOL_ROLES } from "@/lib/school-enquiry";
 
 const JAKARTA = "'Plus Jakarta Sans', ui-sans-serif, system-ui";
 const SORA    = "'Sora', ui-sans-serif, system-ui";
 
-const DEVICE_TYPES = [
-  { id: "laptops",           label: "Laptops",            icon: "💻", desc: "Rev Orion & Aelia — Windows 11" },
-  { id: "tablets",           label: "Tablets",            icon: "📱", desc: "Rev Tab — Android 13" },
-  { id: "all-in-ones",       label: "All-in-One PCs",     icon: "🖥️", desc: "Desktop + display in one unit" },
-  { id: "cloud-server",      label: "Cloud / Server",     icon: "☁️", desc: "Local school server & cloud setup" },
-  { id: "interactive-boards",label: "Interactive Boards", icon: "📺", desc: "Smart boards for classrooms" },
-];
-
-const PURPOSES = [
-  { id: "teachers",  label: "For our teachers",     desc: "Equip teaching staff with devices" },
-  { id: "students",  label: "For our students",     desc: "Student devices and learning tools" },
-  { id: "lab",       label: "Setting up a lab",     desc: "Computer lab or tech centre" },
-  { id: "admin",     label: "Administrative use",   desc: "Office and admin functions" },
-];
-
-const ROLES = [
-  "School Owner / Proprietor",
-  "School Principal",
-  "School Administrator",
-  "Head of IT / Technology",
-  "Procurement Officer",
-  "Other",
-];
+// Form options: src/lib/school-enquiry.ts (shared with the server).
+const DEVICE_TYPES = SCHOOL_DEVICE_TYPES;
+const PURPOSES = SCHOOL_PURPOSES;
+const ROLES = SCHOOL_ROLES;
 
 function Field({ label, error, children, optional }: {
   label: string; error?: string; optional?: boolean; children: React.ReactNode;
@@ -113,28 +95,21 @@ export default function SchoolApplyPage() {
     setSubmitError(null);
 
     try {
-      const notes = JSON.stringify({
-        submissionType:    "school",
-        role:              form.role,
-        deviceTypes:       form.deviceTypes,
-        estimatedCount:    form.estimatedCount,
-        purposes:          form.purposes,
-        financingInterest: form.financingInterest,
-        comments:          form.comments,
-      });
-
-      const res = await fetch("/api/registrations", {
+      const res = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fullName:     form.contactName,
-          email:        form.email,
-          phone:        form.phone,
-          organization: form.schoolName,
-          role:         "School Owner",
-          interests:    form.deviceTypes.map(d => DEVICE_TYPES.find(dt => dt.id === d)?.label ?? d),
-          deviceCount:  form.estimatedCount ? parseInt(form.estimatedCount) || null : null,
-          notes,
+          kind: "school",
+          contactName: form.contactName,
+          email: form.email,
+          phone: form.phone,
+          schoolName: form.schoolName,
+          role: form.role,
+          deviceTypes: form.deviceTypes,
+          estimatedCount: parseInt(form.estimatedCount, 10) > 0 ? parseInt(form.estimatedCount, 10) : null,
+          purposes: form.purposes,
+          financingInterest: form.financingInterest || null,
+          comments: form.comments.trim() || null,
         }),
       });
 

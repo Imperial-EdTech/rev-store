@@ -13,7 +13,6 @@ import styles from "./shop.module.css";
 // ─── Stock pill ───────────────────────────────────────────────
 const PILL_CLASS: Record<StockStatus, string> = {
   in_stock: styles.pillOk,
-  pre_order: styles.pillInfo,
   on_request: styles.pillWarn,
   out_of_stock: styles.pillBad,
 };
@@ -80,7 +79,7 @@ export function ProductAction({
 }) {
   const { add } = useCart();
   const [justAdded, setJustAdded] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout>>();
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
 
   const cls = clsx(styles.action, size === "lg" && styles.actionLg);

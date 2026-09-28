@@ -4,6 +4,7 @@ import { Facebook, Instagram, Twitter, Youtube } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { RevricaLogo } from "@/components/brand";
+import { CONTACT } from "@/lib/contact";
 
 const MAROON = "#4a0e10";
 
@@ -73,7 +74,7 @@ export function StorefrontFooter() {
               <div>
                 <p style={{ fontSize: 12, color: "#9ca3af", margin: "0 0 3px" }}>Got questions? Call us!</p>
                 <p style={{ fontSize: 15, fontWeight: 700, color: MAROON, margin: 0, lineHeight: 1.4 }}>
-                  +234 813 611 7198
+                  <a href={`tel:+${CONTACT.phoneE164}`} style={{ color: "inherit", textDecoration: "none" }}>{CONTACT.phone}</a>
                 </p>
               </div>
             </div>
@@ -81,8 +82,10 @@ export function StorefrontFooter() {
             {/* Address */}
             <div style={{ marginBottom: 20 }}>
               <p style={{ fontSize: 13.5, fontWeight: 700, color: "#111", margin: "0 0 4px" }}>Contact info</p>
-              <p style={{ fontSize: 13, color: "#6b7280", margin: 0, lineHeight: 1.7 }}>Lagos, Nigeria</p>
-              <p style={{ fontSize: 13, color: "#6b7280", margin: 0, lineHeight: 1.7 }}>support@revrica.com</p>
+              <p style={{ fontSize: 13, color: "#6b7280", margin: 0, lineHeight: 1.7 }}>{CONTACT.address}</p>
+              <p style={{ fontSize: 13, color: "#6b7280", margin: 0, lineHeight: 1.7 }}>
+                <a href={`mailto:${CONTACT.supportEmail}`} style={{ color: "inherit", textDecoration: "none" }}>{CONTACT.supportEmail}</a>
+              </p>
             </div>
 
             {/* Newsletter */}

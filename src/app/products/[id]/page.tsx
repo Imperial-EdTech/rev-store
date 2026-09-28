@@ -3,13 +3,13 @@
 import { ChevronRight, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useState } from "react";
 import { StorefrontFooter } from "@/components/StorefrontFooter";
 import { StorefrontHeader } from "@/components/StorefrontHeader";
 import { ProductCard } from "@/components/shop/ProductCard";
-import { ProductAction, ProductImage, QtyStepper, StockPill } from "@/components/shop/primitives";
+import { ProductImage, StockPill } from "@/components/shop/primitives";
+import { PurchasePanel } from "@/components/shop/PurchasePanel";
 import {
-  PRODUCTS, displayName, formatNaira, getCategory, getProduct, isPurchasable,
+  PRODUCTS, displayName, getCategory, getProduct,
 } from "@/lib/catalog";
 import { whatsappLink } from "@/lib/contact";
 import styles from "./product.module.css";
@@ -17,7 +17,6 @@ import styles from "./product.module.css";
 export default function ProductDetailPage() {
   const params = useParams<{ id: string }>();
   const product = getProduct(params?.id ?? "");
-  const [qty, setQty] = useState(1);
 
   if (!product) {
     return (
@@ -33,8 +32,6 @@ export default function ProductDetailPage() {
   }
 
   const category = getCategory(product.category);
-  const saving =
-    product.price !== null && product.compareAtPrice ? product.compareAtPrice - product.price : 0;
   const related = PRODUCTS.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
   const bulkMessage = `Hi Revrica, I'd like a volume quote for the ${displayName(product)} for my school/organisation. Quantity: `;
 
@@ -64,52 +61,7 @@ export default function ProductDetailPage() {
             <h1 className={styles.name}>{product.name}</h1>
             {product.variant && <p className={styles.variant}>{product.variant}</p>}
 
-            <div className={styles.priceBlock}>
-              {product.price !== null ? (
-                <>
-                  <div className={styles.priceRow}>
-                    <p className={styles.price}>{formatNaira(product.price)}</p>
-                    {saving > 0 && (
-                      <>
-                        <s className={styles.compare}>
-                          <span className={styles.srOnly}>Regular price </span>
-                          {formatNaira(product.compareAtPrice!)}
-                        </s>
-                        <span className={styles.saving}>Save {formatNaira(saving)}</span>
-                      </>
-                    )}
-                  </div>
-                  <p className={styles.priceNote}>
-                    {product.stock === "pre_order"
-                      ? "Pre-order price per unit. Pay now to reserve yours from the first shipment."
-                      : "Price per unit"}
-                  </p>
-                  {product.financing && (
-                    <p className={styles.financing}>
-                      Or from <strong>{formatNaira(product.financing.monthlyFrom)}/month</strong> over{" "}
-                      {product.financing.months} months with the{" "}
-                      <Link href="/teacher-empowerment">Teacher Empowerment Programme</Link>
-                    </p>
-                  )}
-                </>
-              ) : (
-                <>
-                  <p className={styles.priceOnRequest}>Price on request</p>
-                  <p className={styles.priceNote}>
-                    Message us on WhatsApp for the current price and delivery lead time.
-                  </p>
-                </>
-              )}
-            </div>
-
-            <div className={styles.buyRow}>
-              {isPurchasable(product) && (
-                <QtyStepper label="Quantity" onChange={setQty} value={qty} />
-              )}
-              <div className={styles.buyAction}>
-                <ProductAction product={product} qty={qty} size="lg" />
-              </div>
-            </div>
+            <PurchasePanel product={product} />
 
             <a
               className={styles.bulkLink}

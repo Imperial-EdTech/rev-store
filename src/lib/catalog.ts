@@ -8,11 +8,23 @@
  * so a price change here is picked up everywhere, including in saved carts.
  */
 
-export type StockStatus = "in_stock" | "pre_order" | "on_request" | "out_of_stock";
+export type StockStatus = "in_stock" | "on_request" | "out_of_stock";
 
 export type CategoryId = "laptops" | "tablets" | "mini-pcs" | "all-in-ones";
 
 export type Spec = { label: string; value: string };
+
+/**
+ * One Teacher Empowerment repayment option. Figures are the programme's
+ * published numbers, not recalculated here.
+ */
+export type FinancingPlan = {
+  months: number;
+  /** Monthly repayment in naira (kobo precision). */
+  monthly: number;
+  /** Programme profit rate over the whole term, as published. */
+  rate: string;
+};
 
 export type Product = {
   /** URL-safe, stable id. Used in /products/[id] and in saved carts; never rename. */
@@ -32,8 +44,8 @@ export type Product = {
   specs: Spec[];
   /** Short spec line for cards; falls back to processor, memory, storage. */
   summary?: string;
-  /** Teacher Empowerment Programme financing, shown on the product page. */
-  financing?: { monthlyFrom: number; months: number };
+  /** Teacher Empowerment Programme repayment plans. Presence = eligible for financing. */
+  financing?: FinancingPlan[];
 };
 
 export const CATEGORIES: { id: CategoryId; label: string; singular: string }[] = [
@@ -47,19 +59,21 @@ const IMG = (file: string) => `/devices/catalog/${file}.webp`;
 
 export const PRODUCTS: readonly Product[] = [
   // ── Rev devices (own brand) ────────────────────────────────
-  // Laptop specs: Teacher Empowerment page. Tablet specs: previous product pages.
-  // Prices match the homepage deals and the pre-order page. Monthly figures are
-  // the 36-month Teacher Empowerment plans, which are based on the regular price.
+  // Laptop specs and repayment plans: Teacher Empowerment programme.
+  // Tablet specs: previous product pages.
   {
     id: "orion",
     name: "Rev Orion 12″",
     category: "laptops",
-    price: 290_000,
-    compareAtPrice: 350_000,
-    stock: "pre_order",
+    price: 350_000,
+    stock: "in_stock",
     image: "/devices/rev_orion_laptop.png",
     summary: "Intel Celeron N4020, 4GB RAM, 128GB eMMC, Windows 11",
-    financing: { monthlyFrom: 14_858.05, months: 36 },
+    financing: [
+      { months: 12, monthly: 34_120.49, rate: "16.98%" },
+      { months: 24, monthly: 19_569.49, rate: "34.19%" },
+      { months: 36, monthly: 14_858.05, rate: "52.83%" },
+    ],
     specs: [
       { label: "Display", value: "11.6″ HD LCD (1366 × 768)" },
       { label: "Processor", value: "Intel® Celeron N4020 (up to 2.8GHz)" },
@@ -80,12 +94,15 @@ export const PRODUCTS: readonly Product[] = [
     id: "aelia",
     name: "Rev Aelia 14″",
     category: "laptops",
-    price: 330_000,
-    compareAtPrice: 400_000,
-    stock: "pre_order",
+    price: 400_000,
+    stock: "in_stock",
     image: "/devices/rev_orion_laptop.png", // Same photo as the Orion until an Aelia photo exists.
     summary: "Intel Celeron N4020, 4GB RAM, 128GB eMMC, Windows 11",
-    financing: { monthlyFrom: 16_981.11, months: 36 },
+    financing: [
+      { months: 12, monthly: 38_993.33, rate: "16.98%" },
+      { months: 24, monthly: 22_365.0, rate: "34.19%" },
+      { months: 36, monthly: 16_981.11, rate: "52.83%" },
+    ],
     specs: [
       { label: "Display", value: "14.0″ HD LCD (1366 × 768)" },
       { label: "Processor", value: "Intel® Celeron N4020 (up to 2.8GHz)" },
@@ -106,9 +123,8 @@ export const PRODUCTS: readonly Product[] = [
     id: "tab",
     name: "Rev Tab 10″",
     category: "tablets",
-    price: 80_000,
-    compareAtPrice: 150_000,
-    stock: "in_stock",
+    price: null,
+    stock: "on_request",
     image: "/devices/rev_tablet.png",
     summary: "Quad-core ARM, 3GB RAM, 32GB storage, Android 13",
     specs: [
@@ -129,9 +145,8 @@ export const PRODUCTS: readonly Product[] = [
     id: "tab-4g",
     name: "Rev Tab 4G 10″",
     category: "tablets",
-    price: 110_000,
-    compareAtPrice: 140_000,
-    stock: "in_stock",
+    price: null,
+    stock: "on_request",
     image: "/devices/rev_tablet.png",
     summary: "Octa-core ARM, 4GB RAM, 64GB storage, 4G LTE, Android 13",
     specs: [
@@ -150,13 +165,16 @@ export const PRODUCTS: readonly Product[] = [
   },
 
   // ── Laptops (Imperial EdTech catalogue, Aug 2026) ─────────
+  // Sold on request: prices are deliberately not stored here, because
+  // everything in this file is downloaded by every visitor's browser.
+  // Current prices are in the Imperial EdTech catalogue PDF.
   {
     id: "pr5-14r5",
     name: "PR5-14R5",
     variant: "Silver",
     category: "laptops",
-    price: 960_400,
-    stock: "in_stock",
+    price: null,
+    stock: "on_request",
     image: IMG("pr5-14r5"),
     specs: [
       { label: "Processor", value: "AMD Ryzen 5 5500U with Radeon Graphics" },
@@ -173,8 +191,8 @@ export const PRODUCTS: readonly Product[] = [
     name: "DN79C-140M-CSR02",
     variant: "Silver",
     category: "laptops",
-    price: 1_195_600,
-    stock: "in_stock",
+    price: null,
+    stock: "on_request",
     image: IMG("dn79c-140m-csr02"),
     specs: [
       { label: "Processor", value: "Intel Core i5-13420H" },
@@ -191,8 +209,8 @@ export const PRODUCTS: readonly Product[] = [
     name: "DN21C-140P3-CS-N02",
     variant: "Black",
     category: "laptops",
-    price: 917_280,
-    stock: "in_stock",
+    price: null,
+    stock: "on_request",
     image: IMG("dn21c-140p3-cs-n02"),
     specs: [
       { label: "Processor", value: "Intel Core i5-120U" },
@@ -208,8 +226,8 @@ export const PRODUCTS: readonly Product[] = [
     id: "cn-spark-7cjgi6l",
     name: "CN-SPARK 7CJGI6L",
     category: "laptops",
-    price: 835_529,
-    stock: "in_stock",
+    price: null,
+    stock: "on_request",
     image: IMG("cn-spark-7cjgi6l"),
     specs: [
       { label: "Processor", value: "AMD Ryzen 7 4700U with Radeon Graphics" },
@@ -225,8 +243,8 @@ export const PRODUCTS: readonly Product[] = [
     id: "madigi-ne14b",
     name: "MADIGI-NE14B",
     category: "laptops",
-    price: 950_600,
-    stock: "in_stock",
+    price: null,
+    stock: "on_request",
     image: IMG("madigi-ne14b"),
     specs: [
       { label: "Processor", value: "12th Gen Intel Core i5-1235U" },
@@ -242,8 +260,8 @@ export const PRODUCTS: readonly Product[] = [
     id: "madigi-nv16b",
     name: "MADIGI-NV16B",
     category: "laptops",
-    price: 1_695_400,
-    stock: "in_stock",
+    price: null,
+    stock: "on_request",
     image: IMG("madigi-nv16b"),
     specs: [
       { label: "Processor", value: "AMD Ryzen 9 270" },
@@ -363,9 +381,14 @@ export function isCategoryId(value: string | null | undefined): value is Categor
   return CATEGORIES.some((c) => c.id === value);
 }
 
-/** Products with a fixed price that are in stock or open for pre-order can go in the cart. */
+/** Only in-stock products with a listed price can go in the cart. */
 export function isPurchasable(p: Product): p is Product & { price: number } {
-  return (p.stock === "in_stock" || p.stock === "pre_order") && p.price !== null;
+  return p.stock === "in_stock" && p.price !== null;
+}
+
+/** Lowest monthly repayment across a product's plans, if it's financeable. */
+export function lowestMonthly(p: Product): FinancingPlan | undefined {
+  return p.financing?.reduce((low, plan) => (plan.monthly < low.monthly ? plan : low));
 }
 
 export function specValue(p: Product, label: string): string | undefined {
@@ -392,14 +415,25 @@ const NAIRA = new Intl.NumberFormat("en-NG", {
   maximumFractionDigits: 0,
 });
 
-/** Whole naira, e.g. "₦290,000". Rounds, so use only for display. */
+/** Whole naira, e.g. "₦350,000". Rounds, so use only for display. */
 export function formatNaira(amount: number): string {
   return NAIRA.format(amount);
 }
 
+const NAIRA_KOBO = new Intl.NumberFormat("en-NG", {
+  style: "currency",
+  currency: "NGN",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+/** Naira with kobo, e.g. "₦34,120.49". For repayment figures, which aren't whole naira. */
+export function formatNairaKobo(amount: number): string {
+  return NAIRA_KOBO.format(amount);
+}
+
 export const STOCK_LABEL: Record<StockStatus, string> = {
   in_stock: "In stock",
-  pre_order: "Pre-order",
   on_request: "On request",
   out_of_stock: "Out of stock",
 };

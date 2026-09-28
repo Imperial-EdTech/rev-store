@@ -5,57 +5,30 @@ import {
   ArrowLeft, Check, CheckCircle2, ChevronRight, Copy, Mail, MessageCircle, Package, Truck,
 } from "lucide-react";
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { clsx } from "clsx";
 import { StorefrontHeader } from "@/components/StorefrontHeader";
 import { useCart } from "@/lib/cart/cart-context";
-import { displayName, formatNaira, type Product } from "@/lib/catalog";
-import { BANK_ACCOUNT, mailtoLink, whatsappLink } from "@/lib/contact";
+import { displayName, formatNaira } from "@/lib/catalog";
+import { BANK_ACCOUNT, CONTACT, mailtoLink, whatsappLink } from "@/lib/contact";
+import { buyerSchema, fieldErrors, type Buyer, type OrderLine } from "@/lib/orders/schema";
 import styles from "./checkout.module.css";
 
 // ─── Types ────────────────────────────────────────────────────
-type Fulfillment = "pickup" | "delivery";
-type Buyer = { name: string; phone: string; email: string; fulfillment: Fulfillment; address: string };
 type BuyerErrors = Partial<Record<keyof Buyer, string>>;
 
-/** Frozen copy of the cart taken when the buyer moves to payment. */
-type OrderSnapshot = {
-  ref: string;
-  lines: { name: string; qty: number; unit: number; total: number }[];
-  total: number;
-};
-
-/** Line label for the summary and the order message; flags pre-order items for the team. */
-const lineName = (p: Product) => displayName(p) + (p.stock === "pre_order" ? " (pre-order)" : "");
+/** The saved order as confirmed by the server (prices recalculated there). */
+type OrderSnapshot = { ref: string; lines: OrderLine[]; total: number };
 
 const EMPTY_BUYER: Buyer = { name: "", phone: "", email: "", fulfillment: "pickup", address: "" };
 const STEPS = ["Your details", "Payment", "Confirmation"] as const;
 
 // ─── Helpers ──────────────────────────────────────────────────
-function makeOrderRef(): string {
-  // No 0/O/1/I so the reference is easy to read back over the phone.
-  const alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
-  const bytes = crypto.getRandomValues(new Uint8Array(6));
-  return "RS-" + Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
-}
-
-function validate(b: Buyer): BuyerErrors {
-  const e: BuyerErrors = {};
-  if (b.name.trim().length < 2) e.name = "Enter your full name";
-  const digits = b.phone.replace(/\D/g, "");
-  if (digits.length < 10 || digits.length > 14) e.phone = "Enter a phone number, e.g. 0803 123 4567";
-  if (!/^\S+@\S+\.\S+$/.test(b.email.trim())) e.email = "Enter an email address, e.g. name@school.edu.ng";
-  if (b.fulfillment === "delivery" && b.address.trim().length < 8) {
-    e.address = "Enter the full delivery address, including city and state";
-  }
-  return e;
-}
-
 function buildOrderMessage(order: OrderSnapshot, buyer: Buyer): string {
   const paid = BANK_ACCOUNT !== null;
-  const lines = order.lines.map((l) => `• ${l.qty} × ${l.name} — ${formatNaira(l.total)}`).join("\n");
+  const lines = order.lines.map((l) => `• ${l.qty} × ${l.name} — ${formatNaira(l.lineTotal)}`).join("\n");
   const fulfillment =
-    buyer.fulfillment === "pickup" ? "Pickup" : `Delivery to: ${buyer.address.trim()}`;
+    buyer.fulfillment === "pickup" ? `Pickup from ${CONTACT.address}` : `Delivery to: ${buyer.address.trim()}`;
   const payment = BANK_ACCOUNT
     ? `Paid to: ${BANK_ACCOUNT.bankName}, ${BANK_ACCOUNT.accountName}, ${BANK_ACCOUNT.accountNumber}`
     : "Please send me payment details.";
@@ -125,6 +98,11 @@ export default function CheckoutPage() {
   const [errors, setErrors] = useState<BuyerErrors>({});
   const [order, setOrder] = useState<OrderSnapshot | null>(null);
   const [done, setDone] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  // One key per checkout visit: resubmitting after "Edit details" updates the
+  // same order on the server instead of creating a duplicate.
+  const clientKey = useRef<string | null>(null);
 
   const step = done ? 2 : order ? 1 : 0;
 
@@ -133,27 +111,45 @@ export default function CheckoutPage() {
     if (errors[key]) setErrors((e) => ({ ...e, [key]: undefined }));
   }
 
-  function toPayment(e: FormEvent) {
+  async function toPayment(e: FormEvent) {
     e.preventDefault();
-    const found = validate(buyer);
-    setErrors(found);
-    if (Object.keys(found).length > 0) {
+    setSubmitError(null);
+
+    const parsed = buyerSchema.safeParse(buyer);
+    if (!parsed.success) {
+      const found = fieldErrors<keyof Buyer>(parsed.error);
+      setErrors(found);
       // Move focus to the first field with a problem.
-      const first = Object.keys(found)[0];
-      document.querySelector<HTMLElement>(`[name="${first}"]`)?.focus();
+      const first = (["name", "phone", "email", "address"] as const).find((k) => found[k]);
+      if (first) document.querySelector<HTMLElement>(`[name="${first}"]`)?.focus();
       return;
     }
-    setOrder({
-      ref: makeOrderRef(),
-      lines: cart.items.map((i) => ({
-        name: lineName(i.product),
-        qty: i.qty,
-        unit: i.product.price,
-        total: i.lineTotal,
-      })),
-      total: cart.subtotal,
-    });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setErrors({});
+
+    clientKey.current ??= crypto.randomUUID();
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientKey: clientKey.current,
+          buyer: parsed.data,
+          items: cart.items.map((i) => ({ productId: i.product.id, qty: i.qty })),
+        }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok || !body?.order) {
+        setSubmitError(body?.error ?? "We couldn’t place your order. Please try again.");
+        return;
+      }
+      setOrder({ ref: body.order.ref, lines: body.order.items, total: body.order.total });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch {
+      setSubmitError("We couldn’t reach our server. Check your connection and try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   /** The order is complete once the confirmation is sent, so the cart can be emptied. */
@@ -164,6 +160,13 @@ export default function CheckoutPage() {
   }
 
   const message = order ? buildOrderMessage(order, buyer) : "";
+  // Used only if saving the order fails, so the customer can still reach us.
+  const fallbackMessage = [
+    "Hi Revrica! I'd like to order:",
+    ...cart.items.map((i) => `• ${i.qty} × ${displayName(i.product)}`),
+    `Total: ${formatNaira(cart.subtotal)}`,
+    `Name: ${buyer.name.trim()}`,
+  ].join("\n");
   const waHref = order ? whatsappLink(message) : "#";
   const mailHref = order ? mailtoLink(`RevStore order ${order.ref}`, message) : "#";
 
@@ -192,9 +195,15 @@ export default function CheckoutPage() {
   }
 
   // What the summary shows: the frozen order once created, otherwise the live cart.
-  const summaryLines = order
+  const summaryLines: OrderLine[] = order
     ? order.lines
-    : cart.items.map((i) => ({ name: lineName(i.product), qty: i.qty, unit: i.product.price, total: i.lineTotal }));
+    : cart.items.map((i) => ({
+        productId: i.product.id,
+        name: displayName(i.product),
+        qty: i.qty,
+        unitPrice: i.product.price,
+        lineTotal: i.lineTotal,
+      }));
   const summaryTotal = order ? order.total : cart.subtotal;
 
   return (
@@ -257,7 +266,7 @@ export default function CheckoutPage() {
                     <legend className={styles.fieldLabel}>How would you like to receive your order?</legend>
                     <div className={styles.choiceGrid}>
                       {([
-                        ["pickup", "Pickup", "Collect from our Lagos office", Package],
+                        ["pickup", "Pickup", `Collect from ${CONTACT.address}`, Package],
                         ["delivery", "Delivery", "We deliver to your address", Truck],
                       ] as const).map(([value, label, sub, Icon]) => (
                         <label className={clsx(styles.choice, buyer.fulfillment === value && styles.choiceActive)} key={value}>
@@ -294,8 +303,19 @@ export default function CheckoutPage() {
 
                   <div className={styles.actions}>
                     <Link className={styles.backLink} href="/cart"><ArrowLeft aria-hidden size={15} /> Back to cart</Link>
-                    <button className={styles.primaryButton} type="submit">Continue to payment</button>
+                    <button className={styles.primaryButton} disabled={submitting} type="submit">
+                      {submitting ? "Placing order…" : "Continue to payment"}
+                    </button>
                   </div>
+
+                  {submitError && (
+                    <div className={styles.submitError} role="alert">
+                      <p>{submitError}</p>
+                      <a href={whatsappLink(fallbackMessage)} rel="noopener noreferrer" target="_blank">
+                        Or send your order to us on WhatsApp
+                      </a>
+                    </div>
+                  )}
                 </motion.form>
               )}
 
@@ -372,12 +392,12 @@ export default function CheckoutPage() {
             <h2 id="co-summary">Order summary</h2>
             <ul>
               {summaryLines.map((l) => (
-                <li key={l.name}>
+                <li key={l.productId}>
                   <span className={styles.summaryName}>
                     {l.name}
-                    <small>{l.qty} × {formatNaira(l.unit)}</small>
+                    <small>{l.qty} × {formatNaira(l.unitPrice)}</small>
                   </span>
-                  <span className={styles.summaryAmount}>{formatNaira(l.total)}</span>
+                  <span className={styles.summaryAmount}>{formatNaira(l.lineTotal)}</span>
                 </li>
               ))}
             </ul>

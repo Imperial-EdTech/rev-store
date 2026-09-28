@@ -8,6 +8,7 @@ import { RevLearnHeader } from "@/components/revlearn/shell";
 import { useRevLearnContent } from "@/lib/revlearn-hooks";
 import { slugify, deriveSourceName, normaliseEmbedUrl } from "@/lib/revlearn-utils";
 import type { CourseType } from "@/lib/revlearn-types";
+import { adminFetch } from "@/lib/admin-fetch";
 
 function getYoutubeThumbnail(url: string): string | null {
   try {
@@ -100,7 +101,7 @@ function AddResourceContent() {
 
     try {
       const courseId = slugify(title) + "-" + Date.now();
-      const res = await fetch("/api/revlearn/courses", {
+      const res = await adminFetch("/api/revlearn/courses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -124,7 +125,7 @@ function AddResourceContent() {
         for (let i = 0; i < lessons.length; i++) {
           const l = lessons[i];
           if (!l.title || !l.url) continue;
-          await fetch("/api/revlearn/lessons", {
+          await adminFetch("/api/revlearn/lessons", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

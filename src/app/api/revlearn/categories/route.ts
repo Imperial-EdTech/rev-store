@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { requireAdmin } from "@/lib/auth/guard";
 
 const schema = z.object({
   id: z.string().min(1),
@@ -12,6 +13,8 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
   if (!supabaseAdmin) return NextResponse.json({ error: "Admin client not configured." }, { status: 503 });
   let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON." }, { status: 400 }); }
@@ -23,6 +26,8 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
   if (!supabaseAdmin) return NextResponse.json({ error: "Admin client not configured." }, { status: 503 });
   const { id } = await req.json().catch(() => ({}));
   if (!id) return NextResponse.json({ error: "Missing id." }, { status: 400 });

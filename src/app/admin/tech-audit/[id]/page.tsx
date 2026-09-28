@@ -10,7 +10,8 @@
  *  4. What the school actually selected (question-by-question summary)
  *  5. Print / export button
  *
- * Passcode gate reuses the same pattern as the main admin page.
+ * Access: middleware redirects signed-out visitors to /admin/login, and
+ * /api/admin/tech-audit/[id] checks the admin session itself.
  */
 
 import { motion } from "framer-motion";
@@ -25,54 +26,10 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/shell";
+import { adminFetch } from "@/lib/admin-fetch";
 import { allQuestions, auditSections, type AuditOption } from "@/lib/audit-data";
 import { scoreAudit, sectionPriority, type AuditScore } from "@/lib/audit-scoring";
 import type { TechAuditRequest } from "@/lib/types";
-
-// ─── Passcode gate (same env var as admin page) ───────────────────────────────
-
-function PasscodeGate({ onUnlock }: { onUnlock: () => void }) {
-  const [code, setCode] = useState("");
-  const [error, setError] = useState("");
-  function attempt(e: React.FormEvent) {
-    e.preventDefault();
-    const expected = process.env.NEXT_PUBLIC_ADMIN_PASSCODE || "revstore-admin";
-    if (code === expected) { onUnlock(); return; }
-    setError("Incorrect passcode.");
-  }
-  return (
-    <>
-      <SiteHeader />
-      <main className="maroon-glow relative flex min-h-screen items-center py-16">
-        <div className="noise-overlay" />
-        <section className="container-x relative z-10">
-          <div className="mx-auto max-w-md rounded-3xl border border-black/8 bg-white p-8 shadow-xl">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-rev-orange">Audit Report</p>
-            <h1 className="mt-3 font-display text-3xl font-extrabold text-slate-ink">
-              Enter admin passcode
-            </h1>
-            <form className="mt-6 space-y-4" onSubmit={attempt}>
-              <input
-                className="focus-ring h-12 w-full rounded-xl border border-black/12 bg-white px-4 text-sm"
-                onChange={(e) => setCode(e.target.value)}
-                placeholder="Admin passcode"
-                type="password"
-                value={code}
-              />
-              {error ? <p className="text-sm font-bold text-rev-orange">{error}</p> : null}
-              <button
-                className="focus-ring h-12 w-full rounded-full bg-rev-orange text-sm font-bold text-white"
-                type="submit"
-              >
-                View Report
-              </button>
-            </form>
-          </div>
-        </section>
-      </main>
-    </>
-  );
-}
 
 // ─── Colour helpers ───────────────────────────────────────────────────────────
 
@@ -409,19 +366,18 @@ function AuditReport({ request }: { request: TechAuditRequest }) {
   );
 }
 
-// ─── Loader + gate wrapper ────────────────────────────────────────────────────
+// ─── Loader ────────────────────────────────────────────────────
 
 export default function AuditReportPage() {
   const params = useParams<{ id: string }>();
-  const [unlocked, setUnlocked] = useState(false);
   const [request, setRequest] = useState<TechAuditRequest | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!unlocked || !params.id) return;
+    if (!params.id) return;
     setLoading(true);
-    fetch(`/api/admin/tech-audit/${params.id}`)
+    adminFetch(`/api/admin/tech-audit/${params.id}`)
       .then(async (res) => {
         const body = await res.json();
         if (!res.ok) throw new Error(body?.error ?? "Could not load report");
@@ -431,9 +387,7 @@ export default function AuditReportPage() {
         setLoadError(err instanceof Error ? err.message : "Unknown error");
       })
       .finally(() => setLoading(false));
-  }, [unlocked, params.id]);
-
-  if (!unlocked) return <PasscodeGate onUnlock={() => setUnlocked(true)} />;
+  }, [params.id]);
 
   if (loading) {
     return (

@@ -5,11 +5,12 @@ import { Menu, Search, X, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { RevricaLogo } from "@/components/brand";
+import { CONTACT } from "@/lib/contact";
 
-// ── Contact details (update before going live) ─────────────────
-const PHONE   = "+234 813 611 7759";
-const EMAIL   = "support@revrica.com";
-const ADDRESS = "32 Alh. Kofoworola Cresc, Off Awolowo Way, Ikeja Lagos";
+// Contact details come from lib/contact.ts (single source).
+const PHONE   = CONTACT.phone;
+const EMAIL   = CONTACT.supportEmail;
+const ADDRESS = CONTACT.address;
 
 // ── Category nav ───────────────────────────────────────────────
 const CATEGORIES = [

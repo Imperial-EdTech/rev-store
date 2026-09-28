@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { supabase } from "@/lib/supabase";
 import type { Category, Course, Lesson } from "@/lib/revlearn-types";
 
 export async function GET() {
-  const client = supabaseAdmin ?? supabase;
+  const client = supabaseAdmin; // RLS locks every table to the server key
   if (!client) {
     return NextResponse.json({ error: "Supabase not configured." }, { status: 503 });
   }

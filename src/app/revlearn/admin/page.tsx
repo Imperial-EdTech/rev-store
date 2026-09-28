@@ -4,11 +4,11 @@ import { useState } from "react";
 import { Plus, Trash2, Edit2, Loader2, Check, X, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { RevLearnHeader } from "@/components/revlearn/shell";
+import { adminFetch } from "@/lib/admin-fetch";
 import { useRevLearnContent } from "@/lib/revlearn-hooks";
 import { slugify, deriveSourceName, normaliseEmbedUrl } from "@/lib/revlearn-utils";
 import type { Accent, CourseType, Category, Course, Lesson } from "@/lib/revlearn-types";
 
-const PASSCODE = process.env.NEXT_PUBLIC_ADMIN_PASSCODE ?? "revlearn-admin";
 const ACCENTS: Accent[] = ["orange", "maroon", "teal", "amber"];
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -20,42 +20,13 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+/**
+ * RevLearn content admin. Access is enforced on the server: middleware
+ * redirects signed-out visitors to /admin/login, and every write route
+ * (/api/revlearn/{categories,courses,lessons,resources,tools}) checks the
+ * admin session.
+ */
 export default function AdminPage() {
-  const [unlocked, setUnlocked] = useState(false);
-  const [pass, setPass] = useState("");
-  const [passErr, setPassErr] = useState("");
-
-  function unlock(e: React.FormEvent) {
-    e.preventDefault();
-    if (pass === PASSCODE) { setUnlocked(true); setPassErr(""); }
-    else setPassErr("Incorrect passcode.");
-  }
-
-  if (!unlocked) {
-    return (
-      <>
-        <RevLearnHeader />
-        <main className="rl-main">
-          <div className="rl-container">
-            <div className="rl-admin-gate">
-              <p className="rl-hero-kicker">RevLearn Admin</p>
-              <h1 className="rl-admin-gate-title">Dashboard access</h1>
-              <p style={{ fontSize: ".875rem", color: "var(--rl-body)", marginBottom: "1.25rem" }}>
-                Enter your admin passcode to manage courses and categories.
-              </p>
-              <form onSubmit={unlock} className="rl-admin-gate-form">
-                <input type="password" className="rl-admin-input" placeholder="Admin passcode"
-                  value={pass} onChange={e => setPass(e.target.value)} />
-                {passErr && <p className="rl-admin-err">{passErr}</p>}
-                <button type="submit" className="rl-admin-submit">Open Dashboard</button>
-              </form>
-            </div>
-          </div>
-        </main>
-      </>
-    );
-  }
-
   return <AdminDashboard />;
 }
 
@@ -77,7 +48,7 @@ function AdminDashboard() {
   }
 
   async function api(path: string, method: string, body: unknown) {
-    const res = await fetch(path, {
+    const res = await adminFetch(path, {
       method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

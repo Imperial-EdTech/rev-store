@@ -7,4 +7,10 @@
 export const FEATURES = {
   /** Teacher Empowerment pre-order modal shown on the homepage and /teacher-empowerment. */
   preorderPopup: false,
+  /** "Limited offers" deals strip with countdown on the homepage. */
+  homepageOffers: false,
+  /** /pre-order checkout. While off, the route redirects to /products. */
+  preorderPage: false,
+  /** /products/tablets offer landing page. While off, the route redirects to /products. */
+  tabletOfferPage: false,
 } as const;

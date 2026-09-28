@@ -24,26 +24,18 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type React from "react";
 import { Suspense, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { z } from "zod";
 import { Button } from "@/components/ui";
 import { StorefrontHeader } from "@/components/StorefrontHeader";
 import { StorefrontFooter } from "@/components/StorefrontFooter";
+import { GOVERNMENT_BODIES } from "@/lib/organizations";
+import { teacherApplicationSchema, type TeacherApplication } from "@/lib/applications/schema";
+import { getProduct } from "@/lib/catalog";
 
 const JAKARTA = "'Plus Jakarta Sans', ui-sans-serif, system-ui";
 const SORA    = "'Sora', ui-sans-serif, system-ui";
 
 // ── Government bodies (for Government Staff pathway) ──────────
-const GOVERNMENT_BODIES = [
-  { id: "fed-ministry-edu",   name: "Federal Ministry of Education" },
-  { id: "subeb",              name: "State Universal Basic Education Board (SUBEB)" },
-  { id: "trcn",              name: "Teachers Registration Council of Nigeria (TRCN)" },
-  { id: "nti",               name: "National Teachers' Institute (NTI)" },
-  { id: "ncce",              name: "National Commission for Colleges of Education (NCCE)" },
-  { id: "tetfund",           name: "Tertiary Education Trust Fund (TETFund)" },
-  { id: "ubec",              name: "Universal Basic Education Commission (UBEC)" },
-  { id: "state-ministry-edu", name: "State Ministry of Education" },
-  { id: "local-education",   name: "Local Government Education Authority (LGEA)" },
-];
+// Government bodies: src/lib/organizations.ts (shared with the database seed).
 
 // ── Nigerian states ───────────────────────────────────────────
 const STATES = [
@@ -54,57 +46,11 @@ const STATES = [
   "Yobe","Zamfara",
 ];
 
-// ── Device names (for display) ────────────────────────────────
-const DEVICE_NAMES: Record<string, string> = {
-  orion: 'Rev Orion 12"',
-  aelia: 'Rev Aelia 14"',
-  tab:   'Rev Tab 10"',
-};
 
 // ── Schema ────────────────────────────────────────────────────
-const schema = z.object({
-  applyAs:       z.enum(["individual", "ltbt", "government"]),
-  governmentBodyId: z.string().optional(),
-
-  // TRCN only required for government staff — optional otherwise
-  trcnNumber:    z.string().optional(),
-
-  fullName:      z.string().min(2, "Enter your full name"),
-  phone:         z.string().min(7, "Enter a valid phone number"),
-  email:         z.string().email("Enter a valid email address"),
-  gender:        z.enum(["Male", "Female"], { required_error: "Select your gender" }),
-
-  schoolName:    z.string().min(2, "Enter your school name"),
-  schoolType:    z.enum(["Public", "Private"], { required_error: "Select school type" }),
-  position:      z.string().min(2, "Enter your position or designation"),
-  state:         z.string().min(2, "Select your state of residence"),
-  lga:           z.string().min(2, "Enter your LGA"),
-  yearsTeaching: z.string().min(1, "Select your years of experience"),
-
-  salaryBand: z.enum(
-    ["₦0 – ₦50,000", "₦51,000 – ₦100,000", "Above ₦100,000"],
-    { required_error: "Select your salary range" }
-  ),
-  repaymentTenor: z.enum(
-    ["Buy Outright (Discounted)", "12 Months", "24 Months", "36 Months"],
-    { required_error: "Select your preferred repayment tenor" }
-  ),
-  monthlyBudget: z.string().optional(),
-
-  ownsLaptop:  z.enum(["Yes", "No"], { required_error: "Please answer this question" }),
-  whyLaptop:   z.string().min(10, "Please give a brief explanation (at least 10 characters)"),
-  kycConsent:  z.enum(["Yes", "No"], { required_error: "Please answer this question" }),
-  declaration: z.literal(true, { errorMap: () => ({ message: "You must confirm this to submit" }) }),
-}).superRefine((data, ctx) => {
-  if (data.applyAs === "government" && !data.governmentBodyId) {
-    ctx.addIssue({ code: "custom", path: ["governmentBodyId"], message: "Select your government body" });
-  }
-  if (data.applyAs === "government" && (!data.trcnNumber || data.trcnNumber.length < 3)) {
-    ctx.addIssue({ code: "custom", path: ["trcnNumber"], message: "Enter your TRCN registration number" });
-  }
-});
-
-type FormValues = z.infer<typeof schema>;
+// Shared with the server: src/lib/applications/schema.ts
+const schema = teacherApplicationSchema;
+type FormValues = TeacherApplication;
 
 const STEPS = [
   { title: "How are you applying?",  sub: "Choose your pathway — this determines how we process your application.", fields: ["applyAs","governmentBodyId"] as (keyof FormValues)[] },
@@ -239,7 +185,7 @@ function ApplyForm() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const deviceId     = searchParams.get("device") ?? "";
-  const deviceName   = DEVICE_NAMES[deviceId] ?? null;
+  const deviceName   = getProduct(deviceId)?.name ?? null;
 
   const [step, setStep]           = useState(0);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -264,40 +210,11 @@ function ApplyForm() {
     if (step !== STEPS.length - 1) return;
     setSubmitError(null);
 
-    const applyAsLabel =
-      values.applyAs === "ltbt"       ? "Let There Be Teachers" :
-      values.applyAs === "government" ? `Government Staff — ${GOVERNMENT_BODIES.find(b => b.id === values.governmentBodyId)?.name ?? ""}` :
-      "Individual Teacher";
-
     try {
-      const res = await fetch("/api/registrations", {
+      const res = await fetch("/api/applications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName:     values.fullName,
-          email:        values.email,
-          phone:        values.phone,
-          organization: values.schoolName,
-          role:         "Teacher",
-          interests:    [values.repaymentTenor === "Buy Outright (Discounted)" ? "Buy a Laptop Outright" : "Laptop Financing"],
-          notes: JSON.stringify({
-            applyAs:        applyAsLabel,
-            device:         deviceName ?? deviceId ?? "Not specified",
-            trcnNumber:     values.applyAs === "government" ? (values.trcnNumber ?? "") : "N/A",
-            gender:         values.gender,
-            schoolType:     values.schoolType,
-            position:       values.position,
-            state:          values.state,
-            lga:            values.lga,
-            yearsTeaching:  values.yearsTeaching,
-            salaryBand:     values.salaryBand,
-            repaymentTenor: values.repaymentTenor,
-            monthlyBudget:  values.monthlyBudget ?? "",
-            ownsLaptop:     values.ownsLaptop,
-            whyLaptop:      values.whyLaptop,
-            kycConsent:     values.kycConsent,
-          }),
-        }),
+        body: JSON.stringify({ ...values, deviceId: deviceId || undefined }),
       });
 
       if (!res.ok) {

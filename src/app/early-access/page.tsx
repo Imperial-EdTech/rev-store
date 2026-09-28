@@ -75,10 +75,11 @@ export default function EarlyAccessPage() {
 
     setSubmitError(null);
     try {
-      const response = await fetch("/api/registrations", {
+      const response = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          kind: "waitlist",
           fullName: values.fullName,
           email: values.email,
           phone: values.phone,

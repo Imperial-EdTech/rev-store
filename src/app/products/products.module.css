@@ -71,27 +71,6 @@
 .catRowActive svg { color: var(--rs-maroon); }
 .catRowActive .catCount { color: var(--rs-maroon); }
 
-.priceForm { display: flex; flex-direction: column; gap: 14px; padding: 4px 12px 0; }
-.priceInputs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.priceField {
-  display: flex; align-items: center; gap: 8px; height: 50px; padding: 0 12px;
-  border: 1.5px solid var(--rs-line-strong); border-radius: var(--rs-radius-sm); background: var(--rs-surface);
-  transition: border-color 0.15s;
-}
-.priceField:focus-within { border-color: var(--rs-maroon); }
-.nairaSign { font-weight: 700; color: var(--rs-ink-2); }
-.priceField input {
-  width: 100%; min-width: 0; border: none; outline: none; background: transparent;
-  font: inherit; font-size: 14px; color: var(--rs-ink); font-variant-numeric: tabular-nums;
-}
-.priceField input::placeholder { color: #a8a8b0; }
-.applyButton {
-  height: 46px; border: none; border-radius: var(--rs-radius-sm); cursor: pointer;
-  background: var(--rs-maroon); color: #fff; font: inherit; font-size: 15px; font-weight: 700;
-  transition: background-color 0.15s;
-}
-.applyButton:hover { background: var(--rs-maroon-hover); }
-.applyButton:focus-visible { outline: 2px solid var(--rs-maroon); outline-offset: 2px; }
 
 /* ── Toolbar ── */
 .toolbar { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-bottom: 18px; }

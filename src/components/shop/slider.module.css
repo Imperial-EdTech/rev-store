@@ -1,0 +1,44 @@
+.root { padding: 4px 12px 2px; }
+
+.readout {
+  display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 18px;
+  font-size: 15px; font-weight: 700; color: var(--rs-ink); font-variant-numeric: tabular-nums;
+}
+.readout span:not(.dash) {
+  padding: 8px 12px; border: 1.5px solid var(--rs-line-strong); border-radius: var(--rs-radius-sm); background: var(--rs-surface);
+}
+.dash { color: var(--rs-muted); font-weight: 500; }
+
+.track { position: relative; height: 24px; }
+.track::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 4px; transform: translateY(-50%);
+  border-radius: 999px; background: var(--rs-line-strong);
+}
+.fill {
+  position: absolute; top: 50%; height: 4px; transform: translateY(-50%);
+  border-radius: 999px; background: var(--rs-maroon);
+}
+
+/* Both inputs overlay the track; only their thumbs take pointer events. */
+.thumb {
+  position: absolute; inset: 0; width: 100%; height: 100%; margin: 0;
+  background: transparent; pointer-events: none; appearance: none; -webkit-appearance: none;
+}
+.thumb::-webkit-slider-runnable-track { background: transparent; border: none; }
+.thumb::-moz-range-track { background: transparent; border: none; }
+.thumb::-webkit-slider-thumb {
+  -webkit-appearance: none; pointer-events: auto; cursor: grab;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--rs-surface); border: 3px solid var(--rs-maroon); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+.thumb::-moz-range-thumb {
+  pointer-events: auto; cursor: grab;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--rs-surface); border: 3px solid var(--rs-maroon); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+.thumb:active::-webkit-slider-thumb { cursor: grabbing; }
+.thumb:focus-visible { outline: none; }
+.thumb:focus-visible::-webkit-slider-thumb { outline: 3px solid rgba(90, 16, 22, 0.35); outline-offset: 2px; }
+.thumb:focus-visible::-moz-range-thumb { outline: 3px solid rgba(90, 16, 22, 0.35); outline-offset: 2px; }
+
+.bounds { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--rs-muted); font-variant-numeric: tabular-nums; }

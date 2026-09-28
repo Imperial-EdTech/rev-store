@@ -35,17 +35,7 @@
 }
 .variant { margin: 8px 0 0; font-size: 15px; font-weight: 600; color: var(--rs-ink-2); }
 
-.priceBlock { margin: 24px 0; padding: 20px 0; border-block: 1px solid var(--rs-line); }
-.price {
-  margin: 0; font-family: var(--font-display); font-weight: 800; color: var(--rs-maroon);
-  font-size: 34px; letter-spacing: -0.01em; font-variant-numeric: tabular-nums;
-}
-.priceOnRequest { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: 26px; color: var(--rs-ink); }
-.priceNote { margin: 6px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--rs-muted); }
 
-.buyRow { display: flex; gap: 12px; align-items: stretch; }
-.buyRow > div[role="group"] { height: 52px; }
-.buyAction { flex: 1; }
 
 .bulkLink {
   display: inline-flex; align-items: center; gap: 8px; margin-top: 16px;
@@ -93,19 +83,3 @@
 }
 @media (max-width: 480px) { .relatedGrid { grid-template-columns: 1fr; } }
 
-.srOnly {
-  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
-}
-.priceRow { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 12px; }
-.compare { font-size: 17px; color: var(--rs-muted); font-variant-numeric: tabular-nums; }
-.saving {
-  align-self: center; padding: 4px 10px; border-radius: 999px;
-  background: var(--rs-ok-tint); color: var(--rs-ok); font-size: 13px; font-weight: 700;
-}
-.financing {
-  margin: 14px 0 0; padding: 12px 14px; border-radius: var(--rs-radius-sm);
-  background: var(--rs-maroon-tint); font-size: 13.5px; line-height: 1.55; color: var(--rs-ink-2);
-}
-.financing strong { color: var(--rs-maroon); }
-.financing a { color: var(--rs-maroon); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }

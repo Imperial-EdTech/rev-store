@@ -20,6 +20,7 @@ import {
 } from "@/lib/audit-scoring";
 import { roles } from "@/lib/data";
 import type { TechAuditRequest } from "@/lib/types";
+import { adminFetch } from "@/lib/admin-fetch";
 
 type FetchState = "idle" | "loading" | "error" | "ready";
 
@@ -52,7 +53,7 @@ export function TechAuditView() {
     setFetchState("loading");
     setFetchError(null);
     try {
-      const res = await fetch("/api/admin/tech-audit");
+      const res = await adminFetch("/api/admin/tech-audit");
       const body = await res.json();
       if (!res.ok) {
         setFetchError(body?.error ?? "Could not load requests.");
