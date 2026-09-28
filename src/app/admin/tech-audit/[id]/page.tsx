@@ -29,7 +29,7 @@ import { SiteHeader } from "@/components/shell";
 import { adminFetch } from "@/lib/admin-fetch";
 import { allQuestions, auditSections, type AuditOption } from "@/lib/audit-data";
 import { scoreAudit, sectionPriority, type AuditScore } from "@/lib/audit-scoring";
-import type { TechAuditRequest } from "@/lib/types";
+import type { TechAuditRequest } from "@/lib/tech-audits/schema";
 
 // ─── Colour helpers ───────────────────────────────────────────────────────────
 

@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { setStatus } from "@/lib/admin/status";
 import { requireAdmin } from "@/lib/auth/guard";
-import { readJson } from "@/lib/db";
+import { readJson, toResponse } from "@/lib/db";
+import { getLead } from "@/lib/leads/server";
 import { LEAD_STATUS } from "@/lib/statuses";
 
 const bodySchema = z.object({ status: LEAD_STATUS.schema });
@@ -18,5 +19,5 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const result = await setStatus("lead", id, parsed.data.status);
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
-  return NextResponse.json({ status: parsed.data.status, statusChangedAt: new Date().toISOString() });
+  return toResponse(await getLead(id), (lead) => ({ lead }));
 }

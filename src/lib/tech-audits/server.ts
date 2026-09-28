@@ -1,29 +1,8 @@
 import "server-only";
 import { z } from "zod";
-import { allQuestions } from "@/lib/audit-data";
 import { scoreAudit } from "@/lib/audit-scoring";
-import { roles } from "@/lib/data";
 import { dbFailure, getDb, notConfigured, type Result } from "@/lib/db";
-import type { TechAuditRequest } from "@/lib/types";
-
-const letterSchema = z.enum(["A", "B", "C", "D", "E"]);
-const validQuestionKeys = new Set(allQuestions.map((q) => String(q.number)));
-
-export const techAuditRequestSchema = z.object({
-  schoolName: z.string().trim().min(2).max(200),
-  contactName: z.string().trim().min(2).max(160),
-  email: z.string().trim().email().max(200),
-  phone: z.string().trim().min(7).max(30),
-  role: z.enum(roles),
-  deviceEstimate: z.string().max(100).nullable().optional(),
-  answers: z
-    .record(z.string(), z.array(letterSchema))
-    .refine((val) => Object.keys(val).every((k) => validQuestionKeys.has(k)), {
-      message: "Answers contain an unrecognised question number",
-    }),
-  notes: z.string().max(4000).nullable().optional(),
-});
-export type TechAuditSubmission = z.infer<typeof techAuditRequestSchema>;
+import type { TechAuditRequest, TechAuditSubmission } from "./schema";
 
 /**
  * Saves an audit. Scores are computed here, never taken from the browser.
@@ -65,7 +44,7 @@ const AUDIT_SELECT = `
   organizations ( name )`;
 
 type AuditRow = {
-  id: string; contact_role: string | null; device_estimate: string | null; answers: TechAuditRequest["answers"];
+  id: string; contact_role: string; device_estimate: string | null; answers: TechAuditRequest["answers"];
   triggered_products: Record<string, number>; top_products: TechAuditRequest["topProducts"];
   section_gaps: TechAuditRequest["sectionGaps"]; notes: string | null; created_at: string;
   contacts: { full_name: string; email: string | null; phone: string | null };
@@ -80,12 +59,12 @@ function toRequest(r: AuditRow): TechAuditRequest {
     contactName: r.contacts.full_name,
     email: r.contacts.email ?? "",
     phone: r.contacts.phone ?? "",
-    role: (r.contact_role ?? "Other") as TechAuditRequest["role"],
+    role: r.contact_role as TechAuditRequest["role"],
     deviceEstimate: r.device_estimate,
-    answers: r.answers ?? {},
-    triggeredProducts: r.triggered_products ?? {},
-    topProducts: r.top_products ?? [],
-    sectionGaps: r.section_gaps ?? {},
+    answers: r.answers,
+    triggeredProducts: r.triggered_products,
+    topProducts: r.top_products,
+    sectionGaps: r.section_gaps,
     notes: r.notes,
     createdAt: r.created_at,
   };

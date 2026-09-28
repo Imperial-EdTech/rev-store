@@ -116,6 +116,8 @@ function PartnerDashboard({ partner, onSignOut }: { partner: SignedInPartner; on
     setFetchError(null);
     try {
       const res  = await fetch("/api/partner/applications");
+      // Session expired: back to the sign-in screen.
+      if (res.status === 401) { onSignOut(); return; }
       const body = await res.json();
       if (!res.ok) { setFetchError(body?.error ?? "Could not load data."); setFetchState("error"); return; }
       setApplicants(body.applications);

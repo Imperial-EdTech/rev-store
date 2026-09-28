@@ -19,7 +19,7 @@ import {
   sectionPriority
 } from "@/lib/audit-scoring";
 import { roles } from "@/lib/data";
-import type { TechAuditRequest } from "@/lib/types";
+import type { TechAuditRequest } from "@/lib/tech-audits/schema";
 import { adminFetch } from "@/lib/admin-fetch";
 
 type FetchState = "idle" | "loading" | "error" | "ready";

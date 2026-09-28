@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { MAX_QTY_PER_LINE } from "@/lib/cart/limits";
 import type { OrderStatus } from "@/lib/statuses";
+import { emailAddress, phoneNumber } from "@/lib/validation";
 
 /**
  * Order rules shared by the checkout form (client) and /api/orders (server),
@@ -10,14 +11,8 @@ import type { OrderStatus } from "@/lib/statuses";
 export const buyerSchema = z
   .object({
     name: z.string().trim().min(2, "Enter your full name").max(120),
-    phone: z
-      .string()
-      .trim()
-      .refine((v) => {
-        const digits = v.replace(/\D/g, "").length;
-        return digits >= 10 && digits <= 14;
-      }, "Enter a phone number, e.g. 0803 123 4567"),
-    email: z.string().trim().max(200).email("Enter an email address, e.g. name@school.edu.ng"),
+    phone: phoneNumber,
+    email: emailAddress,
     fulfillment: z.enum(["pickup", "delivery"]),
     address: z.string().trim().max(500),
   })
@@ -62,13 +57,3 @@ export type Order = {
   updatedAt: string;
   statusChangedAt: string;
 };
-
-/** First error message per field, for showing under form inputs. */
-export function fieldErrors<T extends string>(error: z.ZodError): Partial<Record<T, string>> {
-  const out: Partial<Record<T, string>> = {};
-  for (const issue of error.issues) {
-    const key = issue.path[0] as T | undefined;
-    if (key && !out[key]) out[key] = issue.message;
-  }
-  return out;
-}

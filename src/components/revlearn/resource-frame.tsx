@@ -2,7 +2,7 @@
 
 import { ExternalLink, WifiOff, AlertTriangle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { normaliseEmbedUrl } from "@/lib/revlearn-utils";
+import { normaliseEmbedUrl } from "@/lib/revlearn/utils";
 
 type FrameState = "loading" | "ready" | "blocked" | "offline";
 

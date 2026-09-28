@@ -3,17 +3,14 @@
 // ═══════════════════════════════════════════════════════════════
 // /apply — Teacher Digital Empowerment Programme Application
 //
-// Flow: /apply/devices → /apply?device=<id>
+// Flow: /apply/devices → /apply?device=<id> → /success
 //
 // Three application pathways:
 //  1. Individual Teacher  — solo applicant
 //  2. Let There Be Teachers — LTBT scheme (with logo)
-//  3. Government Staff    — federal/state staff (with federal eagle)
-//
-// TRCN number is required for ALL pathways.
+//  3. Government Staff    — federal/state staff (with federal eagle);
+//                           also asks for the body and a TRCN number
 // ═══════════════════════════════════════════════════════════════
-
-"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { clsx } from "clsx";
@@ -23,42 +20,42 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import type React from "react";
 import { Suspense, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, type FieldErrors } from "react-hook-form";
+import type { z } from "zod";
 import { Button } from "@/components/ui";
 import { StorefrontHeader } from "@/components/StorefrontHeader";
 import { StorefrontFooter } from "@/components/StorefrontFooter";
 import { GOVERNMENT_BODIES } from "@/lib/organizations";
-import { teacherApplicationSchema, type TeacherApplication } from "@/lib/applications/schema";
-import { getProduct } from "@/lib/catalog";
+import {
+  REPAYMENT_OPTIONS, SALARY_BANDS, YEARS_TEACHING, teacherApplicationSchema,
+  type SubmissionOutcome, type TeacherApplication,
+} from "@/lib/applications/schema";
+import { displayName, getProduct } from "@/lib/catalog";
+import { NIGERIAN_STATES } from "@/lib/nigeria";
 
 const JAKARTA = "'Plus Jakarta Sans', ui-sans-serif, system-ui";
 const SORA    = "'Sora', ui-sans-serif, system-ui";
 
-// ── Government bodies (for Government Staff pathway) ──────────
-// Government bodies: src/lib/organizations.ts (shared with the database seed).
-
-// ── Nigerian states ───────────────────────────────────────────
-const STATES = [
-  "Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno",
-  "Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT","Gombe","Imo",
-  "Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa",
-  "Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba",
-  "Yobe","Zamfara",
-];
-
-
 // ── Schema ────────────────────────────────────────────────────
 // Shared with the server: src/lib/applications/schema.ts
-const schema = teacherApplicationSchema;
+type FormInput = z.input<typeof teacherApplicationSchema>;
 type FormValues = TeacherApplication;
+/** Every field name across the three pathways (government adds two). */
+type FieldName = keyof Extract<FormInput, { applyAs: "government" }>;
 
-const STEPS = [
-  { title: "How are you applying?",  sub: "Choose your pathway — this determines how we process your application.", fields: ["applyAs","governmentBodyId"] as (keyof FormValues)[] },
-  { title: "Personal information",   sub: "We'll use this to contact and verify you.",                              fields: ["fullName","phone","email","gender"] as (keyof FormValues)[] },
-  { title: "Employment information", sub: "Help us understand your teaching context.",                              fields: ["schoolName","schoolType","position","state","lga","yearsTeaching"] as (keyof FormValues)[] },
-  { title: "Financial information",  sub: "This helps us match you with the right plan.",                          fields: ["salaryBand","repaymentTenor","monthlyBudget"] as (keyof FormValues)[] },
-  { title: "Verification &amp; consent", sub: "A few final questions before you submit.",                          fields: ["ownsLaptop","whyLaptop","kycConsent","declaration"] as (keyof FormValues)[] },
+const STEPS: { title: string; sub: string; fields: FieldName[] }[] = [
+  { title: "How are you applying?",  sub: "Choose your pathway — this determines how we process your application.", fields: ["applyAs","governmentBodyId","trcnNumber"] },
+  { title: "Personal information",   sub: "We'll use this to contact and verify you.",                              fields: ["fullName","phone","email","gender"] },
+  { title: "Employment information", sub: "Help us understand your teaching context.",                              fields: ["schoolName","schoolType","position","state","lga","yearsTeaching"] },
+  { title: "Financial information",  sub: "This helps us match you with the right plan.",                          fields: ["salaryBand","repaymentTenor","monthlyBudget"] },
+  { title: "Verification & consent", sub: "A few final questions before you submit.",                             fields: ["ownsLaptop","whyLaptop","kycConsent","declaration"] },
 ];
+
+/** The first step that has a field with an error. */
+function firstStepWithError(errors: FieldErrors<FormInput>): number {
+  const index = STEPS.findIndex((s) => s.fields.some((f) => f in errors));
+  return index === -1 ? STEPS.length - 1 : index;
+}
 
 // ── Input styles ──────────────────────────────────────────────
 const inputCls =
@@ -86,7 +83,7 @@ function Field({ label, error, optional, hint, children }: {
 }
 
 function RadioGroup({ options, value, onChange }: {
-  options: string[]; value: string | undefined; onChange: (v: string) => void;
+  options: readonly string[]; value: string | undefined; onChange: (v: string) => void;
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -184,25 +181,28 @@ function PathwayCard({ icon, logo, title, description, selected, onClick }: {
 function ApplyForm() {
   const router       = useRouter();
   const searchParams = useSearchParams();
-  const deviceId     = searchParams.get("device") ?? "";
-  const deviceName   = getProduct(deviceId)?.name ?? null;
+  // Only devices on the financing programme can be applied for.
+  const device       = getProduct(searchParams.get("device") ?? "");
+  const deviceId     = device?.financing ? device.id : undefined;
+  const deviceName   = device?.financing ? displayName(device) : null;
 
   const [step, setStep]           = useState(0);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const { register, handleSubmit, trigger, watch, control, setValue, formState: { errors, isSubmitting } } =
-    useForm<FormValues>({
-      resolver: zodResolver(schema),
+  const { register, handleSubmit, trigger, watch, control, formState: { errors, isSubmitting } } =
+    useForm<FormInput, unknown, FormValues>({
+      resolver: zodResolver(teacherApplicationSchema),
       defaultValues: { applyAs: "individual" },
     });
 
   const applyAs         = watch("applyAs");
   const declaration     = watch("declaration");
   const governmentBodyId = watch("governmentBodyId");
+  const fieldError = (name: FieldName) => (errors as FieldErrors<Record<FieldName, unknown>>)[name]?.message as string | undefined;
 
   async function nextStep(e?: React.MouseEvent) {
     e?.preventDefault(); e?.stopPropagation();
-    const ok = await trigger(STEPS[step].fields as any);
+    const ok = await trigger(STEPS[step].fields);
     if (ok) setStep(s => Math.min(s + 1, STEPS.length - 1));
   }
 
@@ -214,18 +214,23 @@ function ApplyForm() {
       const res = await fetch("/api/applications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...values, deviceId: deviceId || undefined }),
+        body: JSON.stringify({ ...values, deviceId }),
       });
-
+      const body = await res.json().catch(() => null);
       if (!res.ok) {
-        const body = await res.json().catch(() => null);
         setSubmitError(body?.error ?? "Something went wrong. Please try again.");
         return;
       }
-      router.push("/success");
+      const outcome = body as SubmissionOutcome;
+      router.push(outcome.kind === "application" ? `/success?ref=${encodeURIComponent(outcome.ref)}` : "/success?type=purchase");
     } catch {
       setSubmitError("Could not reach the server. Check your connection and try again.");
     }
+  }
+
+  /** On a failed submit, go back to the step with the problem so it's visible. */
+  function onInvalid(invalid: FieldErrors<FormInput>) {
+    setStep(firstStepWithError(invalid));
   }
 
   return (
@@ -313,14 +318,14 @@ function ApplyForm() {
               ))}
             </div>
 
-            <form onKeyDown={e => { if (e.key === "Enter") e.preventDefault(); }} onSubmit={handleSubmit(onSubmit)}>
+            <form onKeyDown={e => { if (e.key === "Enter") e.preventDefault(); }} onSubmit={handleSubmit(onSubmit, onInvalid)}>
               <AnimatePresence mode="wait">
                 <motion.div animate={{ opacity:1, x:0 }} exit={{ opacity:0, x:-16 }} initial={{ opacity:0, x:16 }} key={step} transition={{ duration:0.22 }}>
 
                   {/* Step heading */}
                   <div className="mb-7">
                     <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-rev-orange/70">Step {step + 1} of {STEPS.length}</p>
-                    <h2 className="mt-1 font-display text-2xl font-bold text-slate-ink" dangerouslySetInnerHTML={{ __html: STEPS[step].title }}/>
+                    <h2 className="mt-1 font-display text-2xl font-bold text-slate-ink">{STEPS[step].title}</h2>
                     <p className="mt-1 text-sm text-slate-body">{STEPS[step].sub}</p>
                   </div>
 
@@ -335,14 +340,14 @@ function ApplyForm() {
                             title="Individual Teacher"
                             description="Applying directly as a teacher — no intermediary required."
                             selected={field.value === "individual"}
-                            onClick={() => { field.onChange("individual"); setValue("governmentBodyId",""); }}
+                            onClick={() => field.onChange("individual")}
                           />
                           <PathwayCard
                             logo={<LTBTLogo size={36}/>}
                             title="Let There Be Teachers"
                             description="Applying through the Let There Be Teachers laptop scheme."
                             selected={field.value === "ltbt"}
-                            onClick={() => { field.onChange("ltbt"); setValue("governmentBodyId",""); }}
+                            onClick={() => field.onChange("ltbt")}
                           />
                           <PathwayCard
                             logo={<FederalEagle size={36}/>}
@@ -359,7 +364,7 @@ function ApplyForm() {
                         {applyAs === "government" && (
                           <motion.div animate={{ height:"auto", opacity:1 }} exit={{ height:0, opacity:0 }} initial={{ height:0, opacity:0 }} transition={{ duration:0.25 }}>
                             <div className="overflow-hidden pt-1">
-                              <Field error={errors.governmentBodyId?.message} label="Government Body / Agency">
+                              <Field error={fieldError("governmentBodyId")} label="Government Body / Agency">
                                 <select className={selectCls} {...register("governmentBodyId")}>
                                   <option value="">Select your body…</option>
                                   {GOVERNMENT_BODIES.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -376,7 +381,7 @@ function ApplyForm() {
                           <div className="overflow-hidden">
                             <div className="rounded-xl border border-rev-orange/20 bg-rev-orange/4 p-4">
                               <Field
-                                error={errors.trcnNumber?.message}
+                                error={fieldError("trcnNumber")}
                                 hint="Your TRCN number is on your registration certificate or at trcn.gov.ng"
                                 label="TRCN Registration Number"
                               >
@@ -427,7 +432,7 @@ function ApplyForm() {
                         <Field error={errors.state?.message} label="State of Residence">
                           <select className={selectCls} {...register("state")}>
                             <option value="">Select state</option>
-                            {STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                            {NIGERIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
                           </select>
                         </Field>
                         <Field error={errors.lga?.message} label="LGA">
@@ -437,7 +442,7 @@ function ApplyForm() {
                       <Field error={errors.yearsTeaching?.message} label="Years of Teaching Experience">
                         <select className={selectCls} {...register("yearsTeaching")}>
                           <option value="">Select range</option>
-                          {["Less than 1 year","1–2 years","3–5 years","6–10 years","11–20 years","Over 20 years"].map(y => <option key={y} value={y}>{y}</option>)}
+                          {YEARS_TEACHING.map(y => <option key={y} value={y}>{y}</option>)}
                         </select>
                       </Field>
                     </div>
@@ -448,12 +453,12 @@ function ApplyForm() {
                     <div className="space-y-5">
                       <Field error={errors.salaryBand?.message} label="Monthly Net Salary / Income">
                         <Controller control={control} name="salaryBand" render={({ field }) => (
-                          <RadioGroup onChange={field.onChange} options={["₦0 – ₦50,000","₦51,000 – ₦100,000","Above ₦100,000"]} value={field.value}/>
+                          <RadioGroup onChange={field.onChange} options={SALARY_BANDS} value={field.value}/>
                         )}/>
                       </Field>
                       <Field error={errors.repaymentTenor?.message} label="Preferred Repayment Tenor">
                         <Controller control={control} name="repaymentTenor" render={({ field }) => (
-                          <RadioGroup onChange={field.onChange} options={["Buy Outright (Discounted)","12 Months","24 Months","36 Months"]} value={field.value}/>
+                          <RadioGroup onChange={field.onChange} options={REPAYMENT_OPTIONS} value={field.value}/>
                         )}/>
                       </Field>
                       <Field error={errors.monthlyBudget?.message} label="Preferred Monthly Budget" optional>

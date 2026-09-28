@@ -3,9 +3,8 @@ import { z } from "zod";
 /**
  * Status lifecycles for orders, financing applications and leads.
  *
- * These mirror the CHECK constraints in supabase/migrations/20260927000000_initial_schema.sql.
- * If you add a status here, add it there too (a new migration). The test in
- * scripts/check-statuses.ts fails if the two drift apart.
+ * These mirror the CHECK constraints in supabase/migrations/20260928000000_initial_schema.sql.
+ * If you add a status here, add it there too (in a new migration).
  */
 
 type StatusDef<V extends string> = { value: V; label: string; tone: StatusTone };

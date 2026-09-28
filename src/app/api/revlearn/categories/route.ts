@@ -1,37 +1,5 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
-import { supabaseAdmin } from "@/lib/supabase-admin";
-import { requireAdmin } from "@/lib/auth/guard";
+import { adminContentRoutes } from "@/lib/revlearn/routes";
+import { categorySchema } from "@/lib/revlearn/schema";
 
-const schema = z.object({
-  id: z.string().min(1),
-  title: z.string().min(1),
-  description: z.string().optional().default(""),
-  icon: z.string().optional().default("📚"),
-  accent: z.enum(["orange", "maroon", "teal", "amber"]).default("orange"),
-  position: z.number().int().default(0),
-});
-
-export async function POST(req: Request) {
-  const denied = await requireAdmin(req);
-  if (denied) return denied;
-  if (!supabaseAdmin) return NextResponse.json({ error: "Admin client not configured." }, { status: 503 });
-  let body: unknown;
-  try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON." }, { status: 400 }); }
-  const parsed = schema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: "Invalid data." }, { status: 400 });
-  const { error } = await supabaseAdmin.from("revlearn_categories").upsert(parsed.data, { onConflict: "id" });
-  if (error) return NextResponse.json({ error: "Could not save category." }, { status: 500 });
-  return NextResponse.json({ ok: true });
-}
-
-export async function DELETE(req: Request) {
-  const denied = await requireAdmin(req);
-  if (denied) return denied;
-  if (!supabaseAdmin) return NextResponse.json({ error: "Admin client not configured." }, { status: 503 });
-  const { id } = await req.json().catch(() => ({}));
-  if (!id) return NextResponse.json({ error: "Missing id." }, { status: 400 });
-  const { error } = await supabaseAdmin.from("revlearn_categories").delete().eq("id", id);
-  if (error) return NextResponse.json({ error: "Could not delete." }, { status: 500 });
-  return NextResponse.json({ ok: true });
-}
+/** POST (save) and DELETE { id } a category. Deleting removes its courses and lessons. Admin only. */
+export const { POST, DELETE } = adminContentRoutes("category", categorySchema);

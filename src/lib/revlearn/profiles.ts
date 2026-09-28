@@ -1,4 +1,4 @@
-import type { LocalProfile } from "@/lib/revlearn-types";
+import type { LocalProfile } from "@/lib/revlearn/types";
 
 const PROFILES_KEY = "rl_profiles_v1";
 const ACTIVE_KEY   = "rl_active_profile_v1";

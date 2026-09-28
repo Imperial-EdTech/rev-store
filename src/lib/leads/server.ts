@@ -17,7 +17,7 @@ function toPayload(req: LeadRequest) {
         : req.interests.includes("Buy a Laptop Outright") ? "buy_outright" : "general",
       interests: req.interests,
       device_count: req.deviceCount ?? null,
-      details: { organization: req.organization, role: req.role, notes: req.notes ?? undefined },
+      details: { organization: req.organization, role: req.role, notes: req.notes },
     };
   }
   return {
@@ -31,8 +31,8 @@ function toPayload(req: LeadRequest) {
     details: {
       role: req.role,
       purposes: req.purposes.map((id) => labelOf(SCHOOL_PURPOSES, id)),
-      financingInterest: req.financingInterest ?? undefined,
-      comments: req.comments ?? undefined,
+      financingInterest: req.financingInterest,
+      comments: req.comments,
     },
   };
 }
@@ -45,6 +45,14 @@ export async function submitLead(req: LeadRequest): Promise<Result<{ id: string 
   return { ok: true, value: { id: data.id as string } };
 }
 
+// ─── Reading ──────────────────────────────────────────────────
+
+const LEAD_SELECT = `
+  id, status, source, source_detail, intent, interests, product_id, device_count, details, created_at, status_changed_at,
+  contacts ( id, full_name, email, phone, state, job_title ),
+  organizations ( name ),
+  import_batches ( label )`;
+
 type LeadRow = {
   id: string; status: LeadStatus; source: string; source_detail: string | null; intent: string;
   interests: string[]; product_id: string | null; device_count: number | null; details: Record<string, unknown>;
@@ -54,39 +62,41 @@ type LeadRow = {
   import_batches: { label: string } | null;
 };
 
+function toLead(r: LeadRow): Lead {
+  return {
+    id: r.id,
+    status: r.status,
+    source: r.source,
+    sourceDetail: r.source_detail,
+    intent: r.intent,
+    interests: r.interests,
+    productId: r.product_id,
+    deviceCount: r.device_count,
+    details: r.details,
+    createdAt: r.created_at,
+    statusChangedAt: r.status_changed_at,
+    importedFrom: r.import_batches?.label ?? null,
+    contact: {
+      id: r.contacts.id, name: r.contacts.full_name, email: r.contacts.email, phone: r.contacts.phone,
+      state: r.contacts.state, jobTitle: r.contacts.job_title,
+    },
+    organization: r.organizations?.name ?? null,
+  };
+}
+
 export async function listLeads(): Promise<Result<Lead[]>> {
   const db = getDb();
   if (!db) return notConfigured;
-  const { data, error } = await db
-    .from("leads")
-    .select(`
-      id, status, source, source_detail, intent, interests, product_id, device_count, details, created_at, status_changed_at,
-      contacts ( id, full_name, email, phone, state, job_title ),
-      organizations ( name ),
-      import_batches ( label )`)
-    .order("created_at", { ascending: false })
-    .limit(5000);
+  const { data, error } = await db.from("leads").select(LEAD_SELECT).order("created_at", { ascending: false }).limit(5000);
   if (error) return dbFailure("leads: list", error, "Could not load leads.");
-  return {
-    ok: true,
-    value: (data as unknown as LeadRow[]).map((r) => ({
-      id: r.id,
-      status: r.status,
-      source: r.source,
-      sourceDetail: r.source_detail,
-      intent: r.intent,
-      interests: r.interests ?? [],
-      productId: r.product_id,
-      deviceCount: r.device_count,
-      details: r.details ?? {},
-      createdAt: r.created_at,
-      statusChangedAt: r.status_changed_at,
-      importedFrom: r.import_batches?.label ?? null,
-      contact: {
-        id: r.contacts.id, name: r.contacts.full_name, email: r.contacts.email, phone: r.contacts.phone,
-        state: r.contacts.state, jobTitle: r.contacts.job_title,
-      },
-      organization: r.organizations?.name ?? null,
-    })),
-  };
+  return { ok: true, value: (data as unknown as LeadRow[]).map(toLead) };
+}
+
+export async function getLead(id: string): Promise<Result<Lead>> {
+  const db = getDb();
+  if (!db) return notConfigured;
+  const { data, error } = await db.from("leads").select(LEAD_SELECT).eq("id", id).maybeSingle();
+  if (error) return dbFailure("leads: get", error, "Could not load the lead.");
+  if (!data) return { ok: false, status: 404, error: "Not found." };
+  return { ok: true, value: toLead(data as unknown as LeadRow) };
 }

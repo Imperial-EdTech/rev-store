@@ -5,9 +5,9 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2, Heart, ArrowLeft, Send } from "lucide-react";
 import { RevLearnShell } from "@/components/revlearn/shell";
-import { usePosts, useComments, useProfile, useLikedPosts } from "@/lib/revlearn-hooks";
-import { getAvatarColor, getInitials, timeAgo } from "@/lib/revlearn-utils";
-import type { Post, Comment } from "@/lib/revlearn-types";
+import { likePost, usePost, useProfile, useLikedPosts } from "@/lib/revlearn/hooks";
+import { getAvatarColor, getInitials, timeAgo } from "@/lib/revlearn/utils";
+import type { Post, Comment } from "@/lib/revlearn/types";
 
 function Avatar({ name, color, size = 36 }: { name: string; color: string; size?: number }) {
   return (
@@ -23,25 +23,21 @@ function Avatar({ name, color, size = 36 }: { name: string; color: string; size?
 
 export default function PostPage() {
   const { postId } = useParams<{ postId: string }>();
-  const { posts, loading: postsLoading } = usePosts();
-  const { comments, loading: commentsLoading, reload: reloadComments } = useComments(postId);
+  const { post, setPost, comments, loading, reload } = usePost(postId);
   const { profile } = useProfile();
   const { liked, toggle: toggleLike } = useLikedPosts();
   const [reply, setReply] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [replyError, setReplyError] = useState("");
 
-  const post = posts.find((p: Post) => p.id === postId);
 
   async function handleLike() {
     if (!post) return;
-    const wasLiked = liked.has(post.id);
+    const nowLiked = !liked.has(post.id);
     toggleLike(post.id);
-    await fetch("/api/revlearn/posts", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: post.id, increment: !wasLiked }),
-    });
+    const likes = await likePost(post.id, nowLiked);
+    if (likes === null) { toggleLike(post.id); return; } // didn't save: undo
+    setPost({ ...post, likes });
   }
 
   async function submitReply() {
@@ -49,19 +45,19 @@ export default function PostPage() {
     setSubmitting(true);
     setReplyError("");
     try {
-      const res = await fetch("/api/revlearn/comments", {
+      const res = await fetch(`/api/revlearn/posts/${encodeURIComponent(postId)}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          post_id: postId,
           content: reply.trim(),
           author_name: profile.name,
           author_avatar: getAvatarColor(profile.name),
         }),
       });
-      if (!res.ok) throw new Error("Failed to post reply.");
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error ?? "Failed to post reply.");
       setReply("");
-      reloadComments();
+      reload();
     } catch (e) {
       setReplyError((e as Error).message);
     } finally {
@@ -69,7 +65,7 @@ export default function PostPage() {
     }
   }
 
-  if (postsLoading) {
+  if (loading && !post) {
     return (
       <RevLearnShell>
         <div className="rl-state-center" style={{ minHeight: "60vh" }}>
@@ -142,13 +138,13 @@ export default function PostPage() {
             {comments.length} {comments.length === 1 ? "comment" : "comments"}
           </h2>
 
-          {commentsLoading && (
+          {loading && (
             <div className="rl-state-center" style={{ padding: "2rem" }}>
               <Loader2 size={20} className="rl-spin" />
             </div>
           )}
 
-          {!commentsLoading && comments.length === 0 && (
+          {!loading && comments.length === 0 && (
             <div style={{ padding: "1.5rem", textAlign: "center", color: "var(--rl-body)", fontSize: ".875rem", background: "var(--rl-bg-subtle)", borderRadius: "var(--rl-radius)", border: "1px solid var(--rl-line)" }}>
               No comments yet. Be the first to reply.
             </div>

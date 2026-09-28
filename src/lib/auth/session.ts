@@ -23,7 +23,7 @@ export const SESSION_TTL_SECONDS = 60 * 60 * 12; // 12 hours
 
 const encoder = new TextEncoder();
 
-function secretBytes(): Uint8Array | null {
+function secretBytes(): Uint8Array<ArrayBuffer> | null {
   const secret = process.env.AUTH_SESSION_SECRET;
   if (!secret || secret.length < 32) return null;
   return encoder.encode(secret);
@@ -41,7 +41,7 @@ function toBase64Url(bytes: Uint8Array): string {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-function fromBase64Url(value: string): Uint8Array {
+function fromBase64Url(value: string): Uint8Array<ArrayBuffer> {
   const b64 = value.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((value.length + 3) % 4);
   const binary = atob(b64);
   return Uint8Array.from(binary, (c) => c.charCodeAt(0));

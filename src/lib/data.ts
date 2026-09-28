@@ -7,7 +7,7 @@ export const interests = [
   "Hardware Training",
   "Tech Audits",
   "Data Protection"
-];
+] as const;
 
 export const roles = [
   "Teacher",

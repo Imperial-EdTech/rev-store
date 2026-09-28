@@ -5,9 +5,9 @@ import { Plus, Trash2, Edit2, Loader2, Check, X, ExternalLink } from "lucide-rea
 import Link from "next/link";
 import { RevLearnHeader } from "@/components/revlearn/shell";
 import { adminFetch } from "@/lib/admin-fetch";
-import { useRevLearnContent } from "@/lib/revlearn-hooks";
-import { slugify, deriveSourceName, normaliseEmbedUrl } from "@/lib/revlearn-utils";
-import type { Accent, CourseType, Category, Course, Lesson } from "@/lib/revlearn-types";
+import { useRevLearnContent } from "@/lib/revlearn/hooks";
+import { deriveSourceName, newId, normaliseEmbedUrl, slugify } from "@/lib/revlearn/utils";
+import type { Accent, CourseType, Category, Course, Lesson } from "@/lib/revlearn/types";
 
 const ACCENTS: Accent[] = ["orange", "maroon", "teal", "amber"];
 
@@ -95,7 +95,7 @@ function AdminDashboard() {
     setSaving(true);
     try {
       await api("/api/revlearn/lessons", "POST", {
-        id: lessonForm.id || slugify(lessonForm.title) + "-" + Date.now(),
+        id: lessonForm.id || newId(lessonForm.title),
         course_id: lessonForm.courseId,
         title: lessonForm.title,
         url: normaliseEmbedUrl(lessonForm.url),

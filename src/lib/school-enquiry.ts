@@ -27,3 +27,6 @@ export const SCHOOL_ROLES = [
 ] as const;
 
 export const FINANCING_INTEREST = ["yes", "maybe", "no"] as const;
+
+export type SchoolDeviceTypeId = (typeof SCHOOL_DEVICE_TYPES)[number]["id"];
+export type SchoolPurposeId = (typeof SCHOOL_PURPOSES)[number]["id"];

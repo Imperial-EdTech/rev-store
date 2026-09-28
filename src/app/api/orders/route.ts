@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readJson } from "@/lib/db";
+import { invalidRequest, readJson } from "@/lib/db";
 import { orderRequestSchema } from "@/lib/orders/schema";
 import { saveOrder } from "@/lib/orders/server";
 
@@ -10,9 +10,7 @@ import { saveOrder } from "@/lib/orders/server";
  */
 export async function POST(request: Request) {
   const parsed = orderRequestSchema.safeParse(await readJson(request));
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Some order details are missing or invalid." }, { status: 400 });
-  }
+  if (!parsed.success) return invalidRequest(parsed.error);
   const result = await saveOrder(parsed.data);
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
 

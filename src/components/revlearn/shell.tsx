@@ -15,8 +15,8 @@ import {
   getProfiles, getActiveProfile, setActiveProfileId,
   upsertProfile, deleteProfile, generateId,
   type StoredProfile,
-} from "@/lib/revlearn-profiles";
-import { getAvatarColor, getInitials } from "@/lib/revlearn-utils";
+} from "@/lib/revlearn/profiles";
+import { getAvatarColor, getInitials } from "@/lib/revlearn/utils";
 
 // ── Theme ──────────────────────────────────────────────────────
 type Theme = "light" | "dark";

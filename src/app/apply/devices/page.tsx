@@ -17,77 +17,48 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { StorefrontHeader } from "@/components/StorefrontHeader";
 import { StorefrontFooter } from "@/components/StorefrontFooter";
+import { CATEGORIES, PRODUCTS, displayName, formatNaira, specValue, type FinancingPlan, type Product } from "@/lib/catalog";
 
 const JAKARTA = "'Plus Jakarta Sans', ui-sans-serif, system-ui";
 const SORA    = "'Sora', ui-sans-serif, system-ui";
 
-// ─── Device catalogue (laptops only, no discounts) ────────────
-const DEVICES = [
-  {
-    id: "orion",
-    name: 'Rev Orion 12"',
-    tagline: "The teacher's everyday laptop — lightweight, powerful, ready.",
-    category: "Laptop",
-    badge: "Most Popular",
-    badgeColor: "#4a0e10",
-    price: 350000,
-    img: "/devices/rev-laptop.png",
+// ─── Devices on the programme ─────────────────────────────────
+// Name, price, photo and specs come from the catalogue (src/lib/catalog.ts),
+// so this page can't drift from the shop. Only the presentation is here.
+
+type Presentation = { tagline: string; badge: string; badgeColor: string; accentColor: string };
+
+const PRESENTATION: Record<string, Presentation> = {
+  orion: { tagline: "The teacher's everyday laptop — lightweight, powerful, ready.", badge: "Most Popular", badgeColor: "#4a0e10", accentColor: "#4a0e10" },
+  aelia: { tagline: "More screen, more power — built for serious teaching.", badge: "Pre-order", badgeColor: "#7c3aed", accentColor: "#7c3aed" },
+};
+const DEFAULT_PRESENTATION: Presentation = { tagline: "", badge: "Programme device", badgeColor: "#4a0e10", accentColor: "#4a0e10" };
+
+/** What every device on the Teacher Empowerment Programme comes with. */
+const PROGRAMME_PERKS = ["Microsoft Office 365 preloaded", "RevLearn platform preloaded", "2-year local warranty"];
+
+/** Catalogue spec label → icon. */
+const SPEC_ICON: Record<string, string> = {
+  Processor: "cpu", Memory: "ram", Storage: "storage", Display: "display",
+  Battery: "battery", Weight: "weight", "Operating system": "os",
+};
+const HIGHLIGHT_SPECS = ["Processor", "Memory", "Storage", "Display", "Battery", "Weight"];
+
+const DEVICES = PRODUCTS
+  .filter((p): p is Product & { price: number; financing: FinancingPlan[] } => Boolean(p.financing) && p.price !== null)
+  .map((p) => ({
+    id: p.id,
+    name: displayName(p),
+    category: CATEGORIES.find((c) => c.id === p.category)?.singular ?? "Device",
+    price: p.price,
+    img: p.image ?? "/devices/rev-laptop.png",
     highlights: [
-      "Intel® Celeron N4020 — up to 2.8GHz",
-      "4GB RAM · 128GB eMMC Storage",
-      "Splash-resistant keyboard",
-      "2MP FHD webcam built-in",
-      "Up to 8-hour battery",
-      "0.98 kg — carry anywhere",
-      "Microsoft Office 365 preloaded",
-      "RevLearn platform preloaded",
-      "2-year local warranty",
+      ...HIGHLIGHT_SPECS.map((label) => specValue(p, label)).filter((v): v is string => Boolean(v)),
+      ...PROGRAMME_PERKS,
     ],
-    specs: [
-      { icon: "cpu",      label: "Processor", value: "Intel® Celeron N4020", sub: "Up to 2.8GHz dual-core" },
-      { icon: "ram",      label: "RAM",        value: "4GB LPDDR4",           sub: "Responsive multitasking" },
-      { icon: "storage",  label: "Storage",    value: "128GB eMMC",           sub: "Fast + expandable via MicroSD" },
-      { icon: "display",  label: "Display",    value: '12.5" IPS FHD',        sub: "1920×1080 · anti-glare" },
-      { icon: "battery",  label: "Battery",    value: "Up to 8 hours",        sub: "All-day classroom use" },
-      { icon: "weight",   label: "Weight",     value: "0.98 kg",              sub: "Ultralight & portable" },
-      { icon: "os",       label: "OS",         value: "Windows 11",           sub: "+ Office 365 + RevLearn" },
-      { icon: "warranty", label: "Warranty",   value: "2 Years",              sub: "Local Nigeria-based support" },
-    ],
-    accentColor: "#4a0e10",
-  },
-  {
-    id: "aelia",
-    name: 'Rev Aelia 14"',
-    tagline: "More screen, more power — built for serious teaching.",
-    category: "Laptop",
-    badge: "Pre-order",
-    badgeColor: "#7c3aed",
-    price: 400000,
-    img: "/devices/rev-laptop.png",
-    highlights: [
-      "Intel® Celeron N4020 — up to 2.8GHz",
-      "4GB RAM · 128GB eMMC Storage",
-      "Splash-resistant keyboard",
-      "2MP FHD webcam built-in",
-      "Up to 8-hour battery",
-      "0.98 kg — carry anywhere",
-      "Microsoft Office 365 preloaded",
-      "RevLearn platform preloaded",
-      "2-year local warranty",
-    ],
-    specs: [
-      { icon: "cpu",      label: "Processor", value: "Intel® Celeron N4020", sub: "Up to 2.8GHz dual-core" },
-      { icon: "ram",      label: "RAM",        value: "4GB LPDDR4",           sub: "Responsive multitasking" },
-      { icon: "storage",  label: "Storage",    value: "128GB eMMC",           sub: "Fast + expandable via MicroSD" },
-      { icon: "display",  label: "Display",    value: '12.5" IPS FHD',        sub: "1920×1080 · anti-glare" },
-      { icon: "battery",  label: "Battery",    value: "Up to 8 hours",        sub: "All-day classroom use" },
-      { icon: "weight",   label: "Weight",     value: "0.98 kg",              sub: "Ultralight & portable" },
-      { icon: "os",       label: "OS",         value: "Windows 11",           sub: "+ Office 365 + RevLearn" },
-      { icon: "warranty", label: "Warranty",   value: "2 Years",              sub: "Local Nigeria-based support" },
-    ],
-    accentColor: "#7c3aed",
-  },
-];
+    specs: p.specs.map((s) => ({ icon: SPEC_ICON[s.label] ?? "spec", label: s.label, value: s.value, sub: undefined as string | undefined })),
+    ...(PRESENTATION[p.id] ?? DEFAULT_PRESENTATION),
+  }));
 
 // ─── Spec icon SVG helper ──────────────────────────────────────
 function SpecIcon({ type, color }: { type: string; color: string }) {
@@ -102,6 +73,7 @@ function SpecIcon({ type, color }: { type: string; color: string }) {
       {type === "weight"   && <><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></>}
       {type === "os"       && <><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M7 8h2l2 5 2-5h2"/></>}
       {type === "warranty" && <><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></>}
+      {type === "spec"     && <circle cx="12" cy="12" r="4"/>}
     </svg>
   );
 }
@@ -288,7 +260,7 @@ export default function DevicePickerPage() {
                     <div style={{ marginBottom: 20 }}>
                       <p style={{ fontSize: 11, color: "#9ca3af", margin: "0 0 2px", fontWeight: 600 }}>Price</p>
                       <span style={{ fontFamily: SORA, fontWeight: 800, fontSize: 26, color: device.accentColor }}>
-                        ₦{device.price.toLocaleString()}
+                        {formatNaira(device.price)}
                       </span>
                     </div>
 
@@ -406,7 +378,7 @@ export default function DevicePickerPage() {
                   <div>
                     <p style={{ fontSize: 11, color: "#9ca3af", margin: 0 }}>Price</p>
                     <p style={{ fontSize: 17, fontWeight: 800, color: selectedDevice.accentColor, margin: 0, fontFamily: SORA }}>
-                      ₦{selectedDevice.price.toLocaleString()}
+                      {formatNaira(selectedDevice.price)}
                     </p>
                   </div>
                 </div>

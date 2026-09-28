@@ -6,7 +6,7 @@
 // Short, purposeful form for school owners / administrators.
 // Captures: contact, school name, role, devices needed,
 // purpose, financing interest, comments.
-// Submits to /api/school-registrations → success page.
+// Submits to /api/leads → /apply/school/success.
 // ═══════════════════════════════════════════════════════════════
 
 import { AnimatePresence, motion } from "framer-motion";
@@ -16,7 +16,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { StorefrontHeader } from "@/components/StorefrontHeader";
 import { StorefrontFooter } from "@/components/StorefrontFooter";
+import { schoolLeadSchema } from "@/lib/leads/schema";
 import { SCHOOL_DEVICE_TYPES, SCHOOL_PURPOSES, SCHOOL_ROLES } from "@/lib/school-enquiry";
+import { fieldErrors } from "@/lib/validation";
 
 const JAKARTA = "'Plus Jakarta Sans', ui-sans-serif, system-ui";
 const SORA    = "'Sora', ui-sans-serif, system-ui";
@@ -59,7 +61,7 @@ export default function SchoolApplyPage() {
     financingInterest: "" as "" | "yes" | "no" | "maybe",
     comments: "",
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -75,22 +77,32 @@ export default function SchoolApplyPage() {
     }));
   }
 
-  function validate() {
-    const e: Record<string, string> = {};
-    if (!form.contactName.trim()) e.contactName = "Enter your name";
-    if (!form.schoolName.trim())  e.schoolName  = "Enter your school name";
-    if (!form.role)               e.role        = "Select your role";
-    if (!form.phone.trim())       e.phone       = "Enter a phone number";
-    if (!form.email.includes("@")) e.email      = "Enter a valid email";
-    if (form.deviceTypes.length === 0) e.deviceTypes = "Select at least one device type";
-    if (form.purposes.length === 0)    e.purposes    = "Select at least one purpose";
-    setErrors(e);
-    return Object.keys(e).length === 0;
+  /** The exact request the server will validate, built from the form state. */
+  function toRequest() {
+    return {
+      kind: "school" as const,
+      contactName: form.contactName,
+      email: form.email,
+      phone: form.phone,
+      schoolName: form.schoolName,
+      role: form.role,
+      deviceTypes: form.deviceTypes,
+      estimatedCount: form.estimatedCount,
+      purposes: form.purposes,
+      financingInterest: form.financingInterest || undefined,
+      comments: form.comments,
+    };
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!validate()) return;
+    // Same rules and messages as POST /api/leads (src/lib/leads/schema.ts).
+    const parsed = schoolLeadSchema.safeParse(toRequest());
+    if (!parsed.success) {
+      setErrors(fieldErrors(parsed.error));
+      return;
+    }
+    setErrors({});
     setSubmitting(true);
     setSubmitError(null);
 
@@ -98,19 +110,7 @@ export default function SchoolApplyPage() {
       const res = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          kind: "school",
-          contactName: form.contactName,
-          email: form.email,
-          phone: form.phone,
-          schoolName: form.schoolName,
-          role: form.role,
-          deviceTypes: form.deviceTypes,
-          estimatedCount: parseInt(form.estimatedCount, 10) > 0 ? parseInt(form.estimatedCount, 10) : null,
-          purposes: form.purposes,
-          financingInterest: form.financingInterest || null,
-          comments: form.comments.trim() || null,
-        }),
+        body: JSON.stringify(parsed.data),
       });
 
       if (!res.ok) {
@@ -178,7 +178,7 @@ export default function SchoolApplyPage() {
                   <Field label="Email Address" error={errors.email}>
                     <input style={inp} type="email" placeholder="you@school.edu.ng" value={form.email} onChange={e => setF("email", e.target.value)} />
                   </Field>
-                  <Field label="Estimated No. of Devices" optional>
+                  <Field label="Estimated No. of Devices" optional error={errors.estimatedCount}>
                     <input style={inp} type="number" min={1} placeholder="e.g. 40" value={form.estimatedCount} onChange={e => setF("estimatedCount", e.target.value)} />
                   </Field>
                 </div>

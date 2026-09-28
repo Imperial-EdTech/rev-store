@@ -1,6 +1,7 @@
 import "server-only";
 import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import type { ZodError } from "zod";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 /**
@@ -42,4 +43,23 @@ export function toResponse<T>(result: Result<T>, body: (value: T) => unknown, st
 /** Reads a JSON body; null if it isn't valid JSON. */
 export async function readJson(request: Request): Promise<unknown> {
   return request.json().catch(() => null);
+}
+
+/**
+ * 400 for a request body that failed validation. `error` is the first
+ * problem's message (public forms write these for people); `withField`
+ * prefixes the field name, for admin screens. `details` has every problem.
+ */
+export function invalidRequest(error: ZodError, { withField = false } = {}) {
+  const first = error.issues[0];
+  const field = withField && first?.path.length ? `${first.path.join(".")}: ` : "";
+  return NextResponse.json(
+    { error: first ? `${field}${first.message}` : "Some details are missing or invalid.", details: error.flatten() },
+    { status: 400 },
+  );
+}
+
+/** A route parameter that must be a UUID (anything else can't exist, so it's a 404, not a database error). */
+export function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }

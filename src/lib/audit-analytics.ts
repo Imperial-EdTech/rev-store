@@ -8,7 +8,7 @@ import {
   type ProductFrequency,
   type SectionGapScore,
 } from "@/lib/audit-scoring";
-import type { TechAuditRequest } from "@/lib/types";
+import type { TechAuditRequest } from "@/lib/tech-audits/schema";
 
 /**
  * Admin-dashboard analytics over a list of TechAuditRequest rows.

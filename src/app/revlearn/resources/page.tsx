@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { Loader2, AlertCircle, FileText, Globe, Layout, Video, BookOpen, ArrowUpRight } from "lucide-react";
 import { RevLearnShell } from "@/components/revlearn/shell";
-import { useResources } from "@/lib/revlearn-hooks";
-import type { Resource } from "@/lib/revlearn-types";
+import { useResources } from "@/lib/revlearn/hooks";
+import type { Resource } from "@/lib/revlearn/types";
 
 const D = '"Archivo Variable", ui-sans-serif, system-ui';
 

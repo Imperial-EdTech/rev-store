@@ -55,8 +55,8 @@ export function LeadsView() {
 
   async function update(id: string, next: LeadStatus) {
     const body = await patchStatus(`/api/admin/leads/${id}`, next);
-    if (!body) return false;
-    setData((list) => list.map((l) => (l.id === id ? { ...l, status: next, statusChangedAt: body.statusChangedAt as string } : l)));
+    if (!body?.lead) return false;
+    setData((list) => list.map((l) => (l.id === id ? (body.lead as Lead) : l)));
     return true;
   }
 

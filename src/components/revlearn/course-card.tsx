@@ -3,21 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { CheckCircle2, Clock, BookOpen } from "lucide-react";
-import type { Category, Course } from "@/lib/revlearn-types";
-
-function getYoutubeThumbnail(url: string): string | null {
-  try {
-    const u = new URL(url);
-    let id: string | null = null;
-    if (u.hostname.includes("youtube.com")) {
-      id = u.searchParams.get("v");
-      if (!id && u.pathname.startsWith("/embed/")) id = u.pathname.split("/")[2];
-    }
-    if (u.hostname === "youtu.be") id = u.pathname.slice(1);
-    if (id) return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
-    return null;
-  } catch { return null; }
-}
+import type { Category, Course } from "@/lib/revlearn/types";
+import { getYoutubeThumbnail } from "@/lib/revlearn/utils";
 
 export function CourseCard({
   category, course, completed = false,

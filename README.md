@@ -9,6 +9,26 @@ npm install
 npm run dev
 ```
 
-## Supabase
+## Database (Supabase)
 
-Run `supabase/schema.sql` in Supabase SQL editor. The app currently stores form submissions in local storage for local demo mode and includes the Supabase client wiring for production integration.
+The app reads and writes only from the server, with the service-role key
+(`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`). Every table has RLS
+on with no policies, so the public anon key can't reach any data.
+
+Setting up a project, in the Supabase SQL editor:
+
+1. **Rebuilding an existing project only:** `supabase/reset.sql`. Its first
+   query lists what will be removed; the rest drops everything in `public`
+   (Supabase's own schemas, auth users and storage are not touched).
+2. `supabase/migrations/20260928000000_initial_schema.sql`: tables, functions
+   and permissions. The design notes are at the top of the file.
+3. Optional, to load the legacy applications export:
+   ```bash
+   node scripts/import-legacy-applications.mjs revrica-applications-2026-08-28.xlsx \
+     > supabase/imports/2026-08-28_legacy_applications.sql
+   ```
+   then run that file. It is one transaction and refuses to run twice.
+   `supabase/imports/` is git-ignored because it holds personal data.
+
+Schema changes go in a new file in `supabase/migrations/`. Status lists in
+`src/lib/statuses.ts` mirror the CHECK constraints there; change both together.

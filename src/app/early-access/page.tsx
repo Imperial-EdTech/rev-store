@@ -9,25 +9,15 @@ import { useRouter } from "next/navigation";
 import type React from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 import { Button } from "@/components/ui";
 import { interests, roles } from "@/lib/data";
+import { waitlistLeadSchema } from "@/lib/leads/schema";
 import { StorefrontHeader } from "@/components/StorefrontHeader";
 import { StorefrontFooter } from "@/components/StorefrontFooter";
 
-const schema = z.object({
-  fullName: z.string().min(2, "Enter your full name"),
-  email: z.string().email("Enter a valid email"),
-  phone: z.string().min(7, "Enter a valid phone number"),
-  organization: z.string().min(2, "Enter your school or organization"),
-  role: z.enum(roles),
-  interests: z.array(z.string()).min(1, "Select at least one interest"),
-  deviceCount: z.preprocess(
-    (value) => (value === "" || value === null ? undefined : value),
-    z.coerce.number().int().positive().optional()
-  ),
-  notes: z.string().optional()
-});
+// Shared with POST /api/leads: src/lib/leads/schema.ts
+const schema = waitlistLeadSchema;
 
 type FormInput = z.input<typeof schema>;
 type FormValues = z.output<typeof schema>;
@@ -53,7 +43,7 @@ export default function EarlyAccessPage() {
     formState: { errors, isSubmitting }
   } = useForm<FormInput, unknown, FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { role: "Teacher", interests: [] }
+    defaultValues: { kind: "waitlist", role: "Teacher", interests: [] }
   });
   const watchedInterests = watch("interests") ?? [];
 
@@ -78,17 +68,7 @@ export default function EarlyAccessPage() {
       const response = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          kind: "waitlist",
-          fullName: values.fullName,
-          email: values.email,
-          phone: values.phone,
-          organization: values.organization,
-          role: values.role,
-          interests: values.interests,
-          deviceCount: values.deviceCount ?? null,
-          notes: values.notes ?? null
-        })
+        body: JSON.stringify(values)
       });
 
       if (!response.ok) {
@@ -97,7 +77,7 @@ export default function EarlyAccessPage() {
         return;
       }
 
-      router.push("/success");
+      router.push("/success?type=waitlist");
     } catch {
       setSubmitError("Could not reach the server. Check your connection and try again.");
     }

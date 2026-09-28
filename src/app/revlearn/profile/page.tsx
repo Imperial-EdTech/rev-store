@@ -4,12 +4,12 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Check, Trash2, UserCircle, Plus, Link } from "lucide-react";
 import { RevLearnShell, useActiveProfile } from "@/components/revlearn/shell";
-import { getAvatarColor, getInitials } from "@/lib/revlearn-utils";
+import { getAvatarColor, getInitials } from "@/lib/revlearn/utils";
 import {
   getProfiles, upsertProfile, deleteProfile,
   setActiveProfileId, generateId,
   type StoredProfile,
-} from "@/lib/revlearn-profiles";
+} from "@/lib/revlearn/profiles";
 
 const D = '"Archivo Variable", ui-sans-serif, system-ui';
 

@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import type React from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 import { Reveal } from "@/components/reveal";
 import { Button } from "@/components/ui";
 import {
@@ -25,29 +25,14 @@ import {
   type AuditOption
 } from "@/lib/audit-data";
 import { roles } from "@/lib/data";
+import { techAuditRequestSchema } from "@/lib/tech-audits/schema";
 import { StorefrontHeader } from "@/components/StorefrontHeader";
 import { StorefrontFooter } from "@/components/StorefrontFooter";
 
 // ─── Schema ────────────────────────────────────────────────────────────────────
-
-const letterSchema = z.enum(["A", "B", "C", "D", "E"]);
-
-/**
- * Answers are keyed by question number (as a string "1"…"20"), each mapping
- * to an array of selected option letters. An empty array means "nothing
- * selected yet" — we allow partial submissions (unanswered questions are
- * simply excluded from trigger scoring).
- */
-const schema = z.object({
-  schoolName: z.string().min(2, "Enter your school or organisation name"),
-  contactName: z.string().min(2, "Enter your full name"),
-  email: z.string().email("Enter a valid email"),
-  phone: z.string().min(7, "Enter a valid phone number"),
-  role: z.enum(roles),
-  deviceEstimate: z.string().optional(),
-  answers: z.record(z.string(), z.array(letterSchema)),
-  notes: z.string().optional()
-});
+// Shared with POST /api/tech-audit: src/lib/tech-audits/schema.ts. Answers are
+// keyed by question number; unanswered questions are simply left out of scoring.
+const schema = techAuditRequestSchema;
 
 type FormInput = z.input<typeof schema>;
 type FormValues = z.output<typeof schema>;
@@ -115,16 +100,7 @@ export default function TechAuditPage() {
       const res = await fetch("/api/tech-audit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          schoolName: values.schoolName,
-          contactName: values.contactName,
-          email: values.email,
-          phone: values.phone,
-          role: values.role,
-          deviceEstimate: values.deviceEstimate ?? null,
-          answers: values.answers,
-          notes: values.notes ?? null
-        })
+        body: JSON.stringify(values)
       });
       if (!res.ok) {
         const body = await res.json().catch(() => null);

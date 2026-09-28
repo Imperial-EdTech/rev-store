@@ -1,7 +1,7 @@
 /**
  * Government bodies selectable on the Teacher Empowerment application.
- * Shared by the apply form and the database seed (scripts/generate-seed.ts),
- * so the ids here match organizations.slug in the database.
+ * This list is the source of truth: when an application first names a body,
+ * the server creates it in the database with this id as organizations.slug.
  */
 export const GOVERNMENT_BODIES = [
   { id: "fed-ministry-edu", name: "Federal Ministry of Education" },
@@ -14,3 +14,12 @@ export const GOVERNMENT_BODIES = [
   { id: "state-ministry-edu", name: "State Ministry of Education" },
   { id: "local-education", name: "Local Government Education Authority (LGEA)" },
 ] as const;
+
+export type GovernmentBody = (typeof GOVERNMENT_BODIES)[number];
+export type GovernmentBodyId = GovernmentBody["id"];
+
+export const GOVERNMENT_BODY_IDS = GOVERNMENT_BODIES.map((b) => b.id) as [GovernmentBodyId, ...GovernmentBodyId[]];
+
+export function getGovernmentBody(id: GovernmentBodyId): GovernmentBody {
+  return GOVERNMENT_BODIES.find((b) => b.id === id)!;
+}

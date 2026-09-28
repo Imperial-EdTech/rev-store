@@ -5,24 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Upload, Link as LinkIcon, Loader2, ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { RevLearnHeader } from "@/components/revlearn/shell";
-import { useRevLearnContent } from "@/lib/revlearn-hooks";
-import { slugify, deriveSourceName, normaliseEmbedUrl } from "@/lib/revlearn-utils";
-import type { CourseType } from "@/lib/revlearn-types";
+import { useRevLearnContent } from "@/lib/revlearn/hooks";
+import { deriveSourceName, getYoutubeThumbnail, newId, normaliseEmbedUrl } from "@/lib/revlearn/utils";
+import type { CourseType } from "@/lib/revlearn/types";
 import { adminFetch } from "@/lib/admin-fetch";
 
-function getYoutubeThumbnail(url: string): string | null {
-  try {
-    const u = new URL(url);
-    let id: string | null = null;
-    if (u.hostname.includes("youtube.com")) {
-      id = u.searchParams.get("v");
-      if (!id && u.pathname.startsWith("/embed/")) id = u.pathname.split("/")[2];
-    }
-    if (u.hostname === "youtu.be") id = u.pathname.slice(1);
-    if (id) return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
-  } catch {}
-  return null;
-}
 
 function AddResourceContent() {
   const router = useRouter();
@@ -42,6 +29,7 @@ function AddResourceContent() {
   const [thumbnailPreview, setThumbnailPreview] = useState("");
   const [lessons, setLessons] = useState<{ title: string; url: string }[]>([{ title: "", url: "" }]);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -62,15 +50,27 @@ function AddResourceContent() {
     setThumbnailPreview(val);
   }
 
-  function handleFileUpload(file: File) {
+  /** Uploads the image to storage; the course keeps only its URL. */
+  async function handleFileUpload(file: File) {
     if (!file.type.startsWith("image/")) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      const result = e.target?.result as string;
-      setThumbnailPreview(result);
-      setThumbnail(result); // base64 for preview; in production upload to storage
-    };
-    reader.readAsDataURL(file);
+    setError("");
+    setUploading(true);
+    setThumbnailPreview(URL.createObjectURL(file));
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await adminFetch("/api/revlearn/thumbnails", { method: "POST", body: form });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error ?? "Could not upload the image.");
+      setThumbnail(body.url);
+      setThumbnailPreview(body.url);
+    } catch (e) {
+      setError((e as Error).message);
+      setThumbnail("");
+      setThumbnailPreview("");
+    } finally {
+      setUploading(false);
+    }
   }
 
   const onDrop = useCallback((e: React.DragEvent) => {
@@ -100,44 +100,30 @@ function AddResourceContent() {
     setSaving(true);
 
     try {
-      const courseId = slugify(title) + "-" + Date.now();
+      // The course and its lessons are saved together: all or nothing.
       const res = await adminFetch("/api/revlearn/courses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: courseId,
+          id: newId(title),
           category_id: categoryId,
           title,
           description,
-          thumbnail: thumbnailPreview || thumbnail,
+          thumbnail,
           tags: tags.split(",").map((t: string) => t.trim()).filter(Boolean),
           type,
           url: type === "single" ? normaliseEmbedUrl(url) : undefined,
           source_name: sourceName || deriveSourceName(url),
           duration,
-          position: 0,
+          lessons: type === "multi"
+            ? lessons
+                .filter((l) => l.title.trim() && l.url.trim())
+                .map((l, i) => ({ id: newId(l.title), title: l.title, url: normaliseEmbedUrl(l.url), position: i }))
+            : undefined,
         }),
       });
-      if (!res.ok) throw new Error("Failed to save course.");
-
-      // Save lessons if multi
-      if (type === "multi") {
-        for (let i = 0; i < lessons.length; i++) {
-          const l = lessons[i];
-          if (!l.title || !l.url) continue;
-          await adminFetch("/api/revlearn/lessons", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              id: slugify(l.title) + "-" + Date.now() + i,
-              course_id: courseId,
-              title: l.title,
-              url: normaliseEmbedUrl(l.url),
-              position: i,
-            }),
-          });
-        }
-      }
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error ?? "Failed to save course.");
 
       router.push("/revlearn/admin");
     } catch (e) {
@@ -314,7 +300,7 @@ function AddResourceContent() {
               )}
 
               {/* Save */}
-              <button className="rl-add-save" onClick={handleSave} disabled={saving}>
+              <button className="rl-add-save" onClick={handleSave} disabled={saving || uploading}>
                 {saving ? <><Loader2 size={15} className="rl-spin" /> Saving…</> : "Save resource"}
               </button>
             </div>

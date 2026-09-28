@@ -11,9 +11,9 @@ import { RevLearnShell, useActiveProfile } from "@/components/revlearn/shell";
 import {
   useRevLearnContent, useTools, useResources,
   usePosts, useProgress, globalSearch,
-} from "@/lib/revlearn-hooks";
-import type { Category, Course, Tool, Resource, SearchResult } from "@/lib/revlearn-types";
-import { getYoutubeThumbnail, timeAgo } from "@/lib/revlearn-utils";
+} from "@/lib/revlearn/hooks";
+import type { Category, Course, Tool, Resource, SearchResult } from "@/lib/revlearn/types";
+import { getYoutubeThumbnail, timeAgo } from "@/lib/revlearn/utils";
 
 const D = '"Archivo Variable", ui-sans-serif, system-ui';
 

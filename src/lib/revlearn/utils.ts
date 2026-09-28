@@ -1,6 +1,3 @@
-import type { LocalProfile } from "@/lib/revlearn-types";
-
-const PROFILE_KEY = "rl_profile_v1";
 
 const AVATAR_COLORS = [
   "#e85d04", "#d62828", "#023e8a", "#1b4332",
@@ -15,20 +12,6 @@ export function getAvatarColor(name: string): string {
 
 export function getInitials(name: string): string {
   return name.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase();
-}
-
-export function loadProfile(): LocalProfile | null {
-  if (typeof window === "undefined") return null;
-  try { return JSON.parse(localStorage.getItem(PROFILE_KEY) ?? "null"); }
-  catch { return null; }
-}
-
-export function saveProfile(profile: LocalProfile): void {
-  localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-}
-
-export function clearProfile(): void {
-  localStorage.removeItem(PROFILE_KEY);
 }
 
 export function normaliseEmbedUrl(raw: string): string {
@@ -102,4 +85,9 @@ export function timeAgo(date: string): string {
   if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`;
   if (secs < 604800) return `${Math.floor(secs / 86400)}d ago`;
   return new Date(date).toLocaleDateString("en-NG", { day: "numeric", month: "short" });
+}
+/** A new content id from a title, e.g. "intro-to-excel-m1x2k3-7qz". Always valid, even for titles with no letters. */
+export function newId(title: string): string {
+  const random = Math.random().toString(36).slice(2, 5);
+  return `${slugify(title) || "item"}-${Date.now().toString(36)}-${random}`;
 }

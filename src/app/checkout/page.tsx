@@ -11,7 +11,8 @@ import { StorefrontHeader } from "@/components/StorefrontHeader";
 import { useCart } from "@/lib/cart/cart-context";
 import { displayName, formatNaira } from "@/lib/catalog";
 import { BANK_ACCOUNT, CONTACT, mailtoLink, whatsappLink } from "@/lib/contact";
-import { buyerSchema, fieldErrors, type Buyer, type OrderLine } from "@/lib/orders/schema";
+import { buyerSchema, type Buyer, type OrderLine } from "@/lib/orders/schema";
+import { fieldErrors } from "@/lib/validation";
 import styles from "./checkout.module.css";
 
 // ─── Types ────────────────────────────────────────────────────

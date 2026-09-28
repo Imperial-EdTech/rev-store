@@ -4,9 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { BookOpen, CheckCircle2, Clock, Search, ArrowLeft } from "lucide-react";
 import { RevLearnShell } from "@/components/revlearn/shell";
-import { useRevLearnContent, useProgress } from "@/lib/revlearn-hooks";
-import type { Category, Course } from "@/lib/revlearn-types";
-import { getYoutubeThumbnail } from "@/lib/revlearn-utils";
+import { useRevLearnContent, useProgress } from "@/lib/revlearn/hooks";
+import type { Category, Course } from "@/lib/revlearn/types";
+import { getYoutubeThumbnail } from "@/lib/revlearn/utils";
 
 const D = '"Archivo Variable", ui-sans-serif, system-ui';
 

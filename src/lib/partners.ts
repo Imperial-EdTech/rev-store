@@ -1,7 +1,8 @@
 /**
  * Partner organisations that can view their own applicants in /partners.
- * `id` is the partner organisation's slug in the database: applications are
- * linked to it via financing_applications.sponsor_organization_id.
+ * `id` is the partner organisation's slug in the database (created there the
+ * first time a member applies): applications are linked to it via
+ * financing_applications.sponsor_organization_id.
  * Safe to import anywhere: passcodes are NOT here. Each partner's passcode
  * lives in a server-only environment variable (see lib/auth/credentials.ts).
  */

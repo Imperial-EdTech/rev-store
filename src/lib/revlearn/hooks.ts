@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { Category, Tool, Resource, Post, Comment } from "@/lib/revlearn-types";
-import { getActiveProfile, type StoredProfile } from "@/lib/revlearn-profiles";
+import type { Category, Tool, Resource, Post, Comment, SearchResult } from "@/lib/revlearn/types";
+import { getActiveProfile, type StoredProfile } from "@/lib/revlearn/profiles";
 
 export function useRevLearnContent() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -81,25 +81,45 @@ export function usePosts() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
-  return { posts, loading, error, reload: load };
+  return { posts, setPosts, loading, error, reload: load };
 }
 
-export function useComments(postId: string) {
+/** One post and its comments. */
+export function usePost(postId: string) {
+  const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    setLoading(true);
+    setLoading(true); setError(null);
     try {
-      const res = await fetch(`/api/revlearn/comments?postId=${postId}`);
-      const body = await res.json();
-      setComments(body.comments ?? []);
-    } catch {}
+      const res = await fetch(`/api/revlearn/posts/${encodeURIComponent(postId)}`);
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error ?? "Failed to load the post.");
+      setPost(body.post);
+      setComments(body.comments);
+    } catch (e) { setError(e instanceof Error ? e.message : "Error"); }
     finally { setLoading(false); }
   }, [postId]);
 
   useEffect(() => { load(); }, [load]);
-  return { comments, loading, reload: load };
+  return { post, setPost, comments, loading, error, reload: load };
+}
+
+/** Adds or removes a like; resolves to the new count (null if it failed). */
+export async function likePost(postId: string, liked: boolean): Promise<number | null> {
+  try {
+    const res = await fetch(`/api/revlearn/posts/${encodeURIComponent(postId)}/like`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ liked }),
+    });
+    const body = await res.json().catch(() => null);
+    return res.ok ? (body.likes as number) : null;
+  } catch {
+    return null;
+  }
 }
 
 export function useProfile() {
@@ -174,11 +194,6 @@ export function useLikedPosts() {
 
   return { liked, toggle };
 }
-
-export type SearchResult =
-  | { kind: "course"; categoryId: string; categoryTitle: string; id: string; title: string; description: string; sourceName: string }
-  | { kind: "tool"; id: string; title: string; description: string; partnerName: string }
-  | { kind: "resource"; id: string; title: string; description: string; type: string; audience: string };
 
 export function globalSearch(
   categories: Category[],

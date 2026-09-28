@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Loader2, AlertCircle, ExternalLink, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { RevLearnShell } from "@/components/revlearn/shell";
-import { useTools } from "@/lib/revlearn-hooks";
-import type { Tool } from "@/lib/revlearn-types";
+import { useTools } from "@/lib/revlearn/hooks";
+import type { Tool } from "@/lib/revlearn/types";
 
 const D = '"Archivo Variable", ui-sans-serif, system-ui';
 

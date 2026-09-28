@@ -4,9 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { Loader2, Heart, MessageCircle, Send, AlertCircle } from "lucide-react";
 import { RevLearnShell } from "@/components/revlearn/shell";
-import { usePosts, useProfile, useLikedPosts } from "@/lib/revlearn-hooks";
-import { getAvatarColor, getInitials, timeAgo } from "@/lib/revlearn-utils";
-import type { Post } from "@/lib/revlearn-types";
+import { likePost, usePosts, useProfile, useLikedPosts } from "@/lib/revlearn/hooks";
+import { getAvatarColor, getInitials, timeAgo } from "@/lib/revlearn/utils";
+import type { Post } from "@/lib/revlearn/types";
 
 const D = '"Archivo Variable", ui-sans-serif, system-ui';
 
@@ -48,7 +48,7 @@ function PostCard({ post, liked, onLike }: { post: Post; liked: boolean; onLike:
 }
 
 export default function CommunityPage() {
-  const { posts, loading, error, reload } = usePosts();
+  const { posts, setPosts, loading, error, reload } = usePosts();
   const { profile }                        = useProfile();
   const { liked, toggle: toggleLike }      = useLikedPosts();
   const [content, setContent]              = useState("");
@@ -61,19 +61,28 @@ export default function CommunityPage() {
     try {
       const res = await fetch("/api/revlearn/posts", {
         method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ content:content.trim(), author_name:profile.name, author_school:profile.school, author_subject:profile.subject, author_avatar:getAvatarColor(profile.name) }),
+        body: JSON.stringify({
+          content: content.trim(),
+          author_name: profile.name,
+          author_school: profile.school || undefined,
+          author_subject: profile.subject || undefined,
+          author_avatar: getAvatarColor(profile.name),
+        }),
       });
-      if (!res.ok) throw new Error("Failed to post.");
-      setContent(""); reload();
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error ?? "Failed to post.");
+      setContent("");
+      setPosts(list => [body.post as Post, ...list]);
     } catch (e) { setPostError((e as Error).message); }
     finally { setPosting(false); }
   }
 
   async function handleLike(post: Post) {
-    const wasLiked = liked.has(post.id);
+    const nowLiked = !liked.has(post.id);
     toggleLike(post.id);
-    await fetch("/api/revlearn/posts", { method:"PATCH", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ id:post.id, increment:!wasLiked }) });
-    reload();
+    const likes = await likePost(post.id, nowLiked);
+    if (likes === null) { toggleLike(post.id); return; } // didn't save: undo
+    setPosts(list => list.map(p => (p.id === post.id ? { ...p, likes } : p)));
   }
 
   return (

@@ -10,9 +10,9 @@ import {
 import { useState } from "react";
 import { RevLearnShell } from "@/components/revlearn/shell";
 import { ResourceFrame } from "@/components/revlearn/resource-frame";
-import { useRevLearnContent, useProgress } from "@/lib/revlearn-hooks";
-import type { Category, Course, Lesson } from "@/lib/revlearn-types";
-import { getYoutubeThumbnail } from "@/lib/revlearn-utils";
+import { useRevLearnContent, useProgress } from "@/lib/revlearn/hooks";
+import type { Category, Course, Lesson } from "@/lib/revlearn/types";
+import { getYoutubeThumbnail } from "@/lib/revlearn/utils";
 
 const D = '"Archivo Variable", ui-sans-serif, system-ui';
 

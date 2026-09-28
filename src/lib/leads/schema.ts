@@ -1,45 +1,50 @@
 import { z } from "zod";
 import { interests, roles } from "@/lib/data";
-import { FINANCING_INTEREST, SCHOOL_DEVICE_TYPES, SCHOOL_PURPOSES } from "@/lib/school-enquiry";
+import {
+  FINANCING_INTEREST, SCHOOL_DEVICE_TYPES, SCHOOL_PURPOSES, SCHOOL_ROLES,
+  type SchoolDeviceTypeId, type SchoolPurposeId,
+} from "@/lib/school-enquiry";
 import type { LeadStatus } from "@/lib/statuses";
+import { emailAddress, optionalCount, optionalText, phoneNumber } from "@/lib/validation";
 
-/** Public lead submissions accepted by POST /api/leads. */
+/**
+ * Public lead submissions accepted by POST /api/leads. The forms validate with
+ * these same schemas, so they show the server's exact rules and messages.
+ */
 
-const phone = z.string().trim().refine((v) => {
-  const digits = v.replace(/\D/g, "").length;
-  return digits >= 7 && digits <= 15;
-}, "Enter a valid phone number");
-
-const deviceTypeIds = SCHOOL_DEVICE_TYPES.map((d) => d.id) as [string, ...string[]];
-const purposeIds = SCHOOL_PURPOSES.map((p) => p.id) as [string, ...string[]];
+const deviceTypeIds = SCHOOL_DEVICE_TYPES.map((d) => d.id) as [SchoolDeviceTypeId, ...SchoolDeviceTypeId[]];
+const purposeIds = SCHOOL_PURPOSES.map((p) => p.id) as [SchoolPurposeId, ...SchoolPurposeId[]];
 
 /** Early-access waitlist (/early-access). */
 export const waitlistLeadSchema = z.object({
   kind: z.literal("waitlist"),
-  fullName: z.string().trim().min(2).max(160),
-  email: z.string().trim().email().max(200),
-  phone,
-  organization: z.string().trim().min(2).max(200),
-  role: z.enum(roles),
-  interests: z.array(z.enum(interests as [string, ...string[]])).min(1).max(interests.length),
-  deviceCount: z.number().int().positive().max(1_000_000).nullable().optional(),
-  notes: z.string().trim().max(2000).nullable().optional(),
+  fullName: z.string().trim().min(2, "Enter your full name").max(160),
+  email: emailAddress,
+  phone: phoneNumber,
+  organization: z.string().trim().min(2, "Enter your school or organisation").max(200),
+  role: z.enum(roles, { errorMap: () => ({ message: "Select your role" }) }),
+  interests: z.array(z.enum(interests)).min(1, "Select at least one interest").max(interests.length),
+  deviceCount: optionalCount("Enter a whole number of devices"),
+  notes: optionalText(2000),
 });
 
 /** School device enquiry (/apply/school). */
 export const schoolLeadSchema = z.object({
   kind: z.literal("school"),
-  contactName: z.string().trim().min(2).max(160),
-  email: z.string().trim().email().max(200),
-  phone,
-  schoolName: z.string().trim().min(2).max(200),
-  role: z.string().trim().min(2).max(120),
-  deviceTypes: z.array(z.enum(deviceTypeIds)).min(1),
-  estimatedCount: z.number().int().positive().max(1_000_000).nullable().optional(),
-  purposes: z.array(z.enum(purposeIds)).min(1),
-  financingInterest: z.enum(FINANCING_INTEREST).nullable().optional(),
-  comments: z.string().trim().max(2000).nullable().optional(),
+  contactName: z.string().trim().min(2, "Enter your name").max(160),
+  email: emailAddress,
+  phone: phoneNumber,
+  schoolName: z.string().trim().min(2, "Enter your school name").max(200),
+  role: z.enum(SCHOOL_ROLES, { errorMap: () => ({ message: "Select your role" }) }),
+  deviceTypes: z.array(z.enum(deviceTypeIds)).min(1, "Select at least one device type"),
+  estimatedCount: optionalCount("Enter a whole number of devices"),
+  purposes: z.array(z.enum(purposeIds)).min(1, "Select at least one purpose"),
+  financingInterest: z.enum(FINANCING_INTEREST).optional(),
+  comments: optionalText(2000),
 });
+
+export type WaitlistLead = z.infer<typeof waitlistLeadSchema>;
+export type SchoolLead = z.infer<typeof schoolLeadSchema>;
 
 export const leadRequestSchema = z.discriminatedUnion("kind", [waitlistLeadSchema, schoolLeadSchema]);
 export type LeadRequest = z.infer<typeof leadRequestSchema>;
