@@ -1,6 +1,7 @@
 node_modules
 .next
-.env.localnode_modules
-.next
 .env.local
 .vercel
+
+# Generated data imports contain personal data: never commit them.
+supabase/imports/

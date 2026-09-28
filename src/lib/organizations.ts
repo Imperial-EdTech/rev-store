@@ -1,7 +1,7 @@
 /**
  * Government bodies selectable on the Teacher Empowerment application.
- * Shared by the apply form and the database seed (scripts/generate-seed.ts),
- * so the ids here match organizations.slug in the database.
+ * This list is the source of truth: when an application first names a body,
+ * the server creates it in the database with this id as organizations.slug.
  */
 export const GOVERNMENT_BODIES = [
   { id: "fed-ministry-edu", name: "Federal Ministry of Education" },
