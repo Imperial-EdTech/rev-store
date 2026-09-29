@@ -35,24 +35,22 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: "price_desc", label: "Price: High to Low" },
   { value: "name", label: "Name: A to Z" },
 ];
-const PAGE_SIZES = [8, 12, 16, 24] as const;
+/** Multiples of 6, so pages fill complete rows at 3, 2 or 1 per row. */
+const PAGE_SIZES = [6, 12, 18, 24] as const;
 
 /** Price filter: the committed slider range, or null when the whole range is selected. */
 type PriceFilter = Range | null;
 
 /**
- * Slider bounds come from the products that have a listed price, so the
- * range stays correct as prices are added. Null when fewer than two distinct
- * prices exist (a slider would have nothing to filter).
+ * Slider bounds: from ₦0 to at least ₦1,000,000, stretched further if a
+ * product ever costs more. Null when no product has a listed price.
  */
 const PRICED = PRODUCTS.flatMap((p) => (p.price === null ? [] : [p.price]));
-const PRICE_STEP = 5_000;
+const PRICE_STEP = 10_000;
+const PRICE_CEILING_MIN = 1_000_000;
 const PRICE_BOUNDS: Range | null =
-  new Set(PRICED).size >= 2
-    ? [
-        Math.floor(Math.min(...PRICED) / PRICE_STEP) * PRICE_STEP,
-        Math.ceil(Math.max(...PRICED) / PRICE_STEP) * PRICE_STEP,
-      ]
+  PRICED.length > 0
+    ? [0, Math.max(PRICE_CEILING_MIN, Math.ceil(Math.max(...PRICED) / PRICE_STEP) * PRICE_STEP)]
     : null;
 
 const CATEGORY_COUNTS = Object.fromEntries(
@@ -185,7 +183,7 @@ function ShopPage() {
 
   const [sort, setSort] = useState<SortKey>("featured");
   const [view, setView] = useState<"grid" | "list">("grid");
-  const [pageSize, setPageSize] = useState<number>(16);
+  const [pageSize, setPageSize] = useState<number>(12);
   const [page, setPage] = useState(1);
   const [price, setPrice] = useState<PriceFilter>(null);
   const [quickView, setQuickView] = useState<Product | null>(null);
@@ -358,7 +356,7 @@ function ShopPage() {
                 <h2>No products match these filters</h2>
                 <p>
                   {priceActive
-                    ? "Products priced on request are hidden while a price range is set. Widen the range or clear it."
+                    ? "Bulk-order (MOQ) products have no listed price, so they're hidden while a price range is set. Widen the range or clear it."
                     : "Try a different search term or category."}
                 </p>
                 <button className={styles.emptyButton} onClick={clearAll} type="button">Clear filters</button>

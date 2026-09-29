@@ -232,7 +232,7 @@ export default function TeacherEmpowermentPage() {
               initial={{ opacity: 0, y: 14 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <Link href="/pre-order"><Button>Pre-order now <ArrowRight className="h-4 w-4" /></Button></Link>
+              <Link href="/apply"><Button>Apply Now <ArrowRight className="h-4 w-4" /></Button></Link>
               <a href="#specs"><Button variant="ghost">See specifications</Button></a>
             </motion.div>
             <motion.div
@@ -420,7 +420,7 @@ export default function TeacherEmpowermentPage() {
                   <p className="mt-3 text-xs text-white/30">
                     Profit rate: {plan.profitRate} · Figures confirmed by our licensed financing partner.
                   </p>
-                  <Link className="mt-7 inline-block" href="/apply/devices">
+                  <Link className="mt-7 inline-block" href="/apply">
                     <Button>Apply for this plan <ArrowRight className="h-4 w-4" /></Button>
                   </Link>
                 </div>
@@ -434,12 +434,12 @@ export default function TeacherEmpowermentPage() {
                 <div className="flex-1">
                   <p className="font-display text-base font-bold text-[#1d1d1f]">Prefer to buy outright?</p>
                   <p className="mt-0.5 text-sm text-[#6e6e73]">
-                    Pay the full device price in one go and receive a discount. Select "Buy Outright" when applying.
+                    Pay the full device price in one go. Buy it straight from the RevStore shop.
                   </p>
                 </div>
-                <Link className="shrink-0" href="/apply/devices">
+                <Link className="shrink-0" href="/products">
                   <span className="inline-flex items-center gap-1.5 text-sm font-bold text-rev-orange">
-                    Apply <ArrowRight className="h-3.5 w-3.5" />
+                    Buy Now <ArrowRight className="h-3.5 w-3.5" />
                   </span>
                 </Link>
               </div>
@@ -526,7 +526,7 @@ export default function TeacherEmpowermentPage() {
                 Join the waitlist — no payment required. Our team will follow up with your exact plan and next steps.
               </p>
               <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
-                <Link href="/pre-order"><Button>Pre-order now <ArrowRight className="h-4 w-4" /></Button></Link>
+                <Link href="/apply"><Button>Apply Now <ArrowRight className="h-4 w-4" /></Button></Link>
                 <Link href="/"><Button variant="ghost">Back to RevStore</Button></Link>
               </div>
               <p className="mt-5 text-xs text-white/25">

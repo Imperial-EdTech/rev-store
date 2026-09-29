@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { failedLoginDelay, findPartnerByPasscode } from "@/lib/auth/credentials";
 import {
-  PARTNER_COOKIE, SESSION_TTL_SECONDS, readCookie, sessionCookieOptions, signSession, verifySession,
+  PARTNER_COOKIE, SESSION_TTL_SECONDS, readCookie, sessionCookieOptions, sessionSecretProblem, signSession, verifySession,
 } from "@/lib/auth/session";
 import { getPartner } from "@/lib/partners";
 
@@ -21,9 +21,8 @@ export async function GET(request: Request) {
 
 /** POST /api/auth/partner { passcode }: sign in as the matching partner. */
 export async function POST(request: Request) {
-  if (!process.env.AUTH_SESSION_SECRET) {
-    return NextResponse.json({ error: "Partner sign-in isn't configured." }, { status: 503 });
-  }
+  const problem = sessionSecretProblem();
+  if (problem) return NextResponse.json({ error: problem }, { status: 503 });
 
   const parsed = loginSchema.safeParse(await request.json().catch(() => null));
   const partner = parsed.success ? await findPartnerByPasscode(parsed.data.passcode) : null;

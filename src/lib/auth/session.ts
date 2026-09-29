@@ -22,11 +22,23 @@ export const PARTNER_COOKIE = "rs_partner_session";
 export const SESSION_TTL_SECONDS = 60 * 60 * 12; // 12 hours
 
 const encoder = new TextEncoder();
+const MIN_SECRET_LENGTH = 32;
+
+/**
+ * Why sessions can't be signed yet, or null when AUTH_SESSION_SECRET is usable.
+ * The message names the setting, so a misconfigured deploy says what to fix.
+ */
+export function sessionSecretProblem(): string | null {
+  const secret = process.env.AUTH_SESSION_SECRET;
+  if (!secret) return "Sign-in isn't configured: set AUTH_SESSION_SECRET.";
+  if (secret.length < MIN_SECRET_LENGTH) {
+    return `Sign-in isn't configured: AUTH_SESSION_SECRET must be at least ${MIN_SECRET_LENGTH} characters.`;
+  }
+  return null;
+}
 
 function secretBytes(): Uint8Array<ArrayBuffer> | null {
-  const secret = process.env.AUTH_SESSION_SECRET;
-  if (!secret || secret.length < 32) return null;
-  return encoder.encode(secret);
+  return sessionSecretProblem() ? null : encoder.encode(process.env.AUTH_SESSION_SECRET!);
 }
 
 async function hmacKey(usage: "sign" | "verify"): Promise<CryptoKey | null> {
@@ -47,10 +59,10 @@ function fromBase64Url(value: string): Uint8Array<ArrayBuffer> {
   return Uint8Array.from(binary, (c) => c.charCodeAt(0));
 }
 
-/** Creates a signed token. Throws if AUTH_SESSION_SECRET is not configured. */
+/** Creates a signed token. Throws if AUTH_SESSION_SECRET is not usable (check sessionSecretProblem() first). */
 export async function signSession(claims: SessionClaims): Promise<string> {
   const key = await hmacKey("sign");
-  if (!key) throw new Error("AUTH_SESSION_SECRET is missing or shorter than 32 characters.");
+  if (!key) throw new Error(sessionSecretProblem() ?? "AUTH_SESSION_SECRET is not usable.");
   const payload: Session = { ...claims, exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS } as Session;
   const body = toBase64Url(encoder.encode(JSON.stringify(payload)));
   const sig = new Uint8Array(await crypto.subtle.sign("HMAC", key, encoder.encode(body)));

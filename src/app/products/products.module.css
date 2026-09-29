@@ -133,7 +133,8 @@
 }
 
 /* ── Results ── */
-.grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+/* At most three products per row, so cards stay large enough to read. */
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .list { display: flex; flex-direction: column; gap: 14px; }
 
 .empty {
@@ -162,7 +163,6 @@
 
 /* ── Responsive ── */
 @media (max-width: 1180px) {
-  .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .layout { grid-template-columns: 260px minmax(0, 1fr); }
 }
 @media (max-width: 960px) {

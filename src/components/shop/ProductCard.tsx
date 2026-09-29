@@ -3,7 +3,7 @@
 import { Eye } from "lucide-react";
 import Link from "next/link";
 import { clsx } from "clsx";
-import { formatNaira, getCategory, specSummary, type Product } from "@/lib/catalog";
+import { formatNaira, getCategory, priceLabel, specSummary, type Product } from "@/lib/catalog";
 import { ProductAction, ProductImage, StockPill } from "./primitives";
 import styles from "./shop.module.css";
 
@@ -57,7 +57,7 @@ export function ProductCard({
         <div className={styles.cardFooter}>
           <div className={styles.cardPriceRow}>
             <p className={clsx(styles.cardPrice, product.price === null && styles.cardPriceMuted)}>
-              {product.price === null ? "Price on request" : formatNaira(product.price)}
+              {priceLabel(product)}
             </p>
             {product.price !== null && product.compareAtPrice && product.compareAtPrice > product.price && (
               <s className={styles.cardCompare}>

@@ -168,7 +168,7 @@ function PreOrderPopupModal() {
                   {/* CTAs — both fully clickable Links */}
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     <Link
-                      href="/apply/devices"
+                      href="/apply"
                       onClick={dismiss}
                       style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, height: 52, borderRadius: 100, background: "#581319", color: "#fff", fontWeight: 800, fontSize: 14.5, textDecoration: "none", fontFamily: JAKARTA, cursor: "pointer", border: "none" }}
                     >

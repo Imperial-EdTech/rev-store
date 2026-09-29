@@ -9,6 +9,16 @@ npm install
 npm run dev
 ```
 
+## Configuration
+
+Every setting the app reads is listed in `.env.example`. Copy it to
+`.env.local` for local development; in production set the same variables in
+the host (e.g. Vercel project settings) and redeploy.
+
+Sign-in fails closed: without `ADMIN_PASSWORD` and a 32+ character
+`AUTH_SESSION_SECRET`, `/admin` shows "Admin sign-in isn't configured", and a
+partner can't sign in until their passcode variable is set.
+
 ## Database (Supabase)
 
 The app reads and writes only from the server, with the service-role key

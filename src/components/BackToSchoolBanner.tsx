@@ -130,7 +130,7 @@ export function BackToSchoolBanner() {
           </motion.div>
 
           {/* CTA */}
-          <motion.a href="/apply/devices"
+          <motion.a href="/apply"
             initial={{ opacity: 0, y: 8 }}
             animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
             transition={{ duration: 0.4, delay: 0.55 }}
@@ -161,7 +161,7 @@ export function BackToSchoolBanner() {
           ))}
         </motion.div>
 
-        <motion.a href="/apply/devices"
+        <motion.a href="/apply"
           initial={{ opacity: 0, y: 8 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.4, delay: 0.5 }}

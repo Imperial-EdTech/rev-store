@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { checkAdminPassword, failedLoginDelay } from "@/lib/auth/credentials";
+import { adminSignInProblem, checkAdminPassword, failedLoginDelay } from "@/lib/auth/credentials";
 import {
   ADMIN_COOKIE, SESSION_TTL_SECONDS, readCookie, sessionCookieOptions, signSession, verifySession,
 } from "@/lib/auth/session";
@@ -15,12 +15,8 @@ export async function GET(request: Request) {
 
 /** POST /api/auth/admin { password }: sign in. */
 export async function POST(request: Request) {
-  if (!process.env.ADMIN_PASSWORD || !process.env.AUTH_SESSION_SECRET) {
-    return NextResponse.json(
-      { error: "Admin sign-in isn't configured. Set ADMIN_PASSWORD and AUTH_SESSION_SECRET." },
-      { status: 503 },
-    );
-  }
+  const problem = adminSignInProblem();
+  if (problem) return NextResponse.json({ error: problem }, { status: 503 });
 
   const parsed = loginSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success || !(await checkAdminPassword(parsed.data.password))) {

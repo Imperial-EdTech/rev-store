@@ -10,10 +10,10 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Check, CheckCircle2, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { ArrowRight, Check, CheckCircle2, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { BackButton } from "@/components/BackButton";
 import { StorefrontHeader } from "@/components/StorefrontHeader";
 import { StorefrontFooter } from "@/components/StorefrontFooter";
 import { schoolLeadSchema } from "@/lib/leads/schema";
@@ -135,9 +135,7 @@ export default function SchoolApplyPage() {
         <div style={{ maxWidth: 740, margin: "0 auto", padding: "0 20px", position: "relative", zIndex: 10 }}>
 
           {/* Back */}
-          <Link href="/apply/devices" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.5)", textDecoration: "none", marginBottom: 32 }}>
-            <ArrowLeft size={14} /> Back
-          </Link>
+          <BackButton style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.5)", background: "none", border: "none", padding: 0, cursor: "pointer", marginBottom: 32 }} />
 
           {/* Header copy */}
           <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.18em", color: "#FF6B1A", textTransform: "uppercase", margin: "0 0 10px" }}>

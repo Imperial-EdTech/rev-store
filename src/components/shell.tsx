@@ -36,8 +36,7 @@ const FOOTER_DEVICES = [
 const FOOTER_PROGRAMME = [
   { label: "Teacher Empowerment",    href: "/teacher-empowerment" },
   { label: "Let There Be Teachers",  href: "/teacher-empowerment#ltbt" },
-  { label: "Pre-order",              href: "/pre-order" },
-  { label: "Apply now",              href: "/apply/devices" },
+  { label: "Apply now",              href: "/apply" },
   { label: "Payment plans",          href: "/teacher-empowerment#plans" },
   { label: "FAQ",                    href: "/#faq" },
 ];
@@ -96,7 +95,7 @@ export function SiteHeader() {
               <span className="relative inline-flex h-2 w-2 rounded-full bg-rev-orange" />
             </span>
             <span className="text-[11px] font-bold tracking-wide text-rev-orange">
-              Pre-order open — Rev Orion from ₦290,000
+              Teacher Empowerment Programme: applications open
             </span>
           </div>
           <div className="flex gap-5 text-[11px] text-white/35">
@@ -131,9 +130,9 @@ export function SiteHeader() {
             </Link>
             <Link
               className="inline-flex items-center gap-1.5 rounded-full bg-rev-orange px-5 py-2.5 text-xs font-bold text-white shadow-lg transition hover:bg-rev-orange/90"
-              href="/pre-order"
+              href="/apply"
             >
-              <span className="text-sm">⚡</span> Pre-order
+              Apply Now
             </Link>
             <button
               aria-label="Menu"
@@ -186,10 +185,10 @@ export function SiteHeader() {
                 <div className="pt-3">
                   <Link
                     className="block rounded-full bg-rev-orange py-3 text-center text-sm font-bold text-white"
-                    href="/pre-order"
+                    href="/apply"
                     onClick={() => setMobileOpen(false)}
                   >
-                    ⚡ Pre-order now
+                    Apply Now
                   </Link>
                 </div>
               </div>

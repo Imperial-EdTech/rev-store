@@ -1,5 +1,6 @@
 import "server-only";
 import { PARTNERS, type Partner } from "@/lib/partners";
+import { sessionSecretProblem } from "./session";
 
 /**
  * Password checks. Server-only: secrets are read from environment variables
@@ -22,6 +23,12 @@ async function safeEqual(a: string, b: string): Promise<boolean> {
   let diff = 0;
   for (let i = 0; i < x.length; i++) diff |= x[i] ^ y[i];
   return diff === 0;
+}
+
+/** Why admin sign-in can't work yet, or null when it's configured. */
+export function adminSignInProblem(): string | null {
+  if (!process.env.ADMIN_PASSWORD) return "Admin sign-in isn't configured: set ADMIN_PASSWORD.";
+  return sessionSecretProblem();
 }
 
 /** False if ADMIN_PASSWORD is unset: a missing password never grants access. */

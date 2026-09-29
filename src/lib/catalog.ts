@@ -34,7 +34,7 @@ export type Product = {
   /** Colour or configuration shown under the name, e.g. "Silver", "i5 configuration". */
   variant?: string;
   category: CategoryId;
-  /** Unit price in naira. null = price available on request. */
+  /** Unit price in naira. null = no listed price: sold in bulk on request (MOQ applies). */
   price: number | null;
   /** Regular price, shown struck through when the current price is an offer. */
   compareAtPrice?: number;
@@ -438,7 +438,18 @@ export const STOCK_LABEL: Record<StockStatus, string> = {
   out_of_stock: "Out of stock",
 };
 
+/**
+ * Shown where the price would be for products without a listed price: they're
+ * sold in bulk, with a minimum order quantity agreed on WhatsApp.
+ */
+export const BULK_ORDER_LABEL = "MOQ applies";
+
+/** The price as shown to customers: the naira amount, or the bulk-order label. */
+export function priceLabel(p: Product): string {
+  return p.price === null ? BULK_ORDER_LABEL : formatNaira(p.price);
+}
+
 /** WhatsApp message used when a customer asks about an on-request product. */
 export function productEnquiryMessage(p: Product): string {
-  return `Hi Revrica, I'd like a quote for the ${displayName(p)} (${specSummary(p)}). Please share price and availability.`;
+  return `Hi Revrica, I'd like a quote for the ${displayName(p)} (${specSummary(p)}). Please share the price, minimum order quantity (MOQ) and availability.`;
 }

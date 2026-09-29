@@ -36,5 +36,10 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
+  // Node.js runtime, like the API routes: both then read the same environment.
+  // On the Edge runtime, the dev server kept the AUTH_SESSION_SECRET it started
+  // with while sign-in picked up edits to .env.local, so a valid sign-in was
+  // bounced back to /admin/login.
+  runtime: "nodejs",
   matcher: ["/admin/:path*", "/revlearn/admin/:path*", "/pre-order", "/products/tablets"],
 };

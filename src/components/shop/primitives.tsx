@@ -1,9 +1,10 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Ban, Check, ImageOff, MessageCircle, Minus, Plus, ShoppingCart } from "lucide-react";
+import { ArrowRight, Ban, Check, ImageOff, MessageCircle, Minus, Plus, ShoppingCart } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useState } from "react";
 import { clsx } from "clsx";
 import { MAX_QTY_PER_LINE, useCart } from "@/lib/cart/cart-context";
 import { productEnquiryMessage, STOCK_LABEL, type Product, type StockStatus } from "@/lib/catalog";
@@ -61,12 +62,13 @@ export function ProductImage({
   );
 }
 
-// ─── Primary action: add to cart / request / out of stock ─────
+// ─── Primary action: add to cart / checkout / request / out of stock ─────
 /**
- * The one call-to-action for a product, chosen by stock status:
- *   in_stock     → Add to cart (with brief "Added" confirmation)
- *   on_request   → Request on WhatsApp (pre-filled enquiry)
- *   out_of_stock → disabled
+ * The one call-to-action for a product, chosen by stock status and cart:
+ *   in_stock, not in cart → Add to cart
+ *   in_stock, in cart     → Checkout, via the cart page so the order can be reviewed first
+ *   on_request            → Request on WhatsApp (pre-filled enquiry)
+ *   out_of_stock          → disabled
  */
 export function ProductAction({
   product,
@@ -77,12 +79,12 @@ export function ProductAction({
   qty?: number;
   size?: "md" | "lg";
 }) {
-  const { add } = useCart();
-  const [justAdded, setJustAdded] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  useEffect(() => () => clearTimeout(timer.current), []);
+  const { add, qtyOf } = useCart();
+  // Set when this button added the item, so screen readers hear the change.
+  const [announced, setAnnounced] = useState(false);
 
   const cls = clsx(styles.action, size === "lg" && styles.actionLg);
+  const iconSize = size === "lg" ? 18 : 16;
 
   if (product.stock === "on_request") {
     return (
@@ -92,7 +94,7 @@ export function ProductAction({
         rel="noopener noreferrer"
         target="_blank"
       >
-        <MessageCircle aria-hidden size={size === "lg" ? 18 : 16} />
+        <MessageCircle aria-hidden size={iconSize} />
         Request on WhatsApp
       </a>
     );
@@ -107,36 +109,36 @@ export function ProductAction({
     );
   }
 
-  function onAdd() {
-    add(product.id, qty);
-    setJustAdded(true);
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => setJustAdded(false), 1800);
-  }
+  const inCart = qtyOf(product.id) > 0;
 
   return (
-    <button
-      className={clsx(cls, styles.actionPrimary, justAdded && styles.actionAdded)}
-      onClick={onAdd}
-      type="button"
-    >
+    <>
       <AnimatePresence initial={false} mode="wait">
-        <motion.span
-          animate={{ opacity: 1, y: 0 }}
-          className={styles.actionInner}
-          exit={{ opacity: 0, y: -4 }}
-          initial={{ opacity: 0, y: 4 }}
-          key={justAdded ? "added" : "add"}
-          transition={{ duration: 0.14 }}
-        >
-          {justAdded ? <Check aria-hidden size={16} /> : <ShoppingCart aria-hidden size={16} />}
-          {justAdded ? "Added to cart" : "Add to Cart"}
-        </motion.span>
+        {inCart ? (
+          <motion.span animate={{ opacity: 1, scale: 1 }} className={styles.actionSlot} initial={{ opacity: 0, scale: 0.96 }} key="checkout" transition={{ duration: 0.16 }}>
+            <Link className={clsx(cls, styles.actionCheckout)} href="/cart">
+              <Check aria-hidden size={iconSize} />
+              Checkout
+              <ArrowRight aria-hidden className={styles.actionArrow} size={iconSize} />
+            </Link>
+          </motion.span>
+        ) : (
+          <motion.span animate={{ opacity: 1, scale: 1 }} className={styles.actionSlot} initial={{ opacity: 0, scale: 0.96 }} key="add" transition={{ duration: 0.16 }}>
+            <button
+              className={clsx(cls, styles.actionPrimary)}
+              onClick={() => { add(product.id, qty); setAnnounced(true); }}
+              type="button"
+            >
+              <ShoppingCart aria-hidden size={iconSize} />
+              Add to Cart
+            </button>
+          </motion.span>
+        )}
       </AnimatePresence>
       <span aria-live="polite" className={styles.srOnly}>
-        {justAdded ? `${product.name} added to cart` : ""}
+        {announced && inCart ? `${product.name} added to cart. Checkout is now available.` : ""}
       </span>
-    </button>
+    </>
   );
 }
 

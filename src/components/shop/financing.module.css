@@ -8,8 +8,20 @@
   border: 1px solid #efd9d9; border-radius: var(--rs-radius);
   background: linear-gradient(180deg, #fdf6f6 0%, var(--rs-surface) 100%);
 }
-.head { display: flex; align-items: center; gap: 10px; color: var(--rs-maroon); }
-.head h2 { margin: 0; font-family: var(--font-display); font-size: 15.5px; font-weight: 700; color: var(--rs-ink); }
+/* Summary row of the collapsible panel. */
+.head {
+  display: flex; align-items: center; gap: 12px;
+  margin: -4px; padding: 4px; border-radius: 8px;
+  color: var(--rs-maroon); cursor: pointer; list-style: none;
+}
+.head::-webkit-details-marker { display: none; }
+.head:focus-visible { outline: 2px solid var(--rs-maroon); outline-offset: 2px; }
+.headIcon { flex-shrink: 0; }
+.headText { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; }
+.headTitle { font-family: var(--font-display); font-size: 15.5px; font-weight: 700; color: var(--rs-ink); }
+.headSub { font-size: 13px; font-weight: 600; color: var(--rs-maroon); font-variant-numeric: tabular-nums; }
+.chevron { flex-shrink: 0; color: var(--rs-ink-2); transition: transform 0.2s; }
+.panel[open] .chevron { transform: rotate(180deg); }
 
 .terms { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 16px 0 0; padding: 4px; border: none; border-radius: 10px; background: #f3eded; }
 .term {
@@ -20,14 +32,11 @@
 .term:has(input:focus-visible) { outline: 2px solid var(--rs-maroon); outline-offset: 1px; }
 .termActive, .termActive:hover { background: var(--rs-surface); color: var(--rs-maroon); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
 
-.figures { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; margin: 18px 0 0; }
+.figures { margin: 18px 0 0; }
 .figures dt { font-size: 12.5px; color: var(--rs-muted); }
 .figures dd { margin: 3px 0 0; font-size: 15px; font-weight: 700; color: var(--rs-ink); font-variant-numeric: tabular-nums; }
-.monthly { grid-column: 1 / -1; }
 .monthly dd { font-family: var(--font-display); font-size: 28px; font-weight: 800; color: var(--rs-maroon); letter-spacing: -0.01em; }
 .monthly dd span { margin-left: 2px; font-family: var(--font-sans); font-size: 14px; font-weight: 600; color: var(--rs-muted); }
-
-.note { margin: 14px 0 0; font-size: 13px; line-height: 1.55; color: var(--rs-ink-2); }
 
 .actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 18px; margin-top: 16px; }
 .apply {
@@ -45,6 +54,9 @@
 .compact .apply { width: 100%; }
 
 @media (max-width: 480px) {
-  .figures { grid-template-columns: 1fr; }
   .apply { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron { transition: none; }
 }

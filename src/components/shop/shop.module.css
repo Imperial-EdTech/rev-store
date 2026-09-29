@@ -44,11 +44,16 @@
 .action:active:not(:disabled) { transform: scale(0.98); }
 .action:focus-visible { outline: 2px solid var(--rs-maroon); outline-offset: 2px; }
 .actionLg { height: 52px; font-size: 15px; border-radius: 10px; }
-.actionInner { display: inline-flex; align-items: center; gap: 9px; }
 
 .actionPrimary { background: var(--rs-maroon); color: #fff; }
 .actionPrimary:hover { background: var(--rs-maroon-hover); }
-.actionAdded, .actionAdded:hover { background: var(--rs-ok); }
+/* Item already in the cart: the button becomes the way forward. */
+.actionCheckout { background: var(--rs-ok); color: #fff; }
+.actionCheckout:hover { background: #116a32; }
+.actionArrow { margin-left: -2px; transition: transform 0.15s; }
+.actionCheckout:hover .actionArrow { transform: translateX(2px); }
+/* Keeps the swap animation from changing the button's layout. */
+.actionSlot { display: block; width: 100%; }
 
 .actionWhatsapp { background: var(--rs-ok-tint); color: #14532d; }
 .actionWhatsapp svg { color: #16a34a; }

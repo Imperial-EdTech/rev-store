@@ -508,7 +508,7 @@ export default function Home() {
                   <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 8 }}>In Partnership With</div>
                   <h3 style={{ fontFamily: "Sora,sans-serif", fontWeight: 800, fontSize: 22, color: "#fff", margin: "0 0 10px", lineHeight: 1.2 }}>Let There Be<br />Teachers</h3>
                   <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", margin: "0 0 20px", lineHeight: 1.6 }}>Affordable laptops for teachers. Empowering every classroom.</p>
-                  <Link href="/apply/devices?pathway=ltbt">
+                  <Link href="/apply?pathway=ltbt">
                     <button style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "#f2760f", fontWeight: 700, fontSize: 13, cursor: "pointer", padding: 0 }} type="button">
                       Learn more <ArrowRight size={12} />
                     </button>

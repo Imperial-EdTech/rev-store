@@ -3,7 +3,9 @@
 // ═══════════════════════════════════════════════════════════════
 // /apply — Teacher Digital Empowerment Programme Application
 //
-// Flow: /apply/devices → /apply?device=<id> → /success
+// Flow: any "Apply" button → /apply → /success
+//   ?device=<id>   device chosen on its product page (financeable devices only)
+//   ?pathway=ltbt  preselects a pathway (individual | ltbt | government)
 //
 // Three application pathways:
 //  1. Individual Teacher  — solo applicant
@@ -15,7 +17,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { clsx } from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Building2, Check, GraduationCap, Star } from "lucide-react";
+import { ArrowRight, Building2, Check, GraduationCap, Star } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import type React from "react";
@@ -28,9 +30,10 @@ import { StorefrontFooter } from "@/components/StorefrontFooter";
 import { GOVERNMENT_BODIES } from "@/lib/organizations";
 import {
   REPAYMENT_OPTIONS, SALARY_BANDS, YEARS_TEACHING, teacherApplicationSchema,
-  type SubmissionOutcome, type TeacherApplication,
+  type ApplyAs, type SubmissionOutcome, type TeacherApplication,
 } from "@/lib/applications/schema";
-import { displayName, getProduct } from "@/lib/catalog";
+import { BackButton } from "@/components/BackButton";
+import { PRODUCTS, displayName, formatNaira, getProduct, lowestMonthly } from "@/lib/catalog";
 import { NIGERIAN_STATES } from "@/lib/nigeria";
 
 const JAKARTA = "'Plus Jakarta Sans', ui-sans-serif, system-ui";
@@ -50,6 +53,11 @@ const STEPS: { title: string; sub: string; fields: FieldName[] }[] = [
   { title: "Financial information",  sub: "This helps us match you with the right plan.",                          fields: ["salaryBand","repaymentTenor","monthlyBudget"] },
   { title: "Verification & consent", sub: "A few final questions before you submit.",                             fields: ["ownsLaptop","whyLaptop","kycConsent","declaration"] },
 ];
+
+const PATHWAYS: readonly ApplyAs[] = ["individual", "ltbt", "government"];
+
+/** Cheapest monthly repayment on the programme, from the catalogue. */
+const LOWEST_MONTHLY = Math.min(...PRODUCTS.flatMap((p) => lowestMonthly(p)?.monthly ?? []));
 
 /** The first step that has a field with an error. */
 function firstStepWithError(errors: FieldErrors<FormInput>): number {
@@ -185,6 +193,8 @@ function ApplyForm() {
   const device       = getProduct(searchParams.get("device") ?? "");
   const deviceId     = device?.financing ? device.id : undefined;
   const deviceName   = device?.financing ? displayName(device) : null;
+  const pathwayParam = searchParams.get("pathway");
+  const initialPathway: ApplyAs = PATHWAYS.includes(pathwayParam as ApplyAs) ? (pathwayParam as ApplyAs) : "individual";
 
   const [step, setStep]           = useState(0);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -192,7 +202,7 @@ function ApplyForm() {
   const { register, handleSubmit, trigger, watch, control, formState: { errors, isSubmitting } } =
     useForm<FormInput, unknown, FormValues>({
       resolver: zodResolver(teacherApplicationSchema),
-      defaultValues: { applyAs: "individual" },
+      defaultValues: { applyAs: initialPathway },
     });
 
   const applyAs         = watch("applyAs");
@@ -242,9 +252,7 @@ function ApplyForm() {
 
           {/* ── Left panel ── */}
           <aside className="pt-8">
-            <Link className="inline-flex items-center text-sm font-bold text-white/60 hover:text-rev-orange" href="/apply/devices">
-              <ArrowLeft className="mr-2 h-4 w-4"/> Back to devices
-            </Link>
+            <BackButton className="inline-flex items-center gap-2 text-sm font-bold text-white/60 hover:text-rev-orange" />
 
             <p className="mt-10 text-xs font-bold uppercase tracking-[0.2em] text-rev-orange">Teacher Digital Empowerment Programme</p>
             <h1 className="text-balance mt-3 font-display text-3xl font-extrabold leading-[1.06] text-white md:text-4xl">
@@ -288,8 +296,12 @@ function ApplyForm() {
             )}
 
             <p className="mt-5 max-w-sm text-base leading-7 text-white/55">
-              Spread the cost over 12, 24, or 36 months — from <strong className="text-white">₦15,000/month</strong>, in partnership with Lotus Bank.
+              Spread the cost over 12, 24, or 36 months — from <strong className="text-white">{formatNaira(LOWEST_MONTHLY)}/month</strong>, in partnership with Lotus Bank.
             </p>
+
+            <Link className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-rev-orange hover:text-white" href="/teacher-empowerment">
+              Learn more about the Teacher Empowerment Programme <ArrowRight className="h-4 w-4"/>
+            </Link>
 
             {/* Step sidebar */}
             <div className="mt-10 hidden flex-col gap-3 lg:flex">
@@ -509,6 +521,7 @@ function ApplyForm() {
               {/* Navigation */}
               <div className="mt-8 flex items-center justify-between gap-3">
                 <button
+                  aria-label="Previous step"
                   className="focus-ring h-12 rounded-full border border-black/12 px-5 text-sm font-bold text-slate-body transition hover:border-black/25 disabled:opacity-30"
                   disabled={step === 0}
                   onClick={() => setStep(s => Math.max(s - 1, 0))}
