@@ -12,7 +12,7 @@ import { HeroCarousel } from "@/components/HeroCarousel";
 import { PreOrderPopup } from "@/components/preorder-popup";
 import { StorefrontHeader } from "@/components/StorefrontHeader";
 import { StorefrontFooter } from "@/components/StorefrontFooter";
-import { getProduct, specSummary } from "@/lib/catalog";
+import { getCategory, getProduct, specSummary } from "@/lib/catalog";
 import { WHATSAPP_NUMBER } from "@/lib/contact";
 import { FEATURES } from "@/lib/features";
 
@@ -104,6 +104,15 @@ const DEALS = DEAL_BADGES.flatMap(([id, badge]) => {
 });
 
 // ─── Section entrance animation wrapper ───────────────────────
+// ─── Featured devices ("Shop our devices", above Shop by category) ──
+// A few devices to show what we sell before the visitor picks a category.
+// No prices here on purpose; the product page has them.
+const FEATURED_IDS = ["orion", "aelia", "tab", "db19c-i5"];
+const FEATURED = FEATURED_IDS.flatMap((id) => {
+  const p = getProduct(id);
+  return p?.image ? [{ id: p.id, name: p.name, category: getCategory(p.category).singular, image: p.image }] : [];
+});
+
 function AnimatedSection({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
@@ -247,6 +256,8 @@ export default function Home() {
         .serve-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .deals-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
         .shop-cat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+        .featured-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+        .featured-img { height: 210px; }
         .why-grid { display: grid; grid-template-columns: repeat(4,1fr); }
         .programs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .trust-grid { display: grid; grid-template-columns: repeat(4,1fr); }
@@ -257,11 +268,14 @@ export default function Home() {
         @media (max-width: 1024px) {
           .deals-grid { grid-template-columns: repeat(2,1fr) !important; }
           .shop-cat-grid { grid-template-columns: repeat(2,1fr) !important; }
+          .featured-grid { grid-template-columns: repeat(2,1fr) !important; }
         }
         @media (max-width: 768px) {
           .serve-grid { grid-template-columns: 1fr !important; }
           .deals-grid { grid-template-columns: 1fr 1fr !important; }
           .shop-cat-grid { grid-template-columns: 1fr 1fr !important; }
+          .featured-grid { grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
+          .featured-img { height: 140px !important; padding: 12px !important; }
           .why-grid { grid-template-columns: 1fr 1fr !important; }
           .programs-grid { grid-template-columns: 1fr !important; }
           .trust-grid { grid-template-columns: 1fr 1fr !important; }
@@ -346,6 +360,54 @@ export default function Home() {
                           <ShoppingCart size={13} color="#fff" />
                         </button>
                       </div>
+                    </div>
+                  </motion.div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+        </AnimatedSection>
+        )}
+
+        {/* 4a. SHOP OUR DEVICES */}
+        {FEATURED.length > 0 && (
+        <AnimatedSection>
+        <section style={{ background: "#fff", padding: "56px 20px" }}>
+          <div style={{ maxWidth: 1240, margin: "0 auto" }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 28, flexWrap: "wrap", gap: 10 }}>
+              <div>
+                <h2 style={{ fontFamily: "Sora,sans-serif", fontWeight: 800, fontSize: 24, color: "#111", letterSpacing: "-0.02em", margin: "0 0 4px" }}>
+                  Shop our <span style={{ color: "#f2760f" }}>devices</span>
+                </h2>
+                <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>Laptops, tablets and more, built for learning and teaching.</p>
+              </div>
+              <Link href="/products" style={{ fontSize: 13, fontWeight: 700, color: "#f2760f", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
+                View all <ArrowRight size={13} />
+              </Link>
+            </div>
+            <div className="featured-grid">
+              {FEATURED.map((p, idx) => (
+                <Link key={p.id} href={`/products/${p.id}`} style={{ textDecoration: "none" }}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 24 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-30px" }}
+                    transition={{ duration: 0.45, delay: idx * 0.07, ease: [0.22, 1, 0.36, 1] }}
+                    whileHover={{ y: -5, boxShadow: "0 16px 40px rgba(0,0,0,0.10)" }}
+                    style={{ background: "#fff", borderRadius: 18, border: "1px solid #ebebeb", overflow: "hidden", height: "100%", display: "flex", flexDirection: "column" }}
+                  >
+                    <div className="featured-img" style={{ background: "#f6f6f6", display: "flex", alignItems: "center", justifyContent: "center", padding: 18 }}>
+                      <DeviceImg alt={p.name} src={p.image} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+                    </div>
+                    <div style={{ padding: "14px 16px 16px", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 10, flex: 1 }}>
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 3px" }}>{p.category}</p>
+                        <h3 style={{ fontFamily: "Sora,sans-serif", fontWeight: 700, fontSize: 15, color: "#111", margin: 0 }}>{p.name}</h3>
+                      </div>
+                      <span style={{ marginTop: "auto", display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12.5, fontWeight: 700, color: "#f2760f" }}>
+                        View <ArrowRight size={12} />
+                      </span>
                     </div>
                   </motion.div>
                 </Link>

@@ -1,6 +1,8 @@
 "use client";
 
 import { AnimatePresence, motion, useInView } from "framer-motion";
+import { Award } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 function DeviceThumb({ src, alt, fallback, className }: {
@@ -23,7 +25,7 @@ function LaptopSVG({ className }: { className?: string }) {
   );
 }
 
-function AnimatedHeadline({ inView }: { inView: boolean }) {
+function AnimatedHeadline({ inView, align = "center" }: { inView: boolean; align?: "center" | "left" }) {
   const [cycle, setCycle] = useState(0);
 
   useEffect(() => {
@@ -34,15 +36,16 @@ function AnimatedHeadline({ inView }: { inView: boolean }) {
 
   const line1 = ["Welcome", "Back"];
   const line2 = ["To", "School", "DEALS"];
+  const justify = align === "left" ? "justify-start" : "justify-center";
 
   return (
     <AnimatePresence mode="wait">
-      <motion.div key={cycle} className="text-center">
-        <div className="flex flex-wrap justify-center gap-x-[0.28em]">
+      <motion.div key={cycle} className={align === "left" ? "text-left" : "text-center"}>
+        <div className={`flex flex-wrap ${justify} gap-x-[0.28em]`}>
           {line1.map((word, i) => (
             <motion.span key={word + i}
               className="font-display font-black uppercase leading-[1.1] tracking-tight text-white"
-              style={{ fontSize: "clamp(20px, 2.8vw, 30px)" }}
+              style={{ fontSize: "clamp(20px, 2.6vw, 32px)" }}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.38, delay: 0.05 + i * 0.07, ease: [0.16, 1, 0.3, 1] }}
@@ -51,11 +54,11 @@ function AnimatedHeadline({ inView }: { inView: boolean }) {
             </motion.span>
           ))}
         </div>
-        <div className="flex flex-wrap justify-center gap-x-[0.28em]">
+        <div className={`flex flex-wrap ${justify} gap-x-[0.28em]`}>
           {line2.map((word, i) => (
             <motion.span key={word + i}
               className="font-display font-black uppercase leading-[1.1] tracking-tight text-[#FF6B1A]"
-              style={{ fontSize: "clamp(20px, 2.8vw, 30px)" }}
+              style={{ fontSize: "clamp(20px, 2.6vw, 32px)" }}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.38, delay: 0.2 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
@@ -69,14 +72,38 @@ function AnimatedHeadline({ inView }: { inView: boolean }) {
   );
 }
 
+/** Promotes the "My Teacher, My Hero" nominations page (/nominate-a-teacher). */
+function NominateTeacherPill() {
+  return (
+    <Link
+      className="group inline-flex max-w-full items-center gap-2.5 rounded-2xl border border-[#FF6B1A]/40 bg-[#FF6B1A]/10 py-2 pl-2 pr-4 text-left transition hover:border-[#FF6B1A]/70 hover:bg-[#FF6B1A]/20"
+      href="/nominate-a-teacher"
+    >
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#FF6B1A] text-white">
+        <Award className="h-4 w-4" />
+      </span>
+      <span className="text-[12px] leading-snug text-white/80">
+        <strong className="block text-[13px] font-bold text-white">My Teacher, My Hero</strong>
+        Nominate a teacher to win a Rev laptop
+        <span className="ml-1 inline-block font-bold text-[#FF6B1A] transition-transform group-hover:translate-x-0.5">&rarr;</span>
+      </span>
+    </Link>
+  );
+}
+
+const DEVICES = [
+  { src: "/devices/rev_orion_laptop.png", alt: "Rev Orion laptop", label: "Rev Orion", href: "/products/orion" },
+  { src: "/devices/rev_orion_laptop.png", alt: "Rev Aelia laptop", label: "Rev Aelia", href: "/products/aelia" },
+];
+
 export function BackToSchoolBanner() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: false, margin: "-40px" });
-
-  const devices = [
-    { src: "/devices/rev_orion_laptop.png", alt: "Rev Orion laptop", svg: <LaptopSVG className="h-16 w-auto" />, label: "Rev Orion" },
-    { src: "/devices/rev_orion_laptop.png", alt: "Rev Aelia laptop", svg: <LaptopSVG className="h-14 w-auto" />, label: "Rev Aelia" },
-  ];
+  const reveal = (delay: number) => ({
+    initial: { opacity: 0, y: 10 },
+    animate: inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 },
+    transition: { duration: 0.42, delay },
+  });
 
   return (
     <div ref={ref} className="relative overflow-hidden"
@@ -93,83 +120,52 @@ export function BackToSchoolBanner() {
       <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.035]"
         style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px)", backgroundSize: "18px 18px" }} />
 
-      {/* ── DESKTOP ── */}
-      <div className="container-x relative z-10 hidden md:block">
-        <div className="flex flex-col items-center py-8 text-center">
-
-          {/* Headline centred */}
-          <AnimatedHeadline inView={inView} />
-
-          {/* Divider */}
-          <div className="my-5 h-px w-24 bg-white/15" />
-
-          {/* Sub-copy centred */}
-          <motion.p className="max-w-md text-[13px] leading-[1.65] text-white/55"
-            initial={{ opacity: 0, y: 8 }}
-            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
-            transition={{ duration: 0.45, delay: 0.28 }}>
+      {/* ── DESKTOP: one horizontal row ── */}
+      <div className="container-x relative z-10 hidden items-center justify-between gap-8 py-7 md:flex">
+        <div className="min-w-0 shrink">
+          <AnimatedHeadline align="left" inView={inView} />
+          <motion.p className="mt-2 max-w-xs text-[13px] leading-[1.6] text-white/55" {...reveal(0.28)}>
             Big savings on laptops for students, teachers and schools.
           </motion.p>
-
-          {/* Device images centred */}
-          <motion.div className="mt-6 flex items-end justify-center gap-10"
-            initial={{ opacity: 0, y: 18 }}
-            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
-            transition={{ duration: 0.42, delay: 0.38 }}>
-            {devices.map((d, i) => (
-              <motion.div key={d.label}
-                initial={{ opacity: 0, y: 18 }}
-                animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
-                transition={{ duration: 0.42, delay: 0.4 + i * 0.1 }}
-                className="flex flex-col items-center gap-1.5"
-              >
-                <DeviceThumb alt={d.alt} className="h-20 w-auto object-contain drop-shadow-lg" fallback={d.svg} src={d.src} />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-white/30">{d.label}</span>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {/* CTA */}
-          <motion.a href="/apply"
-            initial={{ opacity: 0, y: 8 }}
-            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
-            transition={{ duration: 0.4, delay: 0.55 }}
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#FF6B1A] px-6 py-2.5 text-[13px] font-bold text-white shadow-md transition hover:bg-[#e55d10]"
-          >
-            Apply Now
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </motion.a>
         </div>
-      </div>
 
-      {/* ── MOBILE ── */}
-      <div className="container-x relative z-10 block py-7 text-center md:hidden">
-        <AnimatedHeadline inView={inView} />
-
-        <motion.p className="mx-auto mt-3 max-w-xs text-[12.5px] leading-[1.6] text-white/52"
-          initial={{ opacity: 0, y: 8 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.4, delay: 0.3 }}>
-          Big savings on laptops for students, teachers and schools.
-        </motion.p>
-
-        <motion.div className="mt-4 flex items-end justify-center gap-6"
-          initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ duration: 0.4, delay: 0.4 }}>
-          {devices.map(d => (
-            <div key={d.label} className="flex flex-col items-center gap-1">
-              <DeviceThumb alt={d.alt} className="h-12 w-auto object-contain drop-shadow-md" fallback={d.svg} src={d.src} />
-              <span className="text-[9px] font-bold uppercase tracking-wider text-white/30">{d.label}</span>
-            </div>
+        <motion.div className="flex shrink-0 items-end gap-8 border-white/10 lg:border-x lg:px-10" {...reveal(0.38)}>
+          {DEVICES.map((d) => (
+            <Link className="group flex flex-col items-center gap-1.5" href={d.href} key={d.label}>
+              <DeviceThumb alt={d.alt} className="h-20 w-auto object-contain drop-shadow-lg transition-transform group-hover:-translate-y-1" fallback={<LaptopSVG className="h-16 w-auto" />} src={d.src} />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-white/40 transition-colors group-hover:text-white/70">{d.label}</span>
+            </Link>
           ))}
         </motion.div>
 
-        <motion.a href="/apply"
-          initial={{ opacity: 0, y: 8 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.4, delay: 0.5 }}
-          className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#FF6B1A] px-5 py-2 text-[12.5px] font-bold text-white"
-        >
-          Apply Now
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </motion.a>
+        <motion.div className="hidden shrink-0 lg:block" {...reveal(0.5)}>
+          <NominateTeacherPill />
+        </motion.div>
+      </div>
+      {/* Between md and lg the row has no room for the pill, so it sits underneath. */}
+      <div className="container-x relative z-10 hidden pb-6 md:block lg:hidden">
+        <NominateTeacherPill />
+      </div>
+
+      {/* ── MOBILE: headline beside the laptop, pill underneath ── */}
+      <div className="container-x relative z-10 py-6 md:hidden">
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <AnimatedHeadline align="left" inView={inView} />
+            <motion.p className="mt-2 text-[12.5px] leading-[1.55] text-white/55" {...reveal(0.3)}>
+              Big savings on laptops for students, teachers and schools.
+            </motion.p>
+          </div>
+          <motion.div {...reveal(0.4)}>
+            <Link className="flex shrink-0 flex-col items-center gap-1" href={DEVICES[0].href}>
+              <DeviceThumb alt={DEVICES[0].alt} className="h-16 w-auto object-contain drop-shadow-md" fallback={<LaptopSVG className="h-14 w-auto" />} src={DEVICES[0].src} />
+              <span className="text-[9px] font-bold uppercase tracking-wider text-white/35">{DEVICES[0].label}</span>
+            </Link>
+          </motion.div>
+        </div>
+        <motion.div className="mt-5" {...reveal(0.5)}>
+          <NominateTeacherPill />
+        </motion.div>
       </div>
 
       <div className="absolute inset-x-0 bottom-0 h-[1px] bg-white/6" />

@@ -1,9 +1,10 @@
 "use client";
 
-import { ClipboardCheck, GraduationCap, LogOut, ShoppingBag, Users } from "lucide-react";
+import { Award, ClipboardCheck, GraduationCap, LogOut, ShoppingBag, Users } from "lucide-react";
 import { useState } from "react";
 import { ApplicationsView } from "@/components/admin/applications-view";
 import { LeadsView } from "@/components/admin/leads-view";
+import { NominationsView } from "@/components/admin/nominations-view";
 import { OrdersView } from "@/components/admin/orders-view";
 import { SiteHeader } from "@/components/shell";
 import { TechAuditView } from "@/components/tech-audit-view";
@@ -14,6 +15,7 @@ const TABS = [
   { id: "applications", label: "Applications", Icon: GraduationCap },
   { id: "leads", label: "Leads", Icon: Users },
   { id: "tech-audit", label: "Tech Audit", Icon: ClipboardCheck },
+  { id: "nominations", label: "Nominations", Icon: Award },
 ] as const;
 type Tab = (typeof TABS)[number]["id"];
 
@@ -34,7 +36,7 @@ export default function AdminPage() {
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-rev-orange">Revrica Admin</p>
               <h1 className="mt-3 font-display text-4xl font-extrabold text-white md:text-5xl">Dashboard</h1>
-              <p className="mt-2 text-sm text-white/50">Orders, financing applications, leads and tech audits in one place.</p>
+              <p className="mt-2 text-sm text-white/50">Orders, financing applications, leads, tech audits and teacher nominations in one place.</p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <div className="inline-flex flex-wrap gap-1 rounded-2xl border border-white/12 bg-white/5 p-1.5" role="tablist">
@@ -66,6 +68,7 @@ export default function AdminPage() {
             {tab === "applications" && <ApplicationsView />}
             {tab === "leads" && <LeadsView />}
             {tab === "tech-audit" && <TechAuditView />}
+            {tab === "nominations" && <NominationsView />}
           </div>
         </div>
       </main>
