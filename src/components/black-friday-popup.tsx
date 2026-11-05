@@ -69,7 +69,7 @@ function BlackFridayPopupModal() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               aria-labelledby="bf-popup-title"
               aria-modal="true"
-              className="pointer-events-auto relative w-full max-w-[560px]"
+              className="pointer-events-auto relative max-h-[calc(100dvh-2rem)] w-full max-w-[880px] overflow-y-auto rounded-3xl"
               exit={{ opacity: 0, scale: 0.95, y: 24 }}
               initial={{ opacity: 0, scale: 0.93, y: 32 }}
               role="dialog"
@@ -89,55 +89,64 @@ function BlackFridayPopupModal() {
                   <X className="h-4 w-4" />
                 </button>
 
-                <div className="relative z-10 p-7 text-center sm:p-9">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-rev-orange/40 bg-rev-orange/10 px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.18em] text-rev-orange">
-                    <span className="relative flex h-2 w-2">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rev-orange opacity-60" />
-                      <span className="relative inline-flex h-2 w-2 rounded-full bg-rev-orange" />
-                    </span>
-                    Pre-Black Friday Deal
-                  </span>
-
-                  <h2
-                    className="text-balance mx-auto mt-5 max-w-md font-display text-3xl font-extrabold leading-[1.08] tracking-tight text-white sm:text-4xl"
-                    id="bf-popup-title"
-                  >
-                    Buy a brand-new laptop <span className="text-rev-peach">for your loved ones</span>
-                  </h2>
-
-                  <img
-                    alt="Rev laptop"
-                    className="mx-auto mt-6 h-40 w-auto object-contain drop-shadow-2xl sm:h-48"
-                    src="/devices/rev_orion_laptop.png"
-                  />
-
-                  <p className="mt-5 text-sm font-semibold uppercase tracking-[0.14em] text-white/50">For as low as</p>
-                  <p className="font-display text-5xl font-extrabold tracking-tight text-rev-orange sm:text-6xl">
-                    ₦{FROM_PRICE.toLocaleString("en-NG")}
-                  </p>
-
-                  <div className="mx-auto mt-5 flex max-w-sm items-center justify-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3">
-                    <Gift className="h-5 w-5 shrink-0 text-rev-peach" />
-                    <p className="text-sm text-white/80">
-                      We also do <strong className="text-white">Buy Now, Pay Later</strong>
-                    </p>
+                <div className="relative z-10 grid items-center gap-6 p-7 text-center sm:p-10 md:grid-cols-[1fr_1.1fr] md:gap-10 md:text-left">
+                  {/* Laptop — beside the offer on md+, below the headline on phones */}
+                  <div className="order-2 md:order-1">
+                    <img
+                      alt="Rev laptop"
+                      className="mx-auto h-40 w-auto object-contain drop-shadow-2xl sm:h-48 md:h-auto md:w-full"
+                      src="/devices/rev_orion_laptop.png"
+                    />
                   </div>
 
-                  <div className="mt-7 grid gap-3 sm:grid-cols-2">
-                    <Link
-                      className="focus-ring flex h-12 items-center justify-center gap-2 rounded-full bg-rev-orange text-sm font-bold text-white shadow-glow transition hover:bg-rev-orangeDeep"
-                      href="/products?category=laptops"
-                      onClick={dismiss}
-                    >
-                      Shop laptops <ArrowRight className="h-4 w-4" />
-                    </Link>
-                    <Link
-                      className="focus-ring flex h-12 items-center justify-center rounded-full border border-white/20 text-sm font-bold text-white transition hover:border-white/45 hover:bg-white/5"
-                      href="/apply"
-                      onClick={dismiss}
-                    >
-                      Buy Now, Pay Later
-                    </Link>
+                  <div className="contents md:order-2 md:block">
+                    <div className="order-1">
+                      <span className="inline-flex items-center gap-2 rounded-full border border-rev-orange/40 bg-rev-orange/10 px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.18em] text-rev-orange">
+                        <span className="relative flex h-2 w-2">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rev-orange opacity-60" />
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-rev-orange" />
+                        </span>
+                        Pre-Black Friday Deal
+                      </span>
+
+                      <h2
+                        className="text-balance mx-auto mt-5 max-w-md font-display text-3xl font-extrabold leading-[1.08] tracking-tight text-white sm:text-4xl md:mx-0"
+                        id="bf-popup-title"
+                      >
+                        Buy a brand-new laptop <span className="text-rev-peach">for your loved ones</span>
+                      </h2>
+                    </div>
+
+                    <div className="order-3 md:mt-6">
+                      <p className="text-sm font-semibold uppercase tracking-[0.14em] text-white/50">For as low as</p>
+                      <p className="font-display text-5xl font-extrabold tracking-tight text-rev-orange sm:text-6xl">
+                        ₦{FROM_PRICE.toLocaleString("en-NG")}
+                      </p>
+
+                      <div className="mx-auto mt-5 flex max-w-sm items-center justify-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 md:mx-0 md:justify-start">
+                        <Gift className="h-5 w-5 shrink-0 text-rev-peach" />
+                        <p className="text-sm text-white/80">
+                          We also do <strong className="text-white">Buy Now, Pay Later</strong>
+                        </p>
+                      </div>
+
+                      <div className="mt-7 grid gap-3 sm:grid-cols-2">
+                        <Link
+                          className="focus-ring flex h-12 items-center justify-center gap-2 rounded-full bg-rev-orange text-sm font-bold text-white shadow-glow transition hover:bg-rev-orangeDeep"
+                          href="/products?category=laptops"
+                          onClick={dismiss}
+                        >
+                          Shop laptops <ArrowRight className="h-4 w-4" />
+                        </Link>
+                        <Link
+                          className="focus-ring flex h-12 items-center justify-center rounded-full border border-white/20 text-sm font-bold text-white transition hover:border-white/45 hover:bg-white/5"
+                          href="/apply"
+                          onClick={dismiss}
+                        >
+                          Buy Now, Pay Later
+                        </Link>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
