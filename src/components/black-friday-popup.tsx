@@ -84,7 +84,7 @@ function BlackFridayPopupModal() {
               transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
             >
               <div
-                className={`${manrope.className} relative overflow-hidden rounded-3xl border-2 border-white bg-[#0a0a0b] shadow-[0_40px_100px_rgba(0,0,0,0.7)]`}
+                className={`${manrope.className} relative overflow-hidden rounded-3xl border-[1.5px] border-white bg-[#0a0a0b] shadow-[0_40px_100px_rgba(0,0,0,0.7)]`}
               >
                 {/* Spotlight and glows */}
                 <div className="pointer-events-none absolute left-1/4 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white opacity-[0.06] blur-3xl" />
