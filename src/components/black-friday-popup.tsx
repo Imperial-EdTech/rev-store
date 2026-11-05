@@ -4,14 +4,17 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Gift, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getProduct } from "@/lib/catalog";
+import { discountPercent, getProduct } from "@/lib/catalog";
 import { FEATURES } from "@/lib/features";
 
 const STORAGE_KEY   = "revstore_black_friday_popup_v1";
 const DISMISS_HOURS = 24;
 
 /** Headline "from" price: the Rev Orion's catalogue price, so the popup and shop always agree. */
-const FROM_PRICE = getProduct("orion")?.price ?? 295_000;
+const ORION      = getProduct("orion");
+const FROM_PRICE = ORION?.price ?? 295_000;
+const WAS_PRICE  = ORION?.compareAtPrice;
+const PERCENT    = ORION ? discountPercent(ORION) : 0;
 
 /**
  * Pre-Black Friday laptop promo modal.
@@ -123,6 +126,16 @@ function BlackFridayPopupModal() {
                       <p className="font-display text-5xl font-extrabold tracking-tight text-rev-orange sm:text-6xl">
                         ₦{FROM_PRICE.toLocaleString("en-NG")}
                       </p>
+                      {WAS_PRICE && PERCENT > 0 && (
+                        <div className="mt-2 flex items-center justify-center gap-3 md:justify-start">
+                          <s className="text-lg font-semibold text-white/45">
+                            <span className="sr-only">Regular price </span>₦{WAS_PRICE.toLocaleString("en-NG")}
+                          </s>
+                          <span className="rounded-full bg-red-600 px-3 py-1 text-sm font-extrabold tracking-wide text-white">
+                            {PERCENT}% OFF
+                          </span>
+                        </div>
+                      )}
 
                       <div className="mx-auto mt-5 flex max-w-sm items-center justify-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 md:mx-0 md:justify-start">
                         <Gift className="h-5 w-5 shrink-0 text-rev-peach" />

@@ -149,6 +149,7 @@
 }
 .cardPriceMuted { font-size: 15px; color: var(--rs-ink-2); }
 .cardPriceRow { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; }
+.cardPercent { font-size: 13px; font-weight: 800; color: var(--rs-bad); }
 .cardCompare { font-size: 13px; color: var(--rs-muted); text-decoration: line-through; font-variant-numeric: tabular-nums; }
 
 /* List view */
