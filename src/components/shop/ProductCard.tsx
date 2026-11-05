@@ -67,6 +67,7 @@ export function ProductCard({
                 {formatNaira(product.compareAtPrice)}
               </s>
             )}
+            {discount > 0 && <span className={styles.cardPercent}>-{discount}%</span>}
           </div>
           <ProductAction product={product} />
         </div>
