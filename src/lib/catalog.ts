@@ -95,7 +95,8 @@ export const PRODUCTS: readonly Product[] = [
     id: "aelia",
     name: "Rev Aelia 14″",
     category: "laptops",
-    price: 400_000,
+    price: 340_000,
+    compareAtPrice: 400_000,
     stock: "in_stock",
     image: "/devices/rev_orion_laptop.png", // Same photo as the Orion until an Aelia photo exists.
     summary: "Intel Celeron N4020, 4GB RAM, 128GB eMMC, Windows 11",

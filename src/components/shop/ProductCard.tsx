@@ -58,7 +58,7 @@ export function ProductCard({
 
         <div className={styles.cardFooter}>
           <div className={styles.cardPriceRow}>
-            <p className={clsx(styles.cardPrice, product.price === null && styles.cardPriceMuted)}>
+            <p className={clsx(styles.cardPrice, product.price === null && styles.cardPriceMuted, discount > 0 && styles.cardPriceSale)}>
               {priceLabel(product)}
             </p>
             {product.price !== null && product.compareAtPrice && product.compareAtPrice > product.price && (
