@@ -65,7 +65,8 @@ export const PRODUCTS: readonly Product[] = [
     id: "orion",
     name: "Rev Orion 12″",
     category: "laptops",
-    price: 350_000,
+    price: 295_000,
+    compareAtPrice: 350_000,
     stock: "in_stock",
     image: "/devices/rev_orion_laptop.png",
     summary: "Intel Celeron N4020, 4GB RAM, 128GB eMMC, Windows 11",
@@ -384,6 +385,12 @@ export function isCategoryId(value: string | null | undefined): value is Categor
 /** Only in-stock products with a listed price can go in the cart. */
 export function isPurchasable(p: Product): p is Product & { price: number } {
   return p.stock === "in_stock" && p.price !== null;
+}
+
+/** Whole-number percentage off the regular price, or 0 when the product isn't discounted. */
+export function discountPercent(p: Product): number {
+  if (p.price === null || !p.compareAtPrice || p.compareAtPrice <= p.price) return 0;
+  return Math.round(((p.compareAtPrice - p.price) / p.compareAtPrice) * 100);
 }
 
 /** Lowest monthly repayment across a product's plans, if it's financeable. */

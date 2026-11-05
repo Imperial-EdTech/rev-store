@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { clsx } from "clsx";
 import { useCart } from "@/lib/cart/cart-context";
-import { BULK_ORDER_LABEL, formatNaira, isPurchasable, type Product } from "@/lib/catalog";
+import { BULK_ORDER_LABEL, discountPercent, formatNaira, isPurchasable, type Product } from "@/lib/catalog";
 import { ProductAction, QtyStepper } from "./primitives";
 import { RepaymentPlans } from "./RepaymentPlans";
 import styles from "./purchase.module.css";
@@ -35,6 +35,7 @@ export function PurchasePanel({ product, compact = false }: { product: Product; 
                     <span className={styles.srOnly}>Regular price </span>
                     {formatNaira(product.compareAtPrice!)}
                   </s>
+                  <span className={styles.discount}>{discountPercent(product)}% OFF</span>
                   <span className={styles.saving}>Save {formatNaira(saving)}</span>
                 </>
               )}

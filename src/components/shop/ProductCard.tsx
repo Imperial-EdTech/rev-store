@@ -3,7 +3,7 @@
 import { Eye } from "lucide-react";
 import Link from "next/link";
 import { clsx } from "clsx";
-import { formatNaira, getCategory, priceLabel, specSummary, type Product } from "@/lib/catalog";
+import { discountPercent, formatNaira, getCategory, priceLabel, specSummary, type Product } from "@/lib/catalog";
 import { ProductAction, ProductImage, StockPill } from "./primitives";
 import styles from "./shop.module.css";
 
@@ -19,6 +19,7 @@ export function ProductCard({
 }) {
   const href = `/products/${product.id}`;
   const category = getCategory(product.category);
+  const discount = discountPercent(product);
 
   return (
     <article className={clsx(styles.card, view === "list" && styles.cardList)}>
@@ -30,6 +31,7 @@ export function ProductCard({
           />
         </Link>
         <StockPill className={styles.cardPill} status={product.stock} />
+        {discount > 0 && <span className={styles.cardDiscount}>{discount}% OFF</span>}
         {onQuickView && (
           <button
             // Explicit label: on touch screens the visible text is hidden (icon only).

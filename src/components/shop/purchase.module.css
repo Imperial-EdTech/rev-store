@@ -10,6 +10,10 @@
   font-size: 34px; letter-spacing: -0.01em; font-variant-numeric: tabular-nums;
 }
 .compare { font-size: 17px; color: var(--rs-muted); font-variant-numeric: tabular-nums; }
+.discount {
+  align-self: center; padding: 4px 10px; border-radius: 999px;
+  background: var(--rs-bad); color: #fff; font-size: 13px; font-weight: 800; letter-spacing: 0.04em;
+}
 .saving {
   align-self: center; padding: 4px 10px; border-radius: 999px;
   background: var(--rs-ok-tint); color: var(--rs-ok); font-size: 13px; font-weight: 700;
