@@ -121,7 +121,7 @@ function BlackFridayPopupModal() {
                         className="text-balance mx-auto mt-4 max-w-md text-[28px] font-extrabold uppercase leading-[1.05] tracking-tight text-white sm:text-[34px] md:mx-0"
                         id="bf-popup-title"
                       >
-                        The Pre-Black Friday deals are <span className="text-rev-orange">here!</span>
+                        Brand New Laptops <span className="block">Pre-Black Friday deals are <span className="text-rev-orange">here!</span></span>
                       </h2>
 
                       <p className="mt-3 text-lg font-bold text-rev-peach">Your next laptop. Your best deal.</p>
