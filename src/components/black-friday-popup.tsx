@@ -4,13 +4,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Gift, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { getProduct } from "@/lib/catalog";
 import { FEATURES } from "@/lib/features";
 
 const STORAGE_KEY   = "revstore_black_friday_popup_v1";
 const DISMISS_HOURS = 24;
 
-/** Headline "from" price for the campaign, in naira. */
-const FROM_PRICE = 295_000;
+/** Headline "from" price: the Rev Orion's catalogue price, so the popup and shop always agree. */
+const FROM_PRICE = getProduct("orion")?.price ?? 295_000;
 
 /**
  * Pre-Black Friday laptop promo modal.

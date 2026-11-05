@@ -99,6 +99,11 @@
 }
 .cardMediaLink { position: absolute; inset: 0; display: block; }
 .cardPill { position: absolute; top: 8px; right: 8px; z-index: 1; pointer-events: none; }
+.cardDiscount {
+  position: absolute; top: 8px; left: 8px; z-index: 1; pointer-events: none;
+  display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: 999px;
+  background: var(--rs-bad); color: #fff; font-size: 12px; font-weight: 800; letter-spacing: 0.04em;
+}
 
 /* Quick view: revealed on hover or keyboard focus; always shown on touch screens. */
 .quickView {
