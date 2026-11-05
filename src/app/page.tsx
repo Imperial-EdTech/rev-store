@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import type React from "react";
 import { BackToSchoolBanner } from "@/components/BackToSchoolBanner";
 import { HeroCarousel } from "@/components/HeroCarousel";
+import { BlackFridayPopup } from "@/components/black-friday-popup";
 import { PreOrderPopup } from "@/components/preorder-popup";
 import { StorefrontHeader } from "@/components/StorefrontHeader";
 import { StorefrontFooter } from "@/components/StorefrontFooter";
@@ -250,6 +251,7 @@ export default function Home() {
   return (
     <div style={{ background: "#f5f5f5", fontFamily: "'Plus Jakarta Sans','Inter Variable',ui-sans-serif,system-ui" }}>
       <PreOrderPopup />
+      <BlackFridayPopup />
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@700;800&display=swap');

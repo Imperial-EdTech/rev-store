@@ -7,6 +7,8 @@
 export const FEATURES = {
   /** Teacher Empowerment pre-order modal shown on the homepage and /teacher-empowerment. */
   preorderPopup: false,
+  /** Pre-Black Friday laptop promo modal on the homepage. */
+  blackFridayPopup: true,
   /** "Limited offers" deals strip with countdown on the homepage. */
   homepageOffers: false,
   /** /pre-order checkout. While off, the route redirects to /products. */
