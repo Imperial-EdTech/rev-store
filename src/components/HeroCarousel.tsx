@@ -357,7 +357,7 @@ export function HeroCarousel() {
               </h1>
 
               {/* Body */}
-              <p style={{ fontSize:"clamp(13px, 1.4vw, 15.5px)", lineHeight:1.68, color:"rgba(255,255,255,0.58)", marginBottom:28, maxWidth:440 }}>
+              <p style={{ fontSize:"clamp(13px, 1.4vw, 15.5px)", lineHeight:1.68, color:"#fff", marginBottom:28, maxWidth:440 }}>
                 {s.body}
               </p>
 

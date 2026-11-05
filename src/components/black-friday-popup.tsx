@@ -16,7 +16,7 @@ const manrope = Manrope({ subsets: ["latin"], weight: ["500", "600", "700", "800
 
 /** Headline "from" price: the Rev Orion's catalogue price, so the popup and shop always agree. */
 const ORION      = getProduct("orion");
-const FROM_PRICE = ORION?.price ?? 295_000;
+const FROM_PRICE = ORION?.price ?? 289_999;
 const WAS_PRICE  = ORION?.compareAtPrice;
 const PERCENT    = ORION ? discountPercent(ORION) : 0;
 
@@ -84,7 +84,7 @@ function BlackFridayPopupModal() {
               transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
             >
               <div
-                className={`${manrope.className} relative overflow-hidden rounded-3xl border border-white/10 bg-[#0a0a0b] shadow-[0_40px_100px_rgba(0,0,0,0.7)]`}
+                className={`${manrope.className} relative overflow-hidden rounded-3xl border-2 border-white bg-[#0a0a0b] shadow-[0_40px_100px_rgba(0,0,0,0.7)]`}
               >
                 {/* Spotlight and glows */}
                 <div className="pointer-events-none absolute left-1/4 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white opacity-[0.06] blur-3xl" />
@@ -133,14 +133,8 @@ function BlackFridayPopupModal() {
                         <strong className="text-white">REV Orion</strong>. Why wait for Black Friday?
                       </p>
 
-                      <div className="mt-5 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 md:justify-start">
-                        <span className="text-sm font-semibold text-white/50">From</span>
-                        <span className="text-4xl font-extrabold tracking-tight text-white sm:text-[42px]">
-                          ₦{FROM_PRICE.toLocaleString("en-NG")}
-                        </span>
-                      </div>
                       {WAS_PRICE && PERCENT > 0 && (
-                        <div className="mt-1.5 flex items-center justify-center gap-3 md:justify-start">
+                        <div className="mt-5 flex items-center justify-center gap-3 md:justify-start">
                           <s className="text-base font-semibold text-white/40">
                             <span className="sr-only">Regular price </span>₦{WAS_PRICE.toLocaleString("en-NG")}
                           </s>
@@ -149,6 +143,12 @@ function BlackFridayPopupModal() {
                           </span>
                         </div>
                       )}
+                      <div className={`${WAS_PRICE && PERCENT > 0 ? "mt-1" : "mt-5"} flex flex-wrap items-center justify-center gap-x-3 gap-y-1 md:justify-start`}>
+                        <span className="text-sm font-semibold text-white/50">From</span>
+                        <span className="text-4xl font-extrabold tracking-tight text-white sm:text-[42px]">
+                          ₦{FROM_PRICE.toLocaleString("en-NG")}
+                        </span>
+                      </div>
 
                       <Link
                         className="focus-ring mt-6 flex items-center justify-center gap-2 rounded-full bg-rev-orange py-3.5 text-[15px] font-extrabold uppercase tracking-wide text-white shadow-glow transition hover:bg-rev-orangeDeep"
