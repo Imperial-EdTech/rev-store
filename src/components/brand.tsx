@@ -1,10 +1,16 @@
+import { Noto_Serif } from "next/font/google";
 import Link from "next/link";
 
+const serif = Noto_Serif({ subsets: ["latin"], weight: ["700", "800"], style: ["normal", "italic"] });
+
+const ORANGE = "#E2701E";
+
 /**
- * RevStore logo — works on both dark and light backgrounds.
- * On dark BG: R and v are white, "e" and "Store" are orange.
- * On light BG: R and v are brand-dark (#581319), "e" and "Store" are orange.
- * Pass variant="light" for white/light backgrounds.
+ * RevStore logo: store icon, "Rev" + italic "Store" wordmark, "Shop the best deals" tagline.
+ * Transparent background, so it works on dark and light backgrounds.
+ * On dark BG the icon and "Rev" are white; pass variant="light" on white/light
+ * backgrounds to draw them in brand maroon. "Store" and the tagline are always orange.
+ * Text widths are pinned with textLength so the layout holds whatever font loads.
  */
 export function RevricaLogo({
   className,
@@ -13,94 +19,67 @@ export function RevricaLogo({
   className?: string;
   variant?: "dark" | "light";
 }) {
-  const textColor = variant === "light" ? "#581319" : "#ffffff";
+  const ink = variant === "light" ? "#581319" : "#F2F0F2";
+  const font = serif.style.fontFamily;
 
   return (
     <Link aria-label="RevStore home" className="inline-flex items-center" href="/">
       <svg
-        className={className ?? "h-9 w-auto"}
+        aria-hidden
+        className={className ?? "h-10 w-auto sm:h-11"}
         fill="none"
-        viewBox="0 0 220 44"
+        viewBox="0 0 640 128"
         xmlns="http://www.w3.org/2000/svg"
       >
-        {/* Cart pill background */}
-        <rect fill="#581319" height="36" rx="10" width="44" x="0" y="4" />
+        {/* Store icon: roof, striped awning, pillar, door gap, shop window */}
+        <path d="M14 8h100l10 38H4z" fill={ink} />
+        <rect fill={ORANGE} height="18" width="28" x="8" y="47" />
+        <rect fill={ink} height="18" width="28" x="36" y="47" />
+        <rect fill={ORANGE} height="18" width="28" x="64" y="47" />
+        <rect fill={ink} height="18" width="28" x="92" y="47" />
+        <rect fill={ink} height="54" width="13" x="8" y="65" />
+        <path d="M52 65h68v54H52z" fill={ink} />
+        <rect fill={ORANGE} height="27" width="32" x="78" y="65" />
 
-        {/* Cart handle */}
-        <path
-          d="M11 15h3.5l3 9h8l2.2-6.5H16"
-          stroke="white"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="1.8"
-        />
-        {/* Cart wheels */}
-        <circle cx="18.5" cy="27" fill="white" r="1.6" />
-        <circle cx="25.5" cy="27" fill="white" r="1.6" />
-        {/* Laptop screen inside cart */}
-        <rect fill="white" height="4.5" opacity="0.95" rx="1" width="7.5" x="17.5" y="16.5" />
-        <rect fill="#FF6B1A" height="3" rx="0.6" width="6" x="18.25" y="17.25" />
-
-        {/* "Rev" wordmark — R dark/white, e orange, v dark/white */}
+        {/* Wordmark */}
         <text
-          dominantBaseline="middle"
-          fill={textColor}
-          fontFamily="'Archivo Variable',ui-sans-serif,system-ui"
-          fontSize="23"
-          fontWeight="900"
-          letterSpacing="-1"
-          x="52"
-          y="23"
+          fill={ink}
+          fontFamily={font}
+          fontSize="104"
+          fontWeight="800"
+          lengthAdjust="spacingAndGlyphs"
+          textLength="196"
+          x="150"
+          y="92"
         >
-          R
+          Rev
         </text>
         <text
-          dominantBaseline="middle"
-          fill="#FF6B1A"
-          fontFamily="'Archivo Variable',ui-sans-serif,system-ui"
-          fontSize="23"
-          fontWeight="900"
-          letterSpacing="-1"
-          x="69"
-          y="23"
-        >
-          e
-        </text>
-        <text
-          dominantBaseline="middle"
-          fill={textColor}
-          fontFamily="'Archivo Variable',ui-sans-serif,system-ui"
-          fontSize="23"
-          fontWeight="900"
-          letterSpacing="-1"
-          x="84"
-          y="23"
-        >
-          v
-        </text>
-
-        {/* Divider */}
-        <rect
-          fill={variant === "light" ? "rgba(88,19,25,0.2)" : "rgba(255,255,255,0.2)"}
-          height="20"
-          rx="1"
-          width="1.5"
-          x="104"
-          y="12"
-        />
-
-        {/* "Store" — always orange */}
-        <text
-          dominantBaseline="middle"
-          fill="#FF6B1A"
-          fontFamily="'Archivo Variable',ui-sans-serif,system-ui"
-          fontSize="18"
-          fontWeight="700"
-          letterSpacing="0.5"
-          x="110"
-          y="23"
+          fill={ORANGE}
+          fontFamily={font}
+          fontSize="104"
+          fontStyle="italic"
+          fontWeight="800"
+          lengthAdjust="spacingAndGlyphs"
+          textLength="284"
+          x="350"
+          y="92"
         >
           Store
+        </text>
+
+        {/* Tagline */}
+        <text
+          fill={ORANGE}
+          fontFamily="ui-sans-serif, system-ui, sans-serif"
+          fontSize="22"
+          fontWeight="600"
+          lengthAdjust="spacing"
+          textLength="400"
+          x="152"
+          y="124"
+        >
+          SHOP THE BEST DEALS
         </text>
       </svg>
     </Link>
