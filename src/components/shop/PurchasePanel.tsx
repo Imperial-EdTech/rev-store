@@ -28,7 +28,7 @@ export function PurchasePanel({ product, compact = false }: { product: Product; 
         {product.price !== null ? (
           <>
             <div className={styles.priceRow}>
-              <p className={styles.price}>{formatNaira(product.price)}</p>
+              <p className={clsx(styles.price, saving > 0 && styles.priceSale)}>{formatNaira(product.price)}</p>
               {saving > 0 && (
                 <>
                   <s className={styles.compare}>
