@@ -1,14 +1,18 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Gift, X } from "lucide-react";
+import { ArrowRight, X, Zap } from "lucide-react";
+import { Manrope } from "next/font/google";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { discountPercent, getProduct } from "@/lib/catalog";
 import { FEATURES } from "@/lib/features";
 
-const STORAGE_KEY   = "revstore_black_friday_popup_v1";
+// Bumped with each new creative so visitors who closed the old one see it once.
+const STORAGE_KEY   = "revstore_black_friday_popup_v2";
 const DISMISS_HOURS = 24;
+
+const manrope = Manrope({ subsets: ["latin"], weight: ["500", "600", "700", "800"] });
 
 /** Headline "from" price: the Rev Orion's catalogue price, so the popup and shop always agree. */
 const ORION      = getProduct("orion");
@@ -79,9 +83,12 @@ function BlackFridayPopupModal() {
               role="dialog"
               transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
             >
-              <div className="relative overflow-hidden rounded-3xl bg-[#0d0d0f] shadow-[0_40px_100px_rgba(0,0,0,0.7)]">
-                {/* Glows */}
-                <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-rev-orange opacity-20 blur-3xl" />
+              <div
+                className={`${manrope.className} relative overflow-hidden rounded-3xl border border-white/10 bg-[#0a0a0b] shadow-[0_40px_100px_rgba(0,0,0,0.7)]`}
+              >
+                {/* Spotlight and glows */}
+                <div className="pointer-events-none absolute left-1/4 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white opacity-[0.06] blur-3xl" />
+                <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-rev-orange opacity-25 blur-3xl" />
                 <div className="pointer-events-none absolute -bottom-20 -left-16 h-56 w-56 rounded-full bg-maroon-bright opacity-40 blur-3xl" />
 
                 <button
@@ -94,72 +101,71 @@ function BlackFridayPopupModal() {
                 </button>
 
                 <div className="relative z-10 grid items-center gap-6 p-7 text-center sm:p-10 md:grid-cols-[1fr_1.1fr] md:gap-10 md:text-left">
-                  {/* Laptop — beside the offer on md+, below the headline on phones */}
+                  {/* Laptop: beside the offer on md+, below the headline on phones */}
                   <div className="order-2 md:order-1">
                     <img
                       alt="Rev laptop"
-                      className="mx-auto h-40 w-auto object-contain drop-shadow-2xl sm:h-48 md:h-auto md:w-full"
+                      className="mx-auto h-40 w-auto object-contain drop-shadow-[0_30px_40px_rgba(0,0,0,0.8)] sm:h-48 md:h-auto md:w-full"
                       src="/devices/rev_orion_laptop.png"
                     />
                   </div>
 
                   <div className="contents md:order-2 md:block">
                     <div className="order-1">
-                      <span className="inline-flex items-center gap-2 rounded-full border border-rev-orange/40 bg-rev-orange/10 px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.18em] text-rev-orange">
-                        <span className="relative flex h-2 w-2">
-                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rev-orange opacity-60" />
-                          <span className="relative inline-flex h-2 w-2 rounded-full bg-rev-orange" />
-                        </span>
-                        Pre-Black Friday Deal
+                      <span className="inline-flex items-center gap-2 rounded-full bg-rev-orange px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.16em] text-white">
+                        <Zap className="h-3.5 w-3.5 fill-current" />
+                        Limited-time offer
                       </span>
 
                       <h2
-                        className="text-balance mx-auto mt-5 max-w-md font-display text-3xl font-extrabold leading-[1.08] tracking-tight text-white sm:text-4xl md:mx-0"
+                        className="text-balance mx-auto mt-4 max-w-md text-[28px] font-extrabold uppercase leading-[1.05] tracking-tight text-white sm:text-[34px] md:mx-0"
                         id="bf-popup-title"
                       >
-                        Buy a brand-new laptop <span className="text-rev-peach">for your loved ones</span>
+                        The Pre-Black Friday deals are <span className="text-rev-orange">here!</span>
                       </h2>
+
+                      <p className="mt-3 text-lg font-bold text-rev-peach">Your next laptop. Your best deal.</p>
                     </div>
 
-                    <div className="order-3 md:mt-6">
-                      <p className="text-sm font-semibold uppercase tracking-[0.14em] text-white/50">For as low as</p>
-                      <p className="font-display text-5xl font-extrabold tracking-tight text-rev-orange sm:text-6xl">
-                        ₦{FROM_PRICE.toLocaleString("en-NG")}
+                    <div className="order-3 md:mt-4">
+                      <p className="mx-auto max-w-sm text-[15px] leading-relaxed text-white/65 md:mx-0">
+                        Upgrade now with exclusive deals on <strong className="text-white">REV Aelia</strong> and{" "}
+                        <strong className="text-white">REV Orion</strong>. Why wait for Black Friday?
                       </p>
+
+                      <div className="mt-5 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 md:justify-start">
+                        <span className="text-sm font-semibold text-white/50">From</span>
+                        <span className="text-4xl font-extrabold tracking-tight text-white sm:text-[42px]">
+                          ₦{FROM_PRICE.toLocaleString("en-NG")}
+                        </span>
+                      </div>
                       {WAS_PRICE && PERCENT > 0 && (
-                        <div className="mt-2 flex items-center justify-center gap-3 md:justify-start">
-                          <s className="text-lg font-semibold text-white/45">
+                        <div className="mt-1.5 flex items-center justify-center gap-3 md:justify-start">
+                          <s className="text-base font-semibold text-white/40">
                             <span className="sr-only">Regular price </span>₦{WAS_PRICE.toLocaleString("en-NG")}
                           </s>
-                          <span className="rounded-full bg-red-600 px-3 py-1 text-sm font-extrabold tracking-wide text-white">
+                          <span className="rounded-full bg-red-600 px-2.5 py-0.5 text-sm font-extrabold text-white">
                             {PERCENT}% OFF
                           </span>
                         </div>
                       )}
 
-                      <div className="mx-auto mt-5 flex max-w-sm items-center justify-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 md:mx-0 md:justify-start">
-                        <Gift className="h-5 w-5 shrink-0 text-rev-peach" />
-                        <p className="text-sm text-white/80">
-                          We also do <strong className="text-white">Buy Now, Pay Later</strong>
-                        </p>
-                      </div>
+                      <Link
+                        className="focus-ring mt-6 flex items-center justify-center gap-2 rounded-full bg-rev-orange py-3.5 text-[15px] font-extrabold uppercase tracking-wide text-white shadow-glow transition hover:bg-rev-orangeDeep"
+                        href="/products?category=laptops"
+                        onClick={dismiss}
+                      >
+                        Shop the deals <ArrowRight className="h-4 w-4" />
+                      </Link>
 
-                      <div className="mt-7 grid gap-3 sm:grid-cols-2">
-                        <Link
-                          className="focus-ring flex h-12 items-center justify-center gap-2 rounded-full bg-rev-orange text-sm font-bold text-white shadow-glow transition hover:bg-rev-orangeDeep"
-                          href="/products?category=laptops"
-                          onClick={dismiss}
-                        >
-                          Shop laptops <ArrowRight className="h-4 w-4" />
-                        </Link>
-                        <Link
-                          className="focus-ring flex h-12 items-center justify-center rounded-full border border-white/20 text-sm font-bold text-white transition hover:border-white/45 hover:bg-white/5"
-                          href="/apply"
-                          onClick={dismiss}
-                        >
+                      <p className="mt-3 text-sm text-white/60">
+                        Prefer to spread the cost?{" "}
+                        <Link className="font-bold text-white underline underline-offset-4 hover:text-rev-peach" href="/apply" onClick={dismiss}>
                           Buy Now, Pay Later
                         </Link>
-                      </div>
+                      </p>
+
+                      <p className="mt-4 text-[11px] text-white/35">Limited-time offer. Terms and conditions apply.</p>
                     </div>
                   </div>
                 </div>
