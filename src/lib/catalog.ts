@@ -65,7 +65,7 @@ export const PRODUCTS: readonly Product[] = [
     id: "orion",
     name: "Rev Orion 12″",
     category: "laptops",
-    price: 289_999,
+    price: 290_000,
     compareAtPrice: 350_000,
     stock: "in_stock",
     image: "/devices/rev_orion_laptop.png",

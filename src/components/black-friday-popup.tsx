@@ -16,7 +16,7 @@ const manrope = Manrope({ subsets: ["latin"], weight: ["500", "600", "700", "800
 
 /** Headline "from" price: the Rev Orion's catalogue price, so the popup and shop always agree. */
 const ORION      = getProduct("orion");
-const FROM_PRICE = ORION?.price ?? 289_999;
+const FROM_PRICE = ORION?.price ?? 290_000;
 const WAS_PRICE  = ORION?.compareAtPrice;
 const PERCENT    = ORION ? discountPercent(ORION) : 0;
 
