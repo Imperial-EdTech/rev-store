@@ -21,9 +21,13 @@ partner can't sign in until their passcode variable is set.
 
 ## Database (Supabase)
 
-The app reads and writes only from the server, with the service-role key
-(`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`). Every table has RLS
-on with no policies, so the public anon key can't reach any data.
+The app reads and writes only from the server, with the project's **secret
+key** (`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SECRET_KEY`; the `sb_secret_...`
+key under Project Settings > API Keys, which replaces the old `service_role`
+key). Every table has RLS on with no policies, so the **publishable key**
+(`sb_publishable_...`, which replaces `anon`) can't reach any data: it isn't
+used by the server, and only browser code such as customer sign-in will need it.
+A wrong or missing setting is logged once, naming the variable to fix.
 
 Setting up a project, in the Supabase SQL editor:
 

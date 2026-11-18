@@ -2,12 +2,12 @@ import "server-only";
 import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import type { ZodError } from "zod";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { databaseConfigProblem, supabaseAdmin } from "@/lib/supabase-admin";
 
 /**
  * Server-side database access. Every table is locked to the public API (RLS
  * with no policies), so all reads and writes go through here with the
- * service-role client.
+ * secret-key client.
  */
 
 export type Result<T> = { ok: true; value: T } | { ok: false; status: number; error: string };
@@ -15,10 +15,17 @@ export type Result<T> = { ok: true; value: T } | { ok: false; status: number; er
 export const notConfigured = {
   ok: false as const,
   status: 503,
-  error: "The database isn't configured. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
+  error: "The database isn't configured. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY.",
 };
 
+let reportedConfigProblem = false;
+
+/** The database client, or null when it isn't configured (the specific reason is logged once). */
 export function getDb(): SupabaseClient | null {
+  if (!supabaseAdmin && !reportedConfigProblem) {
+    reportedConfigProblem = true;
+    console.error(`database: ${databaseConfigProblem}`);
+  }
   return supabaseAdmin;
 }
 
